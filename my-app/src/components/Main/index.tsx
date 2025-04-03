@@ -7,7 +7,6 @@ import {
   CardContent,
   Container,
   CssBaseline,
-  Divider,
   Grid,
   IconButton,
   Paper,
@@ -21,22 +20,19 @@ import {
   alpha
 } from '@mui/material';
 import {
-  AccessTime,
   Chat,
   DateRange,
   MenuOutlined,
   Notifications,
   Psychology,
-  Settings,
   SwapHoriz,
   Map,
-  Analytics,
-  People,
   ArrowForward,
   Check,
   CheckCircleSharp
 } from '@mui/icons-material';
 import { AppBarProps } from '@mui/material/AppBar';
+import Footer from '../Footer';
 
 // Create a custom theme with Fillit colors
 const theme = createTheme({
@@ -152,51 +148,6 @@ const features = [
     title: "Push Notifications",
     description: "Stay updated with instant alerts about schedule changes and shift reminders."
   },
-];
-
-// Pricing plan data
-const pricingPlans = [
-  {
-    title: "Small Teams",
-    price: "$9.99",
-    period: "/month",
-    features: [
-      "Up to 20 employees",
-      "Basic scheduling",
-      "Chat functionality",
-      "Push notifications",
-      "Email support"
-    ]
-  },
-  {
-    title: "Organizations",
-    price: "$29.99",
-    period: "/month",
-    features: [
-      "Up to 100 employees",
-      "Advanced scheduling",
-      "AI assistant",
-      "Analytics dashboard",
-      "Priority support",
-      "Shift swapping",
-      "Location mapping"
-    ],
-    highlighted: true
-  },
-  {
-    title: "Enterprise",
-    price: "Custom",
-    period: "",
-    features: [
-      "Unlimited employees",
-      "Full feature access",
-      "Custom integration",
-      "Dedicated account manager",
-      "24/7 phone support",
-      "Advanced analytics",
-      "White labeling options"
-    ]
-  }
 ];
 
 // Hero wave SVG
@@ -448,10 +399,10 @@ const LandingPage: React.FC = () => {
             
               <Box
                 component="img"
-                src="/api/placeholder/550/400"
+                src="/fillit.png"
                 alt="Fillit App in Action"
                 sx={{
-                  width: '100%',
+                  width: '10%',
                   borderRadius: 3,
                   boxShadow: theme.shadows[10],
                 }}
@@ -541,7 +492,7 @@ const LandingPage: React.FC = () => {
         </Container>
       </Box>
       
-      {/* Pricing Section */}
+      {/* Pricing Section
       <Container sx={{ py: { xs: 8, md: 12 } }}>
         <Box sx={{ textAlign: 'center', mb: 8 }}>
           <Typography 
@@ -648,9 +599,9 @@ const LandingPage: React.FC = () => {
               </Card>
           ))}
         </Grid>
-      </Container>
+      </Container> */}
       
-      {/* CTA Section */}
+      {/* CTA Section
       <Box 
         sx={{ 
           bgcolor: 'primary.main', 
@@ -660,7 +611,6 @@ const LandingPage: React.FC = () => {
           overflow: 'hidden'
         }}
       >
-        {/* Background Pattern */}
         <Box
           sx={{
             position: 'absolute',
@@ -739,70 +689,10 @@ const LandingPage: React.FC = () => {
             </Stack>
           </Box>
         </Container>
-      </Box>
+      </Box> */}
       
       {/* Footer */}
-      <Box sx={{ bgcolor: 'secondary.main', color: 'white', py: 6 }}>
-        <Container>
-          <Grid container spacing={4}>
-              <Typography 
-                variant="h4" 
-                component="div" 
-                sx={{ 
-                  fontWeight: 700,
-                  mb: 2 
-                }}
-              >
-                f<Typography component="span" color="primary" variant="h4" sx={{ fontWeight: 700 }}>i</Typography>ll<Typography component="span" color="primary" variant="h4" sx={{ fontWeight: 700 }}>i</Typography>t
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 3, opacity: 0.7 }}>
-                The intelligent shift management platform that streamlines scheduling and enhances team communication.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                {/* Social Media Icons would go here */}
-              </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                Product
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Features</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Pricing</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Integrations</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>FAQ</Typography>
-              </Stack>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                Company
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>About Us</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Blog</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Careers</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Contact</Typography>
-              </Stack>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                Resources
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Documentation</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Support</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>API</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Community</Typography>
-              </Stack>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                Legal
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Privacy</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Terms</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Security</Typography>
-              </Stack>
-          </Grid>
-          <Divider sx={{ my: 4, borderColor: alpha('#ffffff', 0.1) }} />
-          <Typography variant="body2" align="center" sx={{ opacity: 0.7 }}>
-            © {new Date().getFullYear()} Fillit. All rights reserved.
-          </Typography>
-        </Container>
-      </Box>
+      <Footer/>
     </ThemeProvider>
   );
 };
