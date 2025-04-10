@@ -34,10 +34,10 @@ const Footer = () => {
 
           {/* Link Sections */}
           {[
-            { title: 'Product', links: ['Features', 'Pricing', 'Integrations', 'FAQ'] },
-            { title: 'Company', links: ['About Us', 'Blog', 'Careers', 'Contact'] },
-            { title: 'Resources', links: ['Documentation', 'Support', 'API', 'Community'] },
-            { title: 'Legal', links: ['Privacy', 'Terms', 'Security'] },
+            /*{ title: 'Product', links: ['Features', 'Integrations', 'FAQ'] },*/
+            /*{ title: 'Company', links: ['About Us', 'Blog', 'Careers', 'Contact'] },*/
+            /*{ title: 'Resources', links: ['Documentation', 'Support', 'API', 'Community'] },*/
+            { title: ' ', links: [' ', ' ', ' '] },
           ].map((section, idx) => (
             <Box key={idx} sx={{ minWidth: 150 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
@@ -52,8 +52,8 @@ const Footer = () => {
               </Stack>
             </Box>
           ))}
-        </Box>
-
+        </Box> 
+        
         {/* Divider and Bottom Note */}
         <Divider sx={{ my: 4, borderColor: alpha('#ffffff', 0.1) }} />
         <Typography variant="body2" align="center" sx={{ opacity: 0.7 }}>

@@ -1,10 +1,10 @@
-import Main from './components/Main';
+import React from 'react';
+import AppRoutes from './components/Routers';  // Import the routing component
 
-const App = () => {
+const App: React.FC = () => {
   return (
-      <Main/>
+    <AppRoutes />  
   );
 };
-
 
 export default App;
