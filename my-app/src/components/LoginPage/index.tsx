@@ -1,183 +1,287 @@
-import { Check, ArrowForward } from '@mui/icons-material';
-import {AppBar, Box, Button, Card, CardContent, Container, CssBaseline,
-  Grid,
-  IconButton,
-  Paper,
-  Stack,
-  ThemeProvider,
-  Toolbar,
-  Typography,
-  createTheme,
-  useMediaQuery,
-  useScrollTrigger,
- 
-} from '@mui/material';
-import { alpha } from '@mui/system';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#00c28c', // Green color from Fillit logo
-      dark: '#009e6f',
-      light: '#33cf9f'
-    },
-    secondary: {
-      main: '#2c353d', // Dark background from Fillit logo
-      dark: '#232a31',
-      light: '#4e5a64'
-    },
-    background: {
-      default: '#f8f9fa',
-      paper: '#ffffff'
+const LoginPage: React.FC = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const navigate = useNavigate();
+
+  const validateName = (name: string): boolean => {
+    const isValid = name.trim().length > 0;
+    if (!isValid) {
+      setNameError('Name is required');
+    } else {
+      setNameError('');
     }
-  },
-  typography: {
-    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 700,
+    return isValid;
+  };
+
+  const validateEmail = (email: string): boolean => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValid = re.test(email);
+    if (!isValid) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+    return isValid;
+  };
+
+  const validatePassword = (password: string): boolean => {
+    const isValid = password.length >= 8;
+    if (!isValid) {
+      setPasswordError('Password must be at least 8 characters long');
+    } else {
+      setPasswordError('');
+    }
+    return isValid;
+  };
+
+  const validateConfirmPassword = (confirmPassword: string): boolean => {
+    const isValid = confirmPassword === password;
+    if (!isValid) {
+      setConfirmPasswordError('Passwords do not match');
+    } else {
+      setConfirmPasswordError('');
+    }
+    return isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate all inputs
+    const isNameValid = validateName(name);
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+    
+    if (isNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
+      console.log('Submitted Info:', { name, email, password, confirmPassword }); // Log user info
+      setIsLoading(true);
+      
+      try {
+        // Here you would typically make an API call to register the user
+        // For example:
+        // const response = await authService.register(name, email, password);
+        
+        // Simulating API call with timeout
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // If registration is successful, redirect to login or dashboard
+        navigate('/login');
+      } catch (error) {
+        console.error('Registration failed:', error);
+        // Handle registration error (display message, etc.)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Inline styles
+  const styles = {
+    container: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#f9fafb',
+      padding: '20px',
     },
-    h2: {
-      fontWeight: 600,
+    formContainer: {
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      padding: '40px',
+      width: '100%',
+      maxWidth: '500px',
+    },
+    title: {
+      margin: '0',
+      fontSize: '28px',
+      fontWeight: 700,
+      color: '#111827',
+      marginBottom: '8px',
+    },
+    subtitle: {
+      margin: '0',
+      color: '#6b7280',
+      marginBottom: '32px',
+    },
+    form: {
+      display: 'flex',
+      flexDirection: 'column' as 'column',
+      gap: '20px',
+    },
+    formGroup: {
+      display: 'flex',
+      flexDirection: 'column' as 'column',
+      gap: '8px',
+    },
+    label: {
+      fontWeight: 500,
+      color: '#374151',
+    },
+    input: {
+      padding: '12px 16px',
+      border: '1px solid #d1d5db',
+      borderRadius: '6px',
+      fontSize: '16px',
+      transition: 'border-color 0.2s',
+    },
+    inputError: {
+      padding: '12px 16px',
+      border: '1px solid #ef4444',
+      borderRadius: '6px',
+      fontSize: '16px',
+    },
+    errorMessage: {
+      color: '#ef4444',
+      fontSize: '14px',
+      margin: '4px 0 0',
     },
     button: {
+      backgroundColor: '#2563eb',
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      padding: '12px',
+      fontSize: '16px',
       fontWeight: 500,
-      textTransform: 'none',
+      cursor: 'pointer',
+      transition: 'background-color 0.2s',
+      marginTop: '16px',
+    },
+    buttonDisabled: {
+      backgroundColor: '#93c5fd',
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      padding: '12px',
+      fontSize: '16px',
+      fontWeight: 500,
+      cursor: 'not-allowed',
+      marginTop: '16px',
+    },
+    loginPrompt: {
+      textAlign: 'center' as 'center',
+      marginTop: '32px',
+      color: '#4b5563',
+    },
+    link: {
+      color: '#2563eb',
+      textDecoration: 'none',
+      fontWeight: 500,
+    },
+    termsText: {
+      fontSize: '14px',
+      color: '#6b7280',
+      textAlign: 'center' as 'center',
+      marginTop: '24px',
     }
-  },
-  shape: {
-    borderRadius: 12,
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 30,
-          padding: '10px 24px',
-          fontSize: '1rem',
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
-          transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-          '&:hover': {
-            transform: 'translateY(-5px)',
-            boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.12)',
-          },
-        },
-      },
-    },
-  },
-});
+  };
 
-
-const LoginPage = () => (
-
-
-<Box sx={{ bgcolor: 'grey.50', py: { xs: 8, md: 12 } }}>
-<Container>
-  <Grid container spacing={6} alignItems="center">
-    
-      <Box
-        component="img"
-        src="/fillit.png"
-        alt="Fillit App in Action"
-        sx={{
-          width: '10%',
-          borderRadius: 3,
-          boxShadow: theme.shadows[10],
-        }}
-      />
-      <Typography>
-        THIS IS THE LOGIN PAGE
-      </Typography>
-      <Typography paragraph color="text.secondary">
-        Our platform streamlines shift management like never before, addressing the challenges of disorganized communication and manual scheduling.
-      </Typography>
-      
-      <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 2, 
-              display: 'flex', 
-              alignItems: 'flex-start',
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            }}
-          >
-            <Check color="primary" sx={{ mr: 2, mt: 0.5 }} />
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Inspired by Real Needs
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Born from volunteer experience at Magen David Adom, we understand the challenges of shift management in non-profit organizations.
-              </Typography>
-            </Box>
-          </Paper>
+  return (
+    <div style={styles.container}>
+      <div style={styles.formContainer}>
+        <h1 style={styles.title}>Create Account</h1>
+        <p style={styles.subtitle}>Fill in your details to get started</p>
         
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 2, 
-              display: 'flex', 
-              alignItems: 'flex-start',
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            }}
+        <form style={styles.form} onSubmit={handleSubmit}>
+          <div style={styles.formGroup}>
+            <label htmlFor="name" style={styles.label}>Full Name</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => validateName(name)}
+              placeholder="Enter your full name"
+              style={nameError ? styles.inputError : styles.input}
+            />
+            {nameError && <p style={styles.errorMessage}>{nameError}</p>}
+          </div>
+          
+          <div style={styles.formGroup}>
+            <label htmlFor="email" style={styles.label}>Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => validateEmail(email)}
+              placeholder="Enter your email"
+              style={emailError ? styles.inputError : styles.input}
+            />
+            {emailError && <p style={styles.errorMessage}>{emailError}</p>}
+          </div>
+          
+          <div style={styles.formGroup}>
+            <label htmlFor="password" style={styles.label}>Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onBlur={() => validatePassword(password)}
+              placeholder="Create a password"
+              style={passwordError ? styles.inputError : styles.input}
+            />
+            {passwordError && <p style={styles.errorMessage}>{passwordError}</p>}
+          </div>
+          
+          <div style={styles.formGroup}>
+            <label htmlFor="confirmPassword" style={styles.label}>Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onBlur={() => validateConfirmPassword(confirmPassword)}
+              placeholder="Confirm your password"
+              style={confirmPasswordError ? styles.inputError : styles.input}
+            />
+            {confirmPasswordError && <p style={styles.errorMessage}>{confirmPasswordError}</p>}
+          </div>
+          
+          <button 
+            type="submit" 
+            style={isLoading ? styles.buttonDisabled : styles.button}
+            disabled={isLoading}
           >
-            <Check color="primary" sx={{ mr: 2, mt: 0.5 }} />
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Cutting-Edge Technology
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Built on AWS cloud infrastructure with AI-powered assistance for intelligent shift-matching and scheduling.
-              </Typography>
-            </Box>
-          </Paper>
+            {isLoading ? 'Creating account...' : 'Create Account'}
+          </button>
+          
+          <p style={styles.termsText}>
+            By creating an account, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </form>
         
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 2, 
-              display: 'flex', 
-              alignItems: 'flex-start',
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            }}
-          >
-            <Check color="primary" sx={{ mr: 2, mt: 0.5 }} />
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Customizable & Scalable
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Adaptable organizational templates and scalable infrastructure to grow with your organization's needs.
-              </Typography>
-            </Box>
-          </Paper>
-      </Grid>
-      
-      <Button 
-        variant="contained" 
-        color="primary"
-        size="large"
-        endIcon={<ArrowForward />}
-        sx={{ mt: 4 }}
-      >
-        Learn More
-      </Button>
-  </Grid>
-</Container>
-</Box>
- 
-);
+        <p style={styles.loginPrompt}>
+          Already have an account? <Link to="/login" style={styles.link}>Sign In</Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
 
 export default LoginPage;
-export{};
 
-
+//name, email, password, confirmPassword, admin yes or no
+// LINE 68!!!!!!
+// instead of console log create http request to backend
+// and send the data to the backend
+// and then redirect to login page
+// and then redirect to login page
+// and then redirect to login page
+// and then redirect to login page      
