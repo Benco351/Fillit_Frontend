@@ -1,20 +1,11 @@
-import {Map, DateRange, CheckCircleSharp, Chat, SwapHoriz, Psychology, Notifications } from '@mui/icons-material';
-import {AppBar, Box, Button, Card, CardContent, Container, CssBaseline,
-    Grid,
-    IconButton,
-    Paper,
-    Stack,
-    ThemeProvider,
-    Toolbar,
-    Typography,
-    createTheme,
-    useMediaQuery,
-    useScrollTrigger,
-   
-  } from '@mui/material';
-  import { alpha } from '@mui/system';
+import { Map, DateRange, CheckCircleSharp, Chat, SwapHoriz, Psychology, Notifications } from '@mui/icons-material';
+import {
+  Box, Card, CardContent, Container,
+  Grid,
+  Typography,
+} from '@mui/material';
 
-  
+
 // Feature data
 const features = [
   {
@@ -56,59 +47,59 @@ const features = [
 
 //////////
 
-const Features = () => (
+const Features = () => {
 
+  return (
     <Container sx={{ py: { xs: 8, md: 12 } }}>
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography 
-            variant="h2" 
-            gutterBottom
-            sx={{ 
-              fontSize: { xs: '2rem', md: '2.5rem' },
-              fontWeight: 600 
-            }}
-          >
-            Powerful Features
-          </Typography>
-          <Typography 
-            variant="h6" 
-            color="text.secondary"
-            sx={{ 
-              maxWidth: '700px',
-              mx: 'auto',
-              fontWeight: 400,
-            }}
-          >
-            Everything you need to manage shifts efficiently in one place
-          </Typography>
-        </Box>
-        
-        <Grid container spacing={4}>
-          {features.map((feature, index) => (
-            
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  p: 2,
-                }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ mb: 2 }}>{feature.icon}</Box>
-                  <Typography gutterBottom variant="h5" component="h3" sx={{ fontWeight: 600 }}>
-                    {feature.title}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {feature.description}
-                  </Typography>
-                </CardContent>
-              </Card>
-          ))}
-        </Grid>
-      </Container>
+      <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Typography
+          variant="h2"
+          gutterBottom
+          sx={{
+            fontSize: { xs: '2rem', md: '2.5rem' },
+            fontWeight: 600
+          }}
+        >
+          Powerful Features
+        </Typography>
+        <Typography
+          variant="h6"
+          color="text.secondary"
+          sx={{
+            maxWidth: '700px',
+            mx: 'auto',
+            fontWeight: 400,
+          }}
+        >
+          Everything you need to manage shifts efficiently in one place
+        </Typography>
+      </Box>
 
-);
-  
-  export default Features;
- 
+      <Grid container spacing={4}>
+        {features.map((feature, index) => (
+
+          <Card
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              p: 2,
+            }}
+          >
+            <CardContent sx={{ flexGrow: 1 }}>
+              <Box sx={{ mb: 2 }}>{feature.icon}</Box>
+              <Typography gutterBottom variant="h5" component="h3" sx={{ fontWeight: 600 }}>
+                {feature.title}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {feature.description}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Grid>
+    </Container>
+
+  );
+}
+export default Features;

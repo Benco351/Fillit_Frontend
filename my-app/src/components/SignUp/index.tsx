@@ -1,131 +1,140 @@
-import React, { useState } from 'react';
-import { Box, Button, Container, TextField, Typography, Paper, Stack } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Link as RouterLink } from 'react-router-dom';
+/**
+ * src/pages/SignUpPage.tsx
+ * --------------------------------------------------------------
+ * Sign‑up screen that
+ *   • validates with zod / react‑hook‑form
+ *   • posts to POST /api/employees
+ *   • shows a success Snackbar
+ *   • redirects to “/login” two seconds after success
+ * --------------------------------------------------------------
+ */
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#00c28c', // Green color from Fillit logo
-      dark: '#009e6f',
-      light: '#33cf9f',
-    },
-    secondary: {
-      main: '#2c353d', // Dark gray background from Fillit logo
-    },
-    background: {
-      default: '#2c353d', // Dark gray for the entire page
-      paper: '#3a3f47', // Lighter gray for the form bubble
-    },
-    grey: {
-      50: '#f9fafb',
-      100: '#f2f4f6',
-      200: '#e5e7eb',
-      300: '#d1d5db',
-      400: '#9ca3af',
-      500: '#6b7280',
-      800: '#2c353d', // Dark gray
-    },
-  },
-  typography: {
-    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 700,
-    },
-    h2: {
-      fontWeight: 600,
-    },
-    button: {
-      fontWeight: 500,
-      textTransform: 'none',
-    },
-  },
-  shape: {
-    borderRadius: 12,
-  },
+import React, { useState } from 'react';
+import {
+  Alert,
+  Box,
+  Button,
+  Container,
+  Paper,
+  Snackbar,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import HomeIcon from '@mui/icons-material/Home';
+import axios from 'axios';
+
+import { SignUpTheme } from '../../assets/themes/themes';
+
+/* -------------------------------------------------- */
+/* Axios instance                                     */
+/* -------------------------------------------------- */
+const employee_api = axios.create({
+  baseURL: process.env.REACT_APP_API_BASE_URL,
 });
 
+/* -------------------------------------------------- */
+/* Validation schema                                  */
+/* -------------------------------------------------- */
+const SignUpSchema = z
+  .object({
+    name: z.string().nonempty('Name is required'),
+    email: z.string().email('Please enter a valid email address'),
+    phone: z.string().optional(),
+    password: z.string().min(1, 'Password is required'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+type SignUpForm = z.infer<typeof SignUpSchema>;
+
+/* -------------------------------------------------- */
+/* Component                                          */
+/* -------------------------------------------------- */
 const SignUpPage: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [nameError, setNameError] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const navigate = useNavigate();
 
-  const validateName = (name: string): boolean => {
-    const isValid = name.trim().length > 0;
-    setNameError(isValid ? '' : 'Name is required');
-    console.log('Validating name:', name, isValid ? 'Valid' : 'Invalid');
-    return isValid;
-  };
+  const [employeeId, setEmployeeId] = useState<number | null>(null);
+  const [snackOpen, setSnackOpen] = useState(false);
 
-  const validateEmail = (email: string): boolean => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValid = re.test(email);
-    setEmailError(isValid ? '' : 'Please enter a valid email address');
-    console.log('Validating email:', email, isValid ? 'Valid' : 'Invalid');
-    return isValid;
-  };
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<SignUpForm>({ resolver: zodResolver(SignUpSchema) });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const isNameValid = validateName(name);
-    const isEmailValid = validateEmail(email);
-    const isPasswordValid = password.trim().length > 0;
-    const isConfirmPasswordValid = confirmPassword === password;
+  const onSubmit = async (data: SignUpForm) => {
+    const payload = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phone: data.phone ?? undefined,
+    };
 
-    setPasswordError(isPasswordValid ? '' : 'Password is required');
-    setConfirmPasswordError(
-      isConfirmPasswordValid ? '' : 'Passwords do not match'
-    );
+    try {
+      const res = await employee_api.post('/api/employees', payload);
 
-    console.log('Submitting form:', {
-      name,
-      email,
-      password,
-      confirmPassword,
-      isNameValid,
-      isEmailValid,
-      isPasswordValid,
-      isConfirmPasswordValid,
-    });
+      setEmployeeId(res.data.data.employee_id);
+      console.info('Employee created, id =', res.data.data.employee_id);
 
-    if (isNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
-      console.log('Form submitted successfully');
-    } else {
-      console.log('Form submission failed');
+      setSnackOpen(true);               // show the popup
+      setTimeout(() => navigate('/login'), 2000); // redirect after 2 s
+    } catch (err: unknown) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.error
+          ? String(err.response.data.error)
+          : 'Registration failed. Please try again.';
+      setError('email', { type: 'manual', message });
     }
   };
 
+  /* —— reusable TextField styles ———————————————— */
+  const textFieldStyles = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: '#3a3f47',
+      '& fieldset': { borderColor: 'grey.300' },
+      '&:hover fieldset': { borderColor: 'primary.main' },
+      '& input': { color: '#ffffff' },
+    },
+  } as const;
+
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={SignUpTheme}>
       <Box
         sx={{
-          position: 'absolute', // Ensure the box spans the entire viewport
-          top: 0,
-          left: 0,
-          bgcolor: 'background.default', // Dark gray background for the entire page
-          minHeight: '100vh',
-          minWidth: '100vw', // Ensure the background spans the full width
+          position: 'absolute',
+          inset: 0,
+          bgcolor: 'background.default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: 0, // Remove any default margin
         }}
       >
+        {/* floating Home button */}
+        <Button
+          component={RouterLink}
+          to="/"
+          startIcon={<HomeIcon />}
+          variant="text"
+          color="primary"
+          sx={{ position: 'absolute', top: 24, left: 24, textTransform: 'none' }}
+        >
+          Home
+        </Button>
+
         <Container maxWidth="sm">
           <Paper
             elevation={3}
-            sx={{
-              p: 4,
-              borderRadius: 8, // Make the box more rectangular
-              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
-              bgcolor: 'background.paper', // Lighter gray for the form bubble
-              color: 'white', // White text for contrast
-            }}
+            sx={{ p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white' }}
           >
             <Typography
               variant="h4"
@@ -135,101 +144,62 @@ const SignUpPage: React.FC = () => {
             >
               Create Account
             </Typography>
-            <Typography
-              variant="body1"
-              align="center"
-              color="grey.300" // Light gray text for subtitle
-              sx={{ mb: 4 }}
-            >
+            <Typography variant="body1" align="center" color="grey.300" sx={{ mb: 4 }}>
               Fill in your details to get started
             </Typography>
-            <form onSubmit={handleSubmit}>
+
+            {/* form ------------------------------------------------ */}
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <Stack spacing={3}>
                 <TextField
                   label="Full Name"
-                  variant="outlined"
                   fullWidth
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onBlur={() => validateName(name)}
-                  error={!!nameError}
-                  helperText={nameError}
-                  InputLabelProps={{ style: { color: 'white' } }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'grey.300',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
+                  {...register('name')}
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
+                  sx={textFieldStyles}
                 />
+
                 <TextField
                   label="Email"
                   type="email"
-                  variant="outlined"
                   fullWidth
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onBlur={() => validateEmail(email)}
-                  error={!!emailError}
-                  helperText={emailError}
-                  InputLabelProps={{ style: { color: 'white' } }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'grey.300',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
+                  {...register('email')}
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                  sx={textFieldStyles}
                 />
+
+                <TextField
+                  label="Phone Number"
+                  type="tel"
+                  fullWidth
+                  {...register('phone')}
+                  error={!!errors.phone}
+                  helperText={errors.phone?.message}
+                  sx={textFieldStyles}
+                />
+
                 <TextField
                   label="Password"
                   type="password"
-                  variant="outlined"
                   fullWidth
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  error={!!passwordError}
-                  helperText={passwordError}
-                  InputLabelProps={{ style: { color: 'white' } }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'grey.300',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
+                  {...register('password')}
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                  sx={textFieldStyles}
                 />
+
                 <TextField
                   label="Confirm Password"
                   type="password"
-                  variant="outlined"
                   fullWidth
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  error={!!confirmPasswordError}
-                  helperText={confirmPasswordError}
-                  InputLabelProps={{ style: { color: 'white' } }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'grey.300',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
+                  {...register('confirmPassword')}
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword?.message}
+                  sx={textFieldStyles}
                 />
+
                 <Button
                   type="submit"
                   variant="contained"
@@ -242,44 +212,32 @@ const SignUpPage: React.FC = () => {
                 </Button>
               </Stack>
             </form>
-            <Typography
-              variant="body2"
-              align="center"
-              color="grey.300" // Light gray text for footer
-              sx={{ mt: 3 }}
-            >
-              By signing up, you agree to our{' '}
-              <Typography
-                component="span"
-                color="primary"
-                sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                Terms of Service
-              </Typography>{' '}
-              and{' '}
-              <Typography
-                component="span"
-                color="primary"
-                sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                Privacy Policy
-              </Typography>
-              .
-            </Typography>
 
             <Button
-                        variant="text"
-                        color="primary"
-                        fullWidth
-                        sx={{ mt: 2, textTransform: 'none' }}
-                        component={RouterLink}
-                        to="/login" // Ensure this matches the route defined in your router configuration
-                        >
-                          Already have an account? Click here to Login
+              variant="text"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2, textTransform: 'none' }}
+              component={RouterLink}
+              to="/login"
+            >
+              Already have an account? Click here to Login
             </Button>
           </Paper>
         </Container>
       </Box>
+
+      {/* success popup ------------------------------------------ */}
+      <Snackbar
+        open={snackOpen}
+        autoHideDuration={2000}
+        onClose={() => setSnackOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Account created successfully — redirecting to login…
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 };

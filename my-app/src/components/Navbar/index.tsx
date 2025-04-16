@@ -1,7 +1,6 @@
 import {
   AppBar, AppBarProps, Box, Button, Container,
   IconButton,
-
   ThemeProvider,
   Toolbar,
   Typography,
@@ -11,13 +10,11 @@ import {
 
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-
 import {
   MenuOutlined
 } from '@mui/icons-material';
 import React, { useState, useEffect } from 'react';
 import { alpha } from '@mui/system';
-import { Router } from 'express';
 // Create a custom theme with Fillit colors
 const theme = createTheme({
   palette: {
@@ -77,7 +74,7 @@ const theme = createTheme({
   },
 });
 
-function ElevationScroll(props: { children: React.ReactElement<AppBarProps> }) {
+const ElevationScroll = (props: { children: React.ReactElement<AppBarProps> }) => {
   const { children } = props;
   const trigger = useScrollTrigger({
     disableHysteresis: true,
@@ -111,8 +108,6 @@ const Navbar = () => {
 
   return (
     <ThemeProvider theme={theme}>
-
-      {/* Navbar */}
       <ElevationScroll>
         <AppBar
           position="fixed"
