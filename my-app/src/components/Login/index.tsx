@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, Container, TextField, Typography, Paper, Stack } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Link as RouterLink } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -103,12 +104,16 @@ const LogInPage: React.FC = () => {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
+          position: 'absolute', // Ensure the box spans the entire viewport
+          top: 0,
+          left: 0,
           bgcolor: 'background.default', // Dark gray background for the entire page
           minHeight: '100vh',
+          minWidth: '100vw', // Ensure the background spans the full width
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          py: 6,
+          margin: 0, // Remove any default margin
         }}
       >
         <Container maxWidth="sm">
@@ -116,7 +121,7 @@ const LogInPage: React.FC = () => {
             elevation={3}
             sx={{
               p: 4,
-              borderRadius: theme.shape.borderRadius,
+              borderRadius: 8, // Make the box more rectangular
               boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
               bgcolor: 'background.paper', // Lighter gray for the form bubble
               color: 'white', // White text for contrast
@@ -140,27 +145,7 @@ const LogInPage: React.FC = () => {
             </Typography>
             <form onSubmit={handleSubmit}>
               <Stack spacing={3}>
-                <TextField
-                  label="Full Name"
-                  variant="outlined"
-                  fullWidth
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onBlur={() => validateName(name)}
-                  error={!!nameError}
-                  helperText={nameError}
-                  InputLabelProps={{ style: { color: 'white' } }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'grey.300',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
-                />
+               
                 <TextField
                   label="Email"
                   type="email"
@@ -178,7 +163,7 @@ const LogInPage: React.FC = () => {
                         borderColor: 'grey.300',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'primary.main',
+                        borderColor: 'grey.300',
                       },
                     },
                   }}
@@ -204,27 +189,7 @@ const LogInPage: React.FC = () => {
                     },
                   }}
                 />
-                <TextField
-                  label="Confirm Password"
-                  type="password"
-                  variant="outlined"
-                  fullWidth
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  error={!!confirmPasswordError}
-                  helperText={confirmPasswordError}
-                  InputLabelProps={{ style: { color: 'white' } }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'grey.300',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
-                />
+                
                 <Button
                   type="submit"
                   variant="contained"
@@ -233,7 +198,7 @@ const LogInPage: React.FC = () => {
                   fullWidth
                   sx={{ py: 1.5 }}
                 >
-                  Sign Up
+                  Login
                 </Button>
               </Stack>
             </form>
@@ -261,6 +226,16 @@ const LogInPage: React.FC = () => {
               </Typography>
               .
             </Typography>
+            <Button
+              variant="text"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2, textTransform: 'none' }}
+              component={RouterLink}
+              to="/signup" // Ensure this matches the route defined in your router configuration
+            >
+              Still don't have an account? Click here to Sign Up
+            </Button>
           </Paper>
         </Container>
       </Box>

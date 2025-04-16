@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, Container, TextField, Typography, Paper, Stack } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Link as RouterLink } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -103,12 +104,16 @@ const SignUpPage: React.FC = () => {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
+          position: 'absolute', // Ensure the box spans the entire viewport
+          top: 0,
+          left: 0,
           bgcolor: 'background.default', // Dark gray background for the entire page
           minHeight: '100vh',
+          minWidth: '100vw', // Ensure the background spans the full width
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          py: 6,
+          margin: 0, // Remove any default margin
         }}
       >
         <Container maxWidth="sm">
@@ -116,7 +121,7 @@ const SignUpPage: React.FC = () => {
             elevation={3}
             sx={{
               p: 4,
-              borderRadius: theme.shape.borderRadius,
+              borderRadius: 8, // Make the box more rectangular
               boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
               bgcolor: 'background.paper', // Lighter gray for the form bubble
               color: 'white', // White text for contrast
@@ -261,6 +266,17 @@ const SignUpPage: React.FC = () => {
               </Typography>
               .
             </Typography>
+
+            <Button
+                        variant="text"
+                        color="primary"
+                        fullWidth
+                        sx={{ mt: 2, textTransform: 'none' }}
+                        component={RouterLink}
+                        to="/login" // Ensure this matches the route defined in your router configuration
+                        >
+                          Already have an account? Click here to Login
+            </Button>
           </Paper>
         </Container>
       </Box>
