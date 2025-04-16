@@ -162,6 +162,16 @@ const Navbar = () => {
 
                     Login
                   </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ ml: 2 }}
+                    component={RouterLink}
+                    to="/signup"  // This is where it routes to
+                  >
+
+                    SignUp
+                  </Button>
                 </Box>
               )}
             </Toolbar>

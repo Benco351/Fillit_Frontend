@@ -44,7 +44,7 @@ const theme = createTheme({
   },
 });
 
-const LoginPage: React.FC = () => {
+const SignUpPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -268,4 +268,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default SignUpPage;
