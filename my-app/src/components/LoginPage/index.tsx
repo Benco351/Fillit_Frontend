@@ -1,5 +1,48 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Box, Button, Container, TextField, Typography, Paper, Stack } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#00c28c', // Green color from Fillit logo
+      dark: '#009e6f',
+      light: '#33cf9f',
+    },
+    secondary: {
+      main: '#2c353d', // Dark gray background from Fillit logo
+    },
+    background: {
+      default: '#2c353d', // Dark gray for the entire page
+      paper: '#3a3f47', // Lighter gray for the form bubble
+    },
+    grey: {
+      50: '#f9fafb',
+      100: '#f2f4f6',
+      200: '#e5e7eb',
+      300: '#d1d5db',
+      400: '#9ca3af',
+      500: '#6b7280',
+      800: '#2c353d', // Dark gray
+    },
+  },
+  typography: {
+    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    button: {
+      fontWeight: 500,
+      textTransform: 'none',
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+});
 
 const LoginPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -10,278 +53,219 @@ const LoginPage: React.FC = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const navigate = useNavigate();
 
   const validateName = (name: string): boolean => {
     const isValid = name.trim().length > 0;
-    if (!isValid) {
-      setNameError('Name is required');
-    } else {
-      setNameError('');
-    }
+    setNameError(isValid ? '' : 'Name is required');
+    console.log('Validating name:', name, isValid ? 'Valid' : 'Invalid');
     return isValid;
   };
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isValid = re.test(email);
-    if (!isValid) {
-      setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError('');
-    }
+    setEmailError(isValid ? '' : 'Please enter a valid email address');
+    console.log('Validating email:', email, isValid ? 'Valid' : 'Invalid');
     return isValid;
   };
 
-  const validatePassword = (password: string): boolean => {
-    const isValid = password.length >= 8;
-    if (!isValid) {
-      setPasswordError('Password must be at least 8 characters long');
-    } else {
-      setPasswordError('');
-    }
-    return isValid;
-  };
-
-  const validateConfirmPassword = (confirmPassword: string): boolean => {
-    const isValid = confirmPassword === password;
-    if (!isValid) {
-      setConfirmPasswordError('Passwords do not match');
-    } else {
-      setConfirmPasswordError('');
-    }
-    return isValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate all inputs
     const isNameValid = validateName(name);
     const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePassword(password);
-    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
-    
-    if (isNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
-      console.log('Submitted Info:', { name, email, password, confirmPassword }); // Log user info
-      setIsLoading(true);
-      
-      try {
-        // Here you would typically make an API call to register the user
-        // For example:
-        // const response = await authService.register(name, email, password);
-        
-        // Simulating API call with timeout
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // If registration is successful, redirect to login or dashboard
-        navigate('/login');
-      } catch (error) {
-        console.error('Registration failed:', error);
-        // Handle registration error (display message, etc.)
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
+    const isPasswordValid = password.trim().length > 0;
+    const isConfirmPasswordValid = confirmPassword === password;
 
-  // Inline styles
-  const styles = {
-    container: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '20px',
-    },
-    formContainer: {
-      backgroundColor: 'white',
-      borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-      padding: '40px',
-      width: '100%',
-      maxWidth: '500px',
-    },
-    title: {
-      margin: '0',
-      fontSize: '28px',
-      fontWeight: 700,
-      color: '#111827',
-      marginBottom: '8px',
-    },
-    subtitle: {
-      margin: '0',
-      color: '#6b7280',
-      marginBottom: '32px',
-    },
-    form: {
-      display: 'flex',
-      flexDirection: 'column' as 'column',
-      gap: '20px',
-    },
-    formGroup: {
-      display: 'flex',
-      flexDirection: 'column' as 'column',
-      gap: '8px',
-    },
-    label: {
-      fontWeight: 500,
-      color: '#374151',
-    },
-    input: {
-      padding: '12px 16px',
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
-      fontSize: '16px',
-      transition: 'border-color 0.2s',
-    },
-    inputError: {
-      padding: '12px 16px',
-      border: '1px solid #ef4444',
-      borderRadius: '6px',
-      fontSize: '16px',
-    },
-    errorMessage: {
-      color: '#ef4444',
-      fontSize: '14px',
-      margin: '4px 0 0',
-    },
-    button: {
-      backgroundColor: '#2563eb',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      padding: '12px',
-      fontSize: '16px',
-      fontWeight: 500,
-      cursor: 'pointer',
-      transition: 'background-color 0.2s',
-      marginTop: '16px',
-    },
-    buttonDisabled: {
-      backgroundColor: '#93c5fd',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      padding: '12px',
-      fontSize: '16px',
-      fontWeight: 500,
-      cursor: 'not-allowed',
-      marginTop: '16px',
-    },
-    loginPrompt: {
-      textAlign: 'center' as 'center',
-      marginTop: '32px',
-      color: '#4b5563',
-    },
-    link: {
-      color: '#2563eb',
-      textDecoration: 'none',
-      fontWeight: 500,
-    },
-    termsText: {
-      fontSize: '14px',
-      color: '#6b7280',
-      textAlign: 'center' as 'center',
-      marginTop: '24px',
+    setPasswordError(isPasswordValid ? '' : 'Password is required');
+    setConfirmPasswordError(
+      isConfirmPasswordValid ? '' : 'Passwords do not match'
+    );
+
+    console.log('Submitting form:', {
+      name,
+      email,
+      password,
+      confirmPassword,
+      isNameValid,
+      isEmailValid,
+      isPasswordValid,
+      isConfirmPasswordValid,
+    });
+
+    if (isNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
+      console.log('Form submitted successfully');
+    } else {
+      console.log('Form submission failed');
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.formContainer}>
-        <h1 style={styles.title}>Create Account</h1>
-        <p style={styles.subtitle}>Fill in your details to get started</p>
-        
-        <form style={styles.form} onSubmit={handleSubmit}>
-          <div style={styles.formGroup}>
-            <label htmlFor="name" style={styles.label}>Full Name</label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => validateName(name)}
-              placeholder="Enter your full name"
-              style={nameError ? styles.inputError : styles.input}
-            />
-            {nameError && <p style={styles.errorMessage}>{nameError}</p>}
-          </div>
-          
-          <div style={styles.formGroup}>
-            <label htmlFor="email" style={styles.label}>Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onBlur={() => validateEmail(email)}
-              placeholder="Enter your email"
-              style={emailError ? styles.inputError : styles.input}
-            />
-            {emailError && <p style={styles.errorMessage}>{emailError}</p>}
-          </div>
-          
-          <div style={styles.formGroup}>
-            <label htmlFor="password" style={styles.label}>Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onBlur={() => validatePassword(password)}
-              placeholder="Create a password"
-              style={passwordError ? styles.inputError : styles.input}
-            />
-            {passwordError && <p style={styles.errorMessage}>{passwordError}</p>}
-          </div>
-          
-          <div style={styles.formGroup}>
-            <label htmlFor="confirmPassword" style={styles.label}>Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              onBlur={() => validateConfirmPassword(confirmPassword)}
-              placeholder="Confirm your password"
-              style={confirmPasswordError ? styles.inputError : styles.input}
-            />
-            {confirmPasswordError && <p style={styles.errorMessage}>{confirmPasswordError}</p>}
-          </div>
-          
-          <button 
-            type="submit" 
-            style={isLoading ? styles.buttonDisabled : styles.button}
-            disabled={isLoading}
+    <ThemeProvider theme={theme}>
+      <Box
+        sx={{
+          bgcolor: 'background.default', // Dark gray background for the entire page
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          py: 6,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Paper
+            elevation={3}
+            sx={{
+              p: 4,
+              borderRadius: theme.shape.borderRadius,
+              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+              bgcolor: 'background.paper', // Lighter gray for the form bubble
+              color: 'white', // White text for contrast
+            }}
           >
-            {isLoading ? 'Creating account...' : 'Create Account'}
-          </button>
-          
-          <p style={styles.termsText}>
-            By creating an account, you agree to our Terms of Service and Privacy Policy
-          </p>
-        </form>
-        
-        <p style={styles.loginPrompt}>
-          Already have an account? <Link to="/login" style={styles.link}>Sign In</Link>
-        </p>
-      </div>
-    </div>
+            <Typography
+              variant="h4"
+              align="center"
+              gutterBottom
+              sx={{ fontWeight: 700, color: 'primary.main' }}
+            >
+              Create Account
+            </Typography>
+            <Typography
+              variant="body1"
+              align="center"
+              color="grey.300" // Light gray text for subtitle
+              sx={{ mb: 4 }}
+            >
+              Fill in your details to get started
+            </Typography>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing={3}>
+                <TextField
+                  label="Full Name"
+                  variant="outlined"
+                  fullWidth
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => validateName(name)}
+                  error={!!nameError}
+                  helperText={nameError}
+                  InputLabelProps={{ style: { color: 'white' } }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'grey.300',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }}
+                />
+                <TextField
+                  label="Email"
+                  type="email"
+                  variant="outlined"
+                  fullWidth
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => validateEmail(email)}
+                  error={!!emailError}
+                  helperText={emailError}
+                  InputLabelProps={{ style: { color: 'white' } }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'grey.300',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }}
+                />
+                <TextField
+                  label="Password"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  error={!!passwordError}
+                  helperText={passwordError}
+                  InputLabelProps={{ style: { color: 'white' } }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'grey.300',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }}
+                />
+                <TextField
+                  label="Confirm Password"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  error={!!confirmPasswordError}
+                  helperText={confirmPasswordError}
+                  InputLabelProps={{ style: { color: 'white' } }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'grey.300',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  }}
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  fullWidth
+                  sx={{ py: 1.5 }}
+                >
+                  Sign Up
+                </Button>
+              </Stack>
+            </form>
+            <Typography
+              variant="body2"
+              align="center"
+              color="grey.300" // Light gray text for footer
+              sx={{ mt: 3 }}
+            >
+              By signing up, you agree to our{' '}
+              <Typography
+                component="span"
+                color="primary"
+                sx={{ textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                Terms of Service
+              </Typography>{' '}
+              and{' '}
+              <Typography
+                component="span"
+                color="primary"
+                sx={{ textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                Privacy Policy
+              </Typography>
+              .
+            </Typography>
+          </Paper>
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 };
 
-
 export default LoginPage;
-
-//name, email, password, confirmPassword, admin yes or no
-// LINE 68!!!!!!
-// instead of console log create http request to backend
-// and send the data to the backend
-// and then redirect to login page
-// and then redirect to login page
-// and then redirect to login page
-// and then redirect to login page      
