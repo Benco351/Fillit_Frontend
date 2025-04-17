@@ -1,0 +1,19 @@
+version: 1
+applications:
+  - appRoot: my-app             # ← tell Amplify where your package.json lives
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - cd my-app         # ensure we’re in the correct folder
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: my-app/build   # ← match the output of `npm run build`
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - my-app/node_modules/**/*
