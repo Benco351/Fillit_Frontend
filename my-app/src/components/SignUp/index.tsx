@@ -1,25 +1,8 @@
-/**
- * src/pages/SignUpPage.tsx
- * --------------------------------------------------------------
- * Sign‑up screen that
- *   • validates with zod / react‑hook‑form
- *   • posts to POST /api/employees
- *   • shows a success Snackbar
- *   • redirects to “/login” two seconds after success
- * --------------------------------------------------------------
- */
-
+// src/pages/SignUpPage.tsx
 import React, { useState } from 'react';
 import {
-  Alert,
-  Box,
-  Button,
-  Container,
-  Paper,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
+  Alert, Box, Button, Container, Paper,
+  Snackbar, Stack, TextField, Typography
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -27,77 +10,70 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
-import axios from 'axios';
-
 import { SignUpTheme } from '../../assets/themes/themes';
+import { signUp } from '@aws-amplify/auth';
 
-/* -------------------------------------------------- */
-/* Axios instance                                     */
-/* -------------------------------------------------- */
-const employee_api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL,
-});
-
-/* -------------------------------------------------- */
-/* Validation schema                                  */
-/* -------------------------------------------------- */
+// ----------------------
+// Validation schema
+// ----------------------
 const SignUpSchema = z
   .object({
-    name: z.string().nonempty('Name is required'),
-    email: z.string().email('Please enter a valid email address'),
-    phone: z.string().optional(),
-    password: z.string().min(1, 'Password is required'),
+    name:            z.string().nonempty('Name is required'),
+    email:           z.string().email('Please enter a valid email address'),
+    phone:           z.string().optional(),
+    password:        z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
-
 type SignUpForm = z.infer<typeof SignUpSchema>;
 
-/* -------------------------------------------------- */
-/* Component                                          */
-/* -------------------------------------------------- */
-const SignUpPage: React.FC = () => {
+export default function SignUpPage() {
   const navigate = useNavigate();
-
-  const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [snackOpen, setSnackOpen] = useState(false);
+  const [authError, setAuthError] = useState<string|null>(null);
+  const [loading, setLoading]     = useState(false);
 
   const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
+    register, handleSubmit, formState: { errors }
   } = useForm<SignUpForm>({ resolver: zodResolver(SignUpSchema) });
 
   const onSubmit = async (data: SignUpForm) => {
-    const payload = {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      phone: data.phone ?? undefined,
-    };
+    setAuthError(null);
+    setLoading(true);
 
     try {
-      const res = await employee_api.post('/api/employees', payload);
+      const { nextStep } = await signUp({
+        username: data.email,
+        password: data.password,
+        options: {
+          userAttributes: {
+            email: data.email,
+            name:  data.name,
+            ...(data.phone ? { phone_number: data.phone } : {})
+          }
+        }
+      });
 
-      setEmployeeId(res.data.data.employee_id);
-      console.info('Employee created, id =', res.data.data.employee_id);
-
-      setSnackOpen(true);               // show the popup
-      setTimeout(() => navigate('/login'), 2000); // redirect after 2 s
-    } catch (err: unknown) {
-      const message =
-        axios.isAxiosError(err) && err.response?.data?.error
-          ? String(err.response.data.error)
-          : 'Registration failed. Please try again.';
-      setError('email', { type: 'manual', message });
+      // nextStep.signUpStep === 'DONE' means registration success
+      if (nextStep.signUpStep === 'DONE') {
+        setSnackOpen(true);
+        // after 2s, send user to login to enter credentials
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        // handle other flows (e.g. CONFIRM_SIGN_UP) if you enabled them
+        console.warn('Additional sign‑up step:', nextStep);
+      }
+    } catch (err: any) {
+      console.error('signUp error', err);
+      setAuthError(err.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  /* —— reusable TextField styles ———————————————— */
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
@@ -109,125 +85,91 @@ const SignUpPage: React.FC = () => {
 
   return (
     <ThemeProvider theme={SignUpTheme}>
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          bgcolor: 'background.default',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {/* floating Home button */}
+      <Box sx={{
+        position: 'absolute', inset: 0,
+        bgcolor: 'background.default',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}>
         <Button
-          component={RouterLink}
-          to="/"
+          component={RouterLink} to="/"
           startIcon={<HomeIcon />}
-          variant="text"
-          color="primary"
+          variant="text" color="primary"
           sx={{ position: 'absolute', top: 24, left: 24, textTransform: 'none' }}
-        >
-          Home
-        </Button>
+        >Home</Button>
 
         <Container maxWidth="sm">
-          <Paper
-            elevation={3}
-            sx={{ p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white' }}
-          >
-            <Typography
-              variant="h4"
-              align="center"
-              gutterBottom
-              sx={{ fontWeight: 700, color: 'primary.main' }}
-            >
+          <Paper elevation={3} sx={{
+            p: 4, borderRadius: 8,
+            bgcolor: 'background.paper', color: 'white'
+          }}>
+            <Typography variant="h4" align="center" gutterBottom
+               sx={{ fontWeight: 700, color: 'primary.main' }}>
               Create Account
             </Typography>
             <Typography variant="body1" align="center" color="grey.300" sx={{ mb: 4 }}>
               Fill in your details to get started
             </Typography>
 
-            {/* form ------------------------------------------------ */}
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <Stack spacing={3}>
                 <TextField
-                  label="Full Name"
-                  fullWidth
-                  {...register('name')}
-                  error={!!errors.name}
-                  helperText={errors.name?.message}
+                  label="Full Name" fullWidth {...register('name')}
+                  error={!!errors.name} helperText={errors.name?.message}
                   sx={textFieldStyles}
                 />
 
                 <TextField
-                  label="Email"
-                  type="email"
-                  fullWidth
-                  {...register('email')}
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
+                  label="Email" type="email" fullWidth {...register('email')}
+                  error={!!errors.email} helperText={errors.email?.message}
                   sx={textFieldStyles}
                 />
 
                 <TextField
-                  label="Phone Number"
-                  type="tel"
-                  fullWidth
-                  {...register('phone')}
-                  error={!!errors.phone}
-                  helperText={errors.phone?.message}
+                  label="Phone Number" type="tel" fullWidth {...register('phone')}
+                  error={!!errors.phone} helperText={errors.phone?.message}
                   sx={textFieldStyles}
                 />
 
                 <TextField
-                  label="Password"
-                  type="password"
-                  fullWidth
-                  {...register('password')}
-                  error={!!errors.password}
-                  helperText={errors.password?.message}
+                  label="Password" type="password" fullWidth {...register('password')}
+                  error={!!errors.password} helperText={errors.password?.message}
                   sx={textFieldStyles}
                 />
 
                 <TextField
-                  label="Confirm Password"
-                  type="password"
-                  fullWidth
-                  {...register('confirmPassword')}
+                  label="Confirm Password" type="password" fullWidth {...register('confirmPassword')}
                   error={!!errors.confirmPassword}
                   helperText={errors.confirmPassword?.message}
                   sx={textFieldStyles}
                 />
 
+                {authError && (
+                  <Typography color="error" align="center">
+                    {authError}
+                  </Typography>
+                )}
+
                 <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  fullWidth
-                  sx={{ py: 1.5 }}
+                  type="submit" variant="contained" color="primary"
+                  size="large" fullWidth sx={{ py: 1.5 }}
+                  disabled={loading}
                 >
-                  Sign Up
+                  {loading ? 'Signing up…' : 'Sign Up'}
                 </Button>
               </Stack>
             </form>
 
             <Button
-              variant="text"
-              color="primary"
-              fullWidth
+              variant="text" color="primary" fullWidth
               sx={{ mt: 2, textTransform: 'none' }}
-              component={RouterLink}
-              to="/login"
+              component={RouterLink} to="/login"
             >
-              Already have an account? Click here to Login
+              Already have an account? Login
             </Button>
           </Paper>
         </Container>
       </Box>
 
-      {/* success popup ------------------------------------------ */}
       <Snackbar
         open={snackOpen}
         autoHideDuration={2000}
@@ -240,6 +182,4 @@ const SignUpPage: React.FC = () => {
       </Snackbar>
     </ThemeProvider>
   );
-};
-
-export default SignUpPage;
+}
