@@ -79,6 +79,7 @@ const Features = () => {
         {features.map((feature, index) => (
 
           <Card
+            key={index}
             sx={{
               height: '100%',
               display: 'flex',

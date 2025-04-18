@@ -1,6 +1,6 @@
 import React from 'react';
 import { Authenticator } from '@aws-amplify/ui-react';
-import AppRoutes from './components/Routers';
+import AppRoutes from './routes';
 
 const App: React.FC = () => (
   // Provide Amplify’s context to the whole tree:

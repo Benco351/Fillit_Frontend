@@ -1,4 +1,4 @@
-// src/pages/SignUpPage.tsx
+// src/pages/SignUpForm.tsx
 import React, { useState } from 'react';
 import {
   Alert, Box, Button, Container, Paper,
@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
-import { SignUpTheme } from '../../assets/themes/themes';
+import { SignUpTheme } from '../../../assets/themes/themes';
 import { signUp } from '@aws-amplify/auth';
 
 // ----------------------
@@ -28,9 +28,9 @@ const SignUpSchema = z
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
-type SignUpForm = z.infer<typeof SignUpSchema>;
+type SignUpFormType = z.infer<typeof SignUpSchema>;
 
-export default function SignUpPage() {
+export default function SignUpForm() {
   const navigate = useNavigate();
   const [snackOpen, setSnackOpen] = useState(false);
   const [authError, setAuthError] = useState<string|null>(null);
@@ -38,9 +38,9 @@ export default function SignUpPage() {
 
   const {
     register, handleSubmit, formState: { errors }
-  } = useForm<SignUpForm>({ resolver: zodResolver(SignUpSchema) });
+  } = useForm<SignUpFormType>({ resolver: zodResolver(SignUpSchema) });
 
-  const onSubmit = async (data: SignUpForm) => {
+  const onSubmit = async (data: SignUpFormType) => {
     setAuthError(null);
     setLoading(true);
 

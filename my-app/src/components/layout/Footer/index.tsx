@@ -1,5 +1,8 @@
 import { alpha, Box, Container, Divider, Stack, Typography } from '@mui/material'
 import React from 'react'
+import Branding from '../../common/Branding'
+
+
 
 const Footer = () => {
   return (
@@ -15,30 +18,16 @@ const Footer = () => {
             gap: 4,
           }}
         >
-          {/* Branding */}
-          <Box sx={{ flex: '1 1 250px', minWidth: 200 }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 700, mb: 2 }}
-            >
-              f
-              <Typography component="span" color="primary" variant="h4" sx={{ fontWeight: 700 }}>i</Typography>
-              ll
-              <Typography component="span" color="primary" variant="h4" sx={{ fontWeight: 700 }}>i</Typography>
-              t
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 3, opacity: 0.7 }}>
-              The intelligent shift management platform that streamlines scheduling and enhances team communication.
-            </Typography>
-          </Box>
-
+         
+          {/* Logo Section */}
+          <Branding/>
           {/* Link Sections */}
           {[
-            /*{ title: 'Product', links: ['Features', 'Integrations', 'FAQ'] },*/
-            /*{ title: 'Company', links: ['About Us', 'Blog', 'Careers', 'Contact'] },*/
-            /*{ title: 'Resources', links: ['Documentation', 'Support', 'API', 'Community'] },*/
-            { title: ' ', links: [' ', ' ', ' '] },
-          ].map((section, idx) => (
+            { title: 'Product', links: ['Features', 'Integrations', 'FAQ'] },
+            { title: 'Company', links: ['About Us', 'Blog', 'Careers', 'Contact'] },
+            { title: 'Resources', links: ['Documentation', 'Support', 'API', 'Community'] }
+          ]
+          .map((section, idx) => (
             <Box key={idx} sx={{ minWidth: 150 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
                 {section.title}

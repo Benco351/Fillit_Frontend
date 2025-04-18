@@ -1,4 +1,4 @@
-// src/pages/LogInPage.tsx
+// src/pages/LoginForm.tsx
 
 import React, { useState } from 'react';
 import {
@@ -16,7 +16,7 @@ import axios from 'axios';
 // Amplify Auth imports (v6)
 import { signIn, fetchAuthSession } from '@aws-amplify/auth';
 
-import { LoginTheme } from '../../assets/themes/themes';
+import { LoginTheme } from '../../../assets/themes/themes';
 
 // ——— Zod schema —————————————————————————————————————————————————————
 const LogInSchema = z.object({
@@ -30,7 +30,7 @@ const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,   // e.g. https://your-eb-env.elasticbeanstalk.com
 });
 
-export default function LogInPage() {
+export default function LoginForm() {
   const {
     register, handleSubmit, formState: { errors }
   } = useForm<LogInForm>({ resolver: zodResolver(LogInSchema) });
