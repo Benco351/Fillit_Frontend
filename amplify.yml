@@ -5,7 +5,6 @@ applications:
       phases:
         preBuild:
           commands:
-            - cd my-app
             - nvm install 20
             - nvm use 20
             - node -v
