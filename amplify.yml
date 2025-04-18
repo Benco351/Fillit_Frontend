@@ -1,0 +1,19 @@
+version: 1
+applications:
+  - appRoot: my-app          # where package.json lives
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - cd my-app
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: my-app/build
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - my-app/node_modules/**/*
