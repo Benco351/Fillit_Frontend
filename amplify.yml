@@ -1,16 +1,16 @@
 version: 1
 applications:
-  - appRoot: my-app          # where package.json lives
+  - appRoot: my-app            # tells Amplify “my package.json lives under my-app/”
     frontend:
       phases:
         preBuild:
           commands:
-            - cd my-app
-            - npm ci
+            - npm ci           # Amplify will already be in my-app/
         build:
           commands:
-            - npm run build
+            - npm run build   # build output lands in my-app/build/
       artifacts:
+        # publish the CRA build folder
         baseDirectory: my-app/build
         files:
           - '**/*'
