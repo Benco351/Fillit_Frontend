@@ -1,5 +1,6 @@
 // src/amplify-config.ts
 import { Amplify } from 'aws-amplify';
+import '@aws-amplify/auth';    // ensure the auth plugin is registered
 
 Amplify.configure({
   Auth: {

@@ -15,7 +15,6 @@ import axios from 'axios';
 
 // Amplify Auth imports (v6)
 import { signIn, fetchAuthSession } from '@aws-amplify/auth';
-
 import { LoginTheme } from '../../../assets/themes/themes';
 
 // ——— Zod schema —————————————————————————————————————————————————————
@@ -30,7 +29,7 @@ const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,   // e.g. https://your-eb-env.elasticbeanstalk.com
 });
 
-export default function LoginForm() {
+export const LoginForm: React.FC = () => {
   const {
     register, handleSubmit, formState: { errors }
   } = useForm<LogInForm>({ resolver: zodResolver(LogInSchema) });
@@ -43,7 +42,7 @@ export default function LoginForm() {
     setAuthError(null);
     setLoading(true);
     try {
-      // 1️⃣ Sign in with Cognito
+      // Sign in with Cognito
       const { nextStep } = await signIn({
         username: data.email,
         password: data.password
@@ -53,20 +52,20 @@ export default function LoginForm() {
         throw new Error(`Unexpected signIn step: ${nextStep.signInStep}`);
       }
 
-      // 2️⃣ Fetch the access token
+      //Fetch the access token
       const session = await fetchAuthSession();
       const token   = session.tokens?.accessToken;
       if (!token) throw new Error('Unable to retrieve access token');
 
-      // 3️⃣ Call your EB backend with Bearer token
-      await api.post(
-        '/login',                           // your login (or auth‑check) endpoint
-        {},                                 // no body needed
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // // Call your EB backend with Bearer token
+      // await api.post(
+      //   '/api/employees',                           // your login (or auth‑check) endpoint
+      //   {},                                 // no body needed
+      //   { headers: { Authorization: `Bearer ${token}` } }
+      // );
 
-      // 4️⃣ On success, navigate to dashboard
-      navigate('/dashboard', { replace: true });
+      // On success, navigate to dashboard
+      navigate('/user-dashboard', { replace: true });
 
     } catch (err: any) {
       console.error('Login flow error', err);
@@ -161,3 +160,5 @@ export default function LoginForm() {
     </ThemeProvider>
   );
 }
+
+export default LoginForm;

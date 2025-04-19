@@ -1,8 +1,15 @@
 // src/pages/SignUpForm.tsx
 import React, { useState } from 'react';
 import {
-  Alert, Box, Button, Container, Paper,
-  Snackbar, Stack, TextField, Typography
+  Alert,
+  Box,
+  Button,
+  Container,
+  Paper,
+  Snackbar,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -11,11 +18,20 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
 import { SignUpTheme } from '../../../assets/themes/themes';
-import { signUp } from '@aws-amplify/auth';
 
-// ----------------------
-// Validation schema
-// ----------------------
+import {
+  signUp,
+  getCurrentUser,
+  updateUserAttributes,
+} from '@aws-amplify/auth';
+import axios from 'axios';
+
+// point this at your EB backend
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+});
+
+// validation schema
 const SignUpSchema = z
   .object({
     name:            z.string().nonempty('Name is required'),
@@ -24,27 +40,31 @@ const SignUpSchema = z
     password:        z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
-  .refine((data) => data.password === data.confirmPassword, {
+  .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
+
 type SignUpFormType = z.infer<typeof SignUpSchema>;
 
-export default function SignUpForm() {
+const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
   const [snackOpen, setSnackOpen] = useState(false);
-  const [authError, setAuthError] = useState<string|null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
 
-  const {
-    register, handleSubmit, formState: { errors }
-  } = useForm<SignUpFormType>({ resolver: zodResolver(SignUpSchema) });
+  const { register, handleSubmit, formState: { errors } } =
+    useForm<SignUpFormType>({ resolver: zodResolver(SignUpSchema) });
 
   const onSubmit = async (data: SignUpFormType) => {
     setAuthError(null);
     setLoading(true);
 
     try {
+      // 1) Pre-check in your DB
+      await api.get('/api/employees/verify', { params: { email: data.email } });
+
+      // 2) Cognito sign-up
       const { nextStep } = await signUp({
         username: data.email,
         password: data.password,
@@ -52,23 +72,40 @@ export default function SignUpForm() {
           userAttributes: {
             email: data.email,
             name:  data.name,
-            ...(data.phone ? { phone_number: data.phone } : {})
-          }
-        }
+            'custom:employeeId': 'sample', // placeholder for RDS ID
+            ...(data.phone ? { phone_number: data.phone } : {}),
+          },
+        },
       });
-
-      // nextStep.signUpStep === 'DONE' means registration success
-      if (nextStep.signUpStep === 'DONE') {
-        setSnackOpen(true);
-        // after 2s, send user to login to enter credentials
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
-        // handle other flows (e.g. CONFIRM_SIGN_UP) if you enabled them
-        console.warn('Additional sign‑up step:', nextStep);
+      if (nextStep.signUpStep !== 'DONE') {
+        console.warn('Unexpected signUp step:', nextStep);
+        throw new Error(`signUp step: ${nextStep.signUpStep}`);
       }
+
+      // 3) Persist in RDS via your backend
+      const createRes = await api.post('/api/employees', {
+        name:  data.name,
+        email: data.email,
+        phone: data.phone,
+      });
+      const employeeId = createRes.data.data.employee_id;
+
+
+      // 4) Store RDS ID in Cognito custom attribute
+      await updateUserAttributes({
+        userAttributes: { 'custom:employeeId': String(employeeId) }
+      });
+      // 5) Success → show snack, then redirect
+      setSnackOpen(true);
+      setTimeout(() => navigate('/login'), 2000);
+
     } catch (err: any) {
-      console.error('signUp error', err);
-      setAuthError(err.message || 'Registration failed');
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        setAuthError('This email is already registered');
+      } else {
+        console.error('Sign‑up flow error', err);
+        setAuthError(err.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -85,25 +122,29 @@ export default function SignUpForm() {
 
   return (
     <ThemeProvider theme={SignUpTheme}>
-      <Box sx={{
-        position: 'absolute', inset: 0,
-        bgcolor: 'background.default',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
+      <Box
+        sx={{
+          position: 'absolute', inset: 0,
+          bgcolor: 'background.default',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <Button
-          component={RouterLink} to="/"
+          component={RouterLink}
+          to="/"
           startIcon={<HomeIcon />}
-          variant="text" color="primary"
+          variant="text"
+          color="primary"
           sx={{ position: 'absolute', top: 24, left: 24, textTransform: 'none' }}
-        >Home</Button>
+        >
+          Home
+        </Button>
 
         <Container maxWidth="sm">
-          <Paper elevation={3} sx={{
-            p: 4, borderRadius: 8,
-            bgcolor: 'background.paper', color: 'white'
-          }}>
-            <Typography variant="h4" align="center" gutterBottom
-               sx={{ fontWeight: 700, color: 'primary.main' }}>
+          <Paper elevation={3} sx={{ p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white' }}>
+            <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 700, color: 'primary.main' }}>
               Create Account
             </Typography>
             <Typography variant="body1" align="center" color="grey.300" sx={{ mb: 4 }}>
@@ -117,25 +158,21 @@ export default function SignUpForm() {
                   error={!!errors.name} helperText={errors.name?.message}
                   sx={textFieldStyles}
                 />
-
                 <TextField
                   label="Email" type="email" fullWidth {...register('email')}
                   error={!!errors.email} helperText={errors.email?.message}
                   sx={textFieldStyles}
                 />
-
                 <TextField
                   label="Phone Number" type="tel" fullWidth {...register('phone')}
                   error={!!errors.phone} helperText={errors.phone?.message}
                   sx={textFieldStyles}
                 />
-
                 <TextField
                   label="Password" type="password" fullWidth {...register('password')}
                   error={!!errors.password} helperText={errors.password?.message}
                   sx={textFieldStyles}
                 />
-
                 <TextField
                   label="Confirm Password" type="password" fullWidth {...register('confirmPassword')}
                   error={!!errors.confirmPassword}
@@ -150,8 +187,12 @@ export default function SignUpForm() {
                 )}
 
                 <Button
-                  type="submit" variant="contained" color="primary"
-                  size="large" fullWidth sx={{ py: 1.5 }}
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  fullWidth
+                  sx={{ py: 1.5 }}
                   disabled={loading}
                 >
                   {loading ? 'Signing up…' : 'Sign Up'}
@@ -160,9 +201,12 @@ export default function SignUpForm() {
             </form>
 
             <Button
-              variant="text" color="primary" fullWidth
+              variant="text"
+              color="primary"
+              fullWidth
               sx={{ mt: 2, textTransform: 'none' }}
-              component={RouterLink} to="/login"
+              component={RouterLink}
+              to="/login"
             >
               Already have an account? Login
             </Button>
@@ -182,4 +226,6 @@ export default function SignUpForm() {
       </Snackbar>
     </ThemeProvider>
   );
-}
+};
+
+export default SignUpForm;
