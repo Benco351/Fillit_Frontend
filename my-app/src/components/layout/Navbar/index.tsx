@@ -6,25 +6,30 @@ import {
   Typography,
   useMediaQuery,
   useScrollTrigger,
-
-} from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import {
+ 
+ 
+ } from '@mui/material';
+ import { Link as RouterLink } from 'react-router-dom';
+ import {
   MenuOutlined
-} from '@mui/icons-material';
-import React, { useState, useEffect } from 'react';
-import { alpha } from '@mui/system';
-import LogoOnly from '../../common/Logo';
-import { NavBarTheme } from '../../../assets/themes/themes';
-
-
-const ElevationScroll = (props: { children: React.ReactElement<AppBarProps> }) => {
+ } from '@mui/icons-material';
+ import React, { useState, useEffect } from 'react';
+ import { alpha } from '@mui/system';
+ import LogoOnly from '../../common/Logo';
+ import { NavBarTheme } from '../../../assets/themes/themes';
+ import { ROUTES } from '../../../routes/config/routes';
+ 
+ 
+ 
+ 
+ const ElevationScroll = (props: { children: React.ReactElement<AppBarProps> }) => {
   const { children } = props;
   const trigger = useScrollTrigger({
     disableHysteresis: true,
     threshold: 0,
   });
-
+ 
+ 
   return React.cloneElement(children, {
     elevation: trigger ? 4 : 0,
     style: {
@@ -34,14 +39,15 @@ const ElevationScroll = (props: { children: React.ReactElement<AppBarProps> }) =
       ...(children.props.style || {}),
     },
   });
-}
-
-
-const Navbar = () => {
+ }
+ 
+ 
+ 
+ 
+ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const isMobile = useMediaQuery(NavBarTheme.breakpoints.down('md'));
-
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -49,7 +55,8 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
+ 
+ 
   return (
     <ThemeProvider theme={NavBarTheme}>
       <ElevationScroll>
@@ -79,7 +86,8 @@ const Navbar = () => {
                    <LogoOnly/>
                 </Typography>
               </Box>
-
+ 
+ 
               {isMobile ? (
                 <IconButton
                   edge="end"
@@ -90,8 +98,10 @@ const Navbar = () => {
                 </IconButton>
               ) : (
                 <Box sx={{ display: 'flex', gap: 3 }}>
-
-
+ 
+ 
+ 
+ 
                   <Button
                     variant="contained"
                     color="primary"
@@ -99,7 +109,8 @@ const Navbar = () => {
                     component={RouterLink}
                     to="/login"  // This is where it routes to
                   >
-
+ 
+ 
                     Login
                   </Button>
                   <Button
@@ -109,16 +120,35 @@ const Navbar = () => {
                     component={RouterLink}
                     to="/signup"  // This is where it routes to
                   >
-
+ 
+ 
                     SignUp
                   </Button>
-                </Box>
-              )}
-            </Toolbar>
-          </Container>
-        </AppBar>
-      </ElevationScroll>
-    </ThemeProvider>
-  );
+ 
+ 
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ ml: 2 }}
+                    component={RouterLink}
+                    to={ROUTES.DASHBOARD} // Ensure this uses ROUTES.DASHBOARD
+                  >
+                    Calendar
+                  </Button>
+                  </Box>
+             )}
+           </Toolbar>
+         </Container>
+       </AppBar>
+     </ElevationScroll>
+   </ThemeProvider>
+ );
 }
 export default Navbar;
+
+
+
+
+
+
+

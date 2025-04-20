@@ -16,6 +16,7 @@ const AppRoutes: React.FC = () => (
       <Route path={ROUTES.HOME} element={<Main />} />
       <Route path={ROUTES.SIGNUP} element={<SignUpForm />} />
       <Route path={ROUTES.LOGIN} element={<LoginForm />} />
+      <Route path={ROUTES.DASHBOARD} element={<UserDashboard />} />
 
       {/* Protected routes */}
       <Route
