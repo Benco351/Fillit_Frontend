@@ -78,6 +78,8 @@ const UserDashboad: React.FC = () => {
     notes: '',
   });
 
+  const [filter, setFilter] = useState<'all' | 'requested' | 'accepted'>('all'); // Filter state
+
   // Generate week days for the schedule
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
@@ -213,6 +215,27 @@ const UserDashboad: React.FC = () => {
     }
   };
 
+  // Handle accepting a shift
+  const handleAcceptShift = async (requestedShiftId: number) => {
+    setLoading(true);
+    try {
+      // Simulate API call to accept the shift
+      console.log('Accepting shift:', requestedShiftId);
+
+      setRequestedShifts(prev =>
+        prev.map(shift =>
+          shift.id === requestedShiftId ? { ...shift, status: 'approved' } : shift
+        )
+      );
+      setSuccess('Shift accepted successfully');
+    } catch (err) {
+      setError('Failed to accept shift. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Utility function to get shift status for display
   const getShiftStatus = (availableShiftId: number): string => {
     const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
@@ -244,6 +267,24 @@ const UserDashboad: React.FC = () => {
     return employee ? employee.name : 'Unknown Employee';
   };
 
+  // Filtered shifts based on the selected filter
+  const getFilteredShifts = () => {
+    switch (filter) {
+      case 'requested':
+        return availableShifts.filter(shift =>
+          requestedShifts.some(req => req.availableShiftId === shift.id)
+        );
+      case 'accepted':
+        return availableShifts.filter(shift =>
+          assignedShifts.some(assign => assign.availableShiftId === shift.id)
+        );
+      default:
+        return availableShifts; // All shifts
+    }
+  };
+
+  const filteredShifts = getFilteredShifts();
+
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
@@ -270,6 +311,28 @@ const UserDashboad: React.FC = () => {
             <Typography variant="h4" component="h1" gutterBottom align="center">
               Shift Management System
             </Typography>
+
+            {/* Filters */}
+            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Button
+                variant={filter === 'all' ? 'contained' : 'outlined'}
+                onClick={() => setFilter('all')}
+              >
+                All Shifts
+              </Button>
+              <Button
+                variant={filter === 'requested' ? 'contained' : 'outlined'}
+                onClick={() => setFilter('requested')}
+              >
+                Requested Shifts
+              </Button>
+              <Button
+                variant={filter === 'accepted' ? 'contained' : 'outlined'}
+                onClick={() => setFilter('accepted')}
+              >
+                Accepted Shifts
+              </Button>
+            </Box>
 
             {/* Employee selection */}
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
@@ -347,7 +410,7 @@ const UserDashboad: React.FC = () => {
                   </Typography>
                   
                   {/* Shifts for this day */}
-                  {availableShifts
+                  {filteredShifts
                     .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                     .map(shift => {
                       const status = getShiftStatus(shift.id);
@@ -393,11 +456,23 @@ const UserDashboad: React.FC = () => {
                           )}
                           
                           {status === 'pending' && (
-                            <Chip
-                              label="Pending"
-                              size="small"
-                              sx={{ fontSize: '0.6rem', height: 16, mt: 0.5 }}
-                            />
+                            <>
+                              <Chip
+                                label="Pending"
+                                size="small"
+                                sx={{ fontSize: '0.6rem', height: 16, mt: 0.5 }}
+                              />
+                              {currentEmployee.id === 1 && (
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  sx={{ mt: 1 }}
+                                  onClick={() => handleAcceptShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                                >
+                                  Accept
+                                </Button>
+                              )}
+                            </>
                           )}
                           
                           {status === 'denied' && (
