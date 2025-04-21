@@ -27,6 +27,7 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/ico
 import { MainTheme } from '../../assets/themes/themes';
 import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
+import { createAvailableShift } from '../../utils/api'; // Adjust the import path as necessary
 
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
@@ -55,7 +56,7 @@ const UserDashboad: React.FC = () => {
   // Current user (would normally come from auth context)
   const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
   
-  // UI states
+  // UI states/
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -151,10 +152,7 @@ const UserDashboad: React.FC = () => {
       console.log('Adding new shift:', newShift);
       
       // Simulate API response
-      const newShiftResponse = {
-        id: Math.floor(Math.random() * 1000),
-        ...newShift
-      };
+      const newShiftResponse = await createAvailableShift(new Date(newShift.date), newShift.start, newShift.end);
       
       setAvailableShifts(prev => [...prev, newShiftResponse]);
       setSuccess('Shift added successfully');
