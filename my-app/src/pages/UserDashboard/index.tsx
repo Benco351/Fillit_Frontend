@@ -27,6 +27,8 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/ico
 import { MainTheme } from '../../assets/themes/themes';
 import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../../components/layout/dashboardNavbar';
+import Footer from '../../components/layout/Footer';
 
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
@@ -288,27 +290,38 @@ const UserDashboad: React.FC = () => {
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
+      <Navbar /> {/* Add Navbar at the top */}
       <Box
         sx={{
-          backgroundColor: 'background.default',
+          backgroundColor: '#232a31',
           minHeight: '100vh',
           py: 4,
+          px: 2, // Add padding for better spacing
         }}
       >
-        <Container maxWidth="lg">
-          {/* Home Button */}
+        <Container
+          maxWidth={false} // Remove maxWidth restriction
+          sx={{ px: { xs: 2, sm: 4, md: 6 } }} // Add responsive padding
+        >
+          {/* Home Button
           <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-start' }}>
             <Button variant="outlined" onClick={() => navigate('/')}>
               Home
             </Button>
-          </Box>
+          </Box> */}
           {/* Fillit Logo */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
             <LogoOnly />
           </Box>
 
           <Box sx={{ my: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom align="center">
+            <Typography
+              variant="h4"
+              component="h1"
+              gutterBottom
+              align="center"
+              sx={{ color: 'white' }} // Set text color to white
+            >
               Shift Management System
             </Typography>
 
@@ -345,7 +358,7 @@ const UserDashboad: React.FC = () => {
                   const employee = employees.find(emp => emp.id === empId);
                   if (employee) setCurrentEmployee(employee);
                 }}
-                sx={{ width: 200 }}
+                sx={{ width: 200, color: 'white', '& .MuiInputBase-input': { color: 'white' } }} // Set text color to white
               >
                 {employees.map((employee) => (
                   <MenuItem key={employee.id} value={employee.id}>
@@ -360,7 +373,7 @@ const UserDashboad: React.FC = () => {
               <Button variant="outlined" onClick={goToPreviousWeek}>
                 Previous Week
               </Button>
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ color: 'white' }}> {/* Set text color to white */}
                 {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d, yyyy')}
               </Typography>
               <Button variant="outlined" onClick={goToNextWeek}>
@@ -397,7 +410,7 @@ const UserDashboad: React.FC = () => {
                     p: 2,
                     height: '100%',
                     minHeight: 400,
-                    backgroundColor: format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') ? '#f5f5f5' : 'white',
+                    backgroundColor: 'white', // Set all columns to white
                     borderRadius: 1,
                     boxShadow: 3,
                   }}
@@ -634,6 +647,7 @@ const UserDashboad: React.FC = () => {
           </Snackbar>
         </Container>
       </Box>
+      <Footer /> {/* Add Footer at the bottom */}
     </ThemeProvider>
   );
 };
