@@ -29,14 +29,47 @@ import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
-import { createAvailableShift } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
-
+import { intervalToDuration, formatDuration } from 'date-fns';
+import { createAvailableShift, getAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee} from '../../components/CalendarFeatures/calendarStates';
 //import {employees} from '../../components/CalendarFeatures/calendarStates';
 
+// Helper function to calculate duration between two time strings (HH:MM:SS format)
+const calculateDuration = (startTime: string, endTime: string): string => {
+  try {
+    // Parse hours, minutes from time strings
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    // Convert to minutes
+    let startTotalMinutes = startHours * 60 + startMinutes;
+    let endTotalMinutes = endHours * 60 + endMinutes;
+    
+    // Handle case where end time is on the next day
+    if (endTotalMinutes < startTotalMinutes) {
+      endTotalMinutes += 24 * 60; // Add a day
+    }
+    
+    // Calculate difference in minutes
+    const diffMinutes = endTotalMinutes - startTotalMinutes;
+    
+    // Convert back to hours and minutes
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    
+    // Format the result
+    if (hours > 0) {
+      return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes > 0 ? `${minutes} minute${minutes !== 1 ? 's' : ''}` : ''}`;
+    }
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  } catch (error) {
+    console.error('Error calculating duration:', error);
+    return 'Unknown duration';
+  }
+};
 
 // Mock employees data - in a real application this would come from an API
 const employees: Employee[] = [
@@ -83,6 +116,10 @@ const UserDashboad: React.FC = () => {
   });
 
   const [filter, setFilter] = useState<'all' | 'requested' | 'accepted'>('all'); // Filter state
+
+  // State for fetching a shift by ID
+  const [shiftIdToFetch, setShiftIdToFetch] = useState<number | ''>('');
+  const [fetchedShift, setFetchedShift] = useState<AvailableShift | null>(null);
 
   // Generate week days for the schedule
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
@@ -151,13 +188,47 @@ const UserDashboad: React.FC = () => {
   const handleAddShift = async () => {
     setLoading(true);
     try {
-      // In a real app, this would be an API call
       console.log('Adding new shift:', newShift);
       
-      // Simulate API response
-      const newShiftResponse = await createAvailableShift(new Date(newShift.date), newShift.start, newShift.end);
+      const apiResponse = await createAvailableShift({
+        date: new Date(newShift.date),
+        start: newShift.start,
+        end: newShift.end
+      });
+  
+      // Log the complete response
+      console.log('API response:', apiResponse);
       
-      setAvailableShifts(prev => [...prev, newShiftResponse]);
+      // Look for shift_id instead of id
+      let shiftId = null;
+      
+      // Check for shift_id in different possible locations based on your backend response
+      if (apiResponse && apiResponse.shift_id !== undefined) {
+        shiftId = apiResponse.shift_id;
+      } 
+      else if (apiResponse && apiResponse.data && apiResponse.data.shift_id !== undefined) {
+        shiftId = apiResponse.data.shift_id;
+      }
+      
+      if (shiftId === null) {
+        console.error('Could not find shift_id in API response');
+        setError('Shift created but ID is missing. Please refresh.');
+        return;
+      }
+  
+      const addedShift: AvailableShift = {
+        id: shiftId, // Use the extracted shift_id as the id in your frontend
+        date: format(new Date(newShift.date), 'yyyy-MM-dd'),
+        start: newShift.start,
+        end: newShift.end,
+      };
+  
+      setAvailableShifts(prev => {
+        const updatedShifts = [...prev, addedShift];
+        console.log('Updated availableShifts:', updatedShifts);
+        return updatedShifts;
+      });
+  
       setSuccess('Shift added successfully');
       setIsAddShiftDialogOpen(false);
     } catch (err) {
@@ -167,7 +238,6 @@ const UserDashboad: React.FC = () => {
       setLoading(false);
     }
   };
-
   // Handle requesting a shift
   const handleRequestShift = async () => {
     if (!selectedShift) return;
@@ -231,6 +301,33 @@ const UserDashboad: React.FC = () => {
       setSuccess('Shift accepted successfully');
     } catch (err) {
       setError('Failed to accept shift. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGetShiftById = async () => {
+    if (!shiftIdToFetch) {
+      setError('Please enter a valid shift ID.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await getAvailableShiftById(Number(shiftIdToFetch));
+
+      // Set the fetched shift details
+      setFetchedShift({
+        id: response.data.id || response.data.shift_id, // Handle different possible field names
+        date: response.data.date || response.data.shift_date,
+        start: response.data.start || response.data.shift_start,
+        end: response.data.end || response.data.shift_end,
+      });
+
+      setSuccess(`Shift with ID ${shiftIdToFetch} fetched successfully.`);
+    } catch (err) {
+      setError('Failed to fetch shift. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -390,6 +487,50 @@ const UserDashboad: React.FC = () => {
                 Add Available Shift
               </Button>
             </Box>
+
+                    
+            {/* Get Shift by ID Section */}
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h6"
+                sx={{ color: 'white', mb: 2 }}
+              >
+                Get Available Shift by ID
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <TextField
+                  label="Shift ID"
+                  type="number"
+                  value={shiftIdToFetch}
+                  onChange={(e) => setShiftIdToFetch(Number(e.target.value) || '')}
+                  sx={{ width: 200, backgroundColor: 'white' }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleGetShiftById}
+                  disabled={loading}
+                >
+                  {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
+                </Button>
+              </Box>
+              {fetchedShift && (
+                <Box sx={{ mt: 2, p: 2, backgroundColor: 'white', borderRadius: 1 }}>
+                  <Typography variant="body1">
+                    <strong>ID:</strong> {fetchedShift.id}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>Date:</strong> {fetchedShift.date}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>Start:</strong> {fetchedShift.start}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>End:</strong> {fetchedShift.end}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+            {/* Weekly Schedule */} 
 
             {/* Weekly schedule grid */}
             <Box

@@ -6,20 +6,33 @@ interface CreateAvailableShiftData {
     start: string; // format: HH:mm:ss
     end: string;   // format: HH:mm:ss
 }
-export const createAvailableShift = async (data: CreateAvailableShiftData) => {
-    try {
-      const response = await instance.post('/available-shifts', data);
-      
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');}
 
-      return response.data; // Return the response data //body
-    } catch (error) {
-      console.error('Error creating available shift:', error);
-      throw error; // Re-throw the error for further handling
+// Update your interface to match the backend response
+interface AvailableShiftResponse {
+  shift_id: number; // Note: using shift_id instead of id to match backend
+  date: string;
+  start: string;
+  end: string;
+  // Add other fields your backend returns
+}
+
+export const createAvailableShift = async (data: CreateAvailableShiftData): Promise<any> => {
+  try {
+    const response = await instance.post('/available-shifts', data);
+    
+    if (!response.data) {
+      throw new Error('No data returned from the server');
     }
-};
 
+    console.log('createAvailableShift API response:', response.data);
+    
+    // Return the whole response.data to handle different structures
+    return response.data;
+  } catch (error) {
+    console.error('Error creating available shift:', error);
+    throw error;
+  }
+};
 
 export const getAvailableShiftById = async (id: number ) => {
   try {
@@ -96,4 +109,3 @@ export const updateAvailableShiftById = async (id: number, data: UpdateAvailable
       throw error; // Re-throw the error for further handling
     }
 };
-  
