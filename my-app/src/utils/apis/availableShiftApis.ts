@@ -73,21 +73,16 @@ export const getAvailableShifts = async (params: GetAvailableShiftsParams = {}) 
 };
 
 
-export const deleteAvailableShiftById = async (id: number ) => {
-    try {
-      const response = await instance.delete(`/available-shifts/${id}`);
-  
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error deleting available shift by ID:', error);
-      throw error; // Re-throw the error for further handling
-    }
-  };
-
+export const deleteAvailableShiftById = async (id: number) => {
+  try {
+    const response = await instance.delete(`/available-shifts/${id}`);
+    console.log('Delete response:', response.data);
+    return response.data; 
+  } catch (error) {
+    console.error('Error deleting available shift by ID:', error);
+    throw error;
+  }
+};
 
 interface UpdateAvailableShiftData {
     date?: string; // format: YYYY-MM-DD
@@ -109,3 +104,26 @@ export const updateAvailableShiftById = async (id: number, data: UpdateAvailable
       throw error; // Re-throw the error for further handling
     }
 };
+
+interface GetAssignedShiftsParams { 
+    assigned_employee_id?: number; // Filter by employee ID (optional)
+}
+
+export const getAssignedShifts = async (params: GetAssignedShiftsParams = {}) => {
+    try {
+        const response = await instance.get('/assigned-shifts', { params });
+
+        if (!response.data.data) {
+            throw new Error('No data returned from the server');
+        }
+
+        return response.data; // Return the response data
+    } catch (error) {
+        console.error('Error fetching assigned shifts:', error);
+        throw error; // Re-throw the error for further handling
+    }
+};
+
+// setting button, save changes, cancel, changable date and time (update), delete, + is request shift
+// deny button
+//accept shift button api

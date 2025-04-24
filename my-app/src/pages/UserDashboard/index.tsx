@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
 import { intervalToDuration, formatDuration } from 'date-fns';
-import { createAvailableShift, getAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
+import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById} from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
@@ -238,6 +238,7 @@ const UserDashboad: React.FC = () => {
       setLoading(false);
     }
   };
+  
   // Handle requesting a shift
   const handleRequestShift = async () => {
     if (!selectedShift) return;
@@ -269,23 +270,24 @@ const UserDashboad: React.FC = () => {
     }
   };
 
-  // Handle deleting a shift
   const handleDeleteShift = async (shiftId: number) => {
     setLoading(true);
     try {
-      // In a real app, this would be an API call
-      console.log('Deleting shift:', shiftId);
-      
+      // Make API call to delete shift
+      const response = await deleteAvailableShiftById(shiftId);
+      console.log('Deleted shift from server:', response);
+  
+      // Update local state after successful deletion
       setAvailableShifts(prev => prev.filter(shift => shift.id !== shiftId));
+  
       setSuccess('Shift deleted successfully');
     } catch (err) {
+      console.error('Failed to delete shift:', err);
       setError('Failed to delete shift. Please try again.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
-
   // Handle accepting a shift
   const handleAcceptShift = async (requestedShiftId: number) => {
     setLoading(true);
@@ -307,32 +309,59 @@ const UserDashboad: React.FC = () => {
     }
   };
 
-  const handleGetShiftById = async () => {
-    if (!shiftIdToFetch) {
-      setError('Please enter a valid shift ID.');
+
+// Enhanced handleGetShiftById function with better debugging
+const handleGetShiftById = async () => {
+  if (!shiftIdToFetch) {
+    setError('Please enter a valid shift ID.');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const response = await getAvailableShiftById(Number(shiftIdToFetch));
+    
+    // Log the entire response to see its structure
+    console.log('Complete API response:', response);
+    
+    // Check where the data might be located in the response
+    let shiftData;
+    if (response.data && response.data.data) {
+      // If the data is nested (common in API responses with metadata)
+      shiftData = response.data.data;
+      console.log('Found nested data:', shiftData);
+    } else if (response.data) {
+      // If data is directly in the response
+      shiftData = response.data;
+      console.log('Found direct data:', shiftData);
+    } else {
+      // No data found
+      console.log('No data found in response');
+      setError('No shift data found in the response.');
+      setFetchedShift(null);
+      setLoading(false);
       return;
     }
-
-    setLoading(true);
-    try {
-      const response = await getAvailableShiftById(Number(shiftIdToFetch));
-
-      // Set the fetched shift details
-      setFetchedShift({
-        id: response.data.id || response.data.shift_id, // Handle different possible field names
-        date: response.data.date || response.data.shift_date,
-        start: response.data.start || response.data.shift_start,
-        end: response.data.end || response.data.shift_end,
-      });
-
-      setSuccess(`Shift with ID ${shiftIdToFetch} fetched successfully.`);
-    } catch (err) {
-      setError('Failed to fetch shift. Please try again.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    
+    // Transform the data regardless of where it was found
+    const transformedShift: AvailableShift = {
+      id: shiftData.shift_id || shiftData.id || Number(shiftIdToFetch),
+      date: shiftData.date || shiftData.shift_date || '',
+      start: shiftData.start || shiftData.shift_start || '',
+      end: shiftData.end || shiftData.shift_end || ''
+    };
+    
+    console.log('Transformed shift data:', transformedShift);
+    setFetchedShift(transformedShift);
+    setSuccess(`Shift with ID ${shiftIdToFetch} fetched successfully.`);
+  } catch (err) {
+    console.error('Error fetching shift:', err);
+    setError('Failed to fetch shift. Please try again.');
+    setFetchedShift(null);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Utility function to get shift status for display
   const getShiftStatus = (availableShiftId: number): string => {
@@ -490,14 +519,14 @@ const UserDashboad: React.FC = () => {
 
                     
             {/* Get Shift by ID Section */}
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 4, p: 3, backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2 }}>
               <Typography
                 variant="h6"
                 sx={{ color: 'white', mb: 2 }}
               >
                 Get Available Shift by ID
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
                 <TextField
                   label="Shift ID"
                   type="number"
@@ -509,26 +538,69 @@ const UserDashboad: React.FC = () => {
                   variant="contained"
                   onClick={handleGetShiftById}
                   disabled={loading}
+                  sx={{ minWidth: 120 }}
                 >
                   {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
                 </Button>
               </Box>
-              {fetchedShift && (
-                <Box sx={{ mt: 2, p: 2, backgroundColor: 'white', borderRadius: 1 }}>
-                  <Typography variant="body1">
-                    <strong>ID:</strong> {fetchedShift.id}
+              
+              {/* Debug Info - Keep this during development */}
+              <Box sx={{ mt: 2, p: 2, backgroundColor: '#333', borderRadius: 1, color: '#0f0' }}>
+                <Typography variant="subtitle2" sx={{ color: '#0f0' }}>Debug Information:</Typography>
+                <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>
+                  Check browser console for full API response logs
+                </Typography>
+                {fetchedShift && (
+                  <>
+                    <Typography variant="caption" sx={{ color: '#0f0' }}>
+                      Current fetchedShift state:
+                    </Typography>
+                    <pre style={{ whiteSpace: 'pre-wrap', overflow: 'auto', maxHeight: '100px', fontSize: '0.75rem' }}>
+                      {JSON.stringify(fetchedShift, null, 2)}
+                    </pre>
+                  </>
+                )}
+              </Box>
+              
+              {/* Fixed Shift Details Display */}
+              {fetchedShift ? (
+                <Paper sx={{ mt: 2, p: 3, borderRadius: 2, boxShadow: 3 }}>
+                  <Typography variant="h6" color="primary" gutterBottom>
+                    Shift Details
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>Date:</strong> {fetchedShift.date}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Start:</strong> {fetchedShift.start}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>End:</strong> {fetchedShift.end}
-                  </Typography>
-                </Box>
-              )}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                      <Typography variant="body1">
+                        <strong>Shift ID:</strong> {fetchedShift.id || 'N/A'}
+                      </Typography>
+                      <Typography variant="body1">
+                        <strong>Date:</strong> {fetchedShift.date || 'N/A'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                      <Typography variant="body1">
+                        <strong>Start Time:</strong> {fetchedShift.start || 'N/A'}
+                      </Typography>
+                      <Typography variant="body1">
+                        <strong>End Time:</strong> {fetchedShift.end || 'N/A'}
+                      </Typography>
+                    </Box>
+                    {fetchedShift.start && fetchedShift.end && (
+                      <Typography variant="body1">
+                        <strong>Duration:</strong> {calculateDuration(fetchedShift.start, fetchedShift.end)}
+                      </Typography>
+                    )}
+                  </Box>
+                </Paper>
+              ) : error ? (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {error}
+                </Alert>
+              ) : success && !fetchedShift ? (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  No shift found with that ID.
+                </Alert>
+              ) : null}
             </Box>
             {/* Weekly Schedule */} 
 
