@@ -1,8 +1,8 @@
 // Mock employees data - in a real application this would come from an API
 import {Employee} from '../../components/CalendarFeatures/calendarStates';
-import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
 
 
+// Mock employees data - in a real application this would come from an API
 
 
 export const employees: Employee[] = [

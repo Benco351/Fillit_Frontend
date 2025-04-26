@@ -19,66 +19,33 @@ import {
   CircularProgress,
   CssBaseline,
   ThemeProvider,
+  Menu,
+  MenuItem as DropdownMenuItem,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { MainTheme } from '../../assets/themes/themes';
 import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
 import { intervalToDuration, formatDuration } from 'date-fns';
-import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById} from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
+import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
+import { createRequestedShift } from '../../utils/apis/requestedShiftsApis'; // Import the API function
 
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
-import {Employee} from '../../components/CalendarFeatures/calendarStates';
-//import {employees} from '../../components/CalendarFeatures/calendarStates';
+import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
+import {employees} from '../../components/CalendarFeatures/calendarStates';
 
-// Helper function to calculate duration between two time strings (HH:MM:SS format)
-const calculateDuration = (startTime: string, endTime: string): string => {
-  try {
-    // Parse hours, minutes from time strings
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    const [endHours, endMinutes] = endTime.split(':').map(Number);
-    
-    // Convert to minutes
-    let startTotalMinutes = startHours * 60 + startMinutes;
-    let endTotalMinutes = endHours * 60 + endMinutes;
-    
-    // Handle case where end time is on the next day
-    if (endTotalMinutes < startTotalMinutes) {
-      endTotalMinutes += 24 * 60; // Add a day
-    }
-    
-    // Calculate difference in minutes
-    const diffMinutes = endTotalMinutes - startTotalMinutes;
-    
-    // Convert back to hours and minutes
-    const hours = Math.floor(diffMinutes / 60);
-    const minutes = diffMinutes % 60;
-    
-    // Format the result
-    if (hours > 0) {
-      return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes > 0 ? `${minutes} minute${minutes !== 1 ? 's' : ''}` : ''}`;
-    }
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-  } catch (error) {
-    console.error('Error calculating duration:', error);
-    return 'Unknown duration';
-  }
-};
-
-// Mock employees data - in a real application this would come from an API
-const employees: Employee[] = [
-  { id: 1, name: 'John Doe' },
-  { id: 2, name: 'Jane Smith' },
-  { id: 3, name: 'Bob Johnson' },
-];
+import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
+import { useUserDashboard } from '../../hooks/useUserDashboard';
+import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 
 const UserDashboad: React.FC = () => {
+
   const navigate = useNavigate();
 
   // State for the current week
@@ -100,6 +67,7 @@ const UserDashboad: React.FC = () => {
   // Dialog states
   const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState<boolean>(false);
   const [isRequestShiftDialogOpen, setIsRequestShiftDialogOpen] = useState<boolean>(false);
+  const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false); // State for edit dialog
   const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);
   
   // Form states
@@ -115,7 +83,11 @@ const UserDashboad: React.FC = () => {
     notes: '',
   });
 
-  const [filter, setFilter] = useState<'all' | 'requested' | 'accepted'>('all'); // Filter state
+  const [editShift, setEditShift] = useState<AvailableShift | null>(null); // State for the shift being edited
+
+  const [filter, setFilter] = useState<"all" | "requested" | "accepted">("all");
+
+ // Filter state
 
   // State for fetching a shift by ID
   const [shiftIdToFetch, setShiftIdToFetch] = useState<number | ''>('');
@@ -140,25 +112,7 @@ const UserDashboad: React.FC = () => {
       const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
       
       // Simulated API response
-      const availableShiftsResponse = [
-        { id: 1, date: '2023-10-02', start: '09:00:00', end: '13:00:00' },
-        { id: 2, date: '2023-10-02', start: '13:00:00', end: '17:00:00' },
-        { id: 3, date: '2023-10-03', start: '09:00:00', end: '17:00:00' },
-        { id: 4, date: '2023-10-04', start: '10:00:00', end: '14:00:00' },
-        { id: 5, date: '2023-10-05', start: '12:00:00', end: '16:00:00' },
-      ];
-      
-      const requestedShiftsResponse = [
-        { id: 1, employeeId: 1, availableShiftId: 1, notes: 'I can work this shift', status: 'pending' },
-        { id: 2, employeeId: 2, availableShiftId: 2, notes: 'Available for this shift', status: 'approved' },
-        { id: 3, employeeId: 3, availableShiftId: 3, notes: 'Can I take this shift?', status: 'denied' },
-      ];
-      
-      const assignedShiftsResponse = [
-        { id: 1, employeeId: 2, availableShiftId: 2 },
-        { id: 2, employeeId: 1, availableShiftId: 5 },
-      ];
-      
+
       setAvailableShifts(availableShiftsResponse);
       setRequestedShifts(
         requestedShiftsResponse.map(shift => ({
@@ -182,6 +136,24 @@ const UserDashboad: React.FC = () => {
 
   const goToNextWeek = () => {
     setCurrentWeekStart(prevWeek => addDays(prevWeek, 7));
+  };
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNavigateHome = () => {
+    navigate('/home'); // Navigate to the home page
+  };
+
+  const handleOpenSettings = () => {
+    navigate('/settings'); // Navigate to the settings page
   };
 
   // Handle adding a new shift
@@ -238,38 +210,50 @@ const UserDashboad: React.FC = () => {
       setLoading(false);
     }
   };
-  
-  // Handle requesting a shift
+
   const handleRequestShift = async () => {
     if (!selectedShift) return;
-    
+  
     setLoading(true);
     try {
-      // In a real app, this would be an API call
       console.log('Requesting shift:', newRequest);
-      
-      // Simulate API response
-      const newRequestResponse = {
-        id: Math.floor(Math.random() * 1000),
-        ...newRequest,
-        availableShiftId: selectedShift.id,
-        status: 'pending'
-      };
-      
-      setRequestedShifts(prev => [
+  
+      // Call the API to create a requested shift
+      const newRequestResponse = await createRequestedShift({
+        employeeId: newRequest.employeeId,
+        shiftSlotId: selectedShift.id,
+        notes: newRequest.notes,
+      });
+  
+      const newRequestData = newRequestResponse.data; // Ensure you have the correct data structure here
+  
+      console.log('Requested shift response:', newRequestData);
+  
+      // Update the local state with the new requested shift
+      setRequestedShifts((prev) => [
         ...prev,
-        { ...newRequestResponse, status: newRequestResponse.status as 'pending' | 'approved' | 'denied' }
+        {
+          id: newRequestData.id,
+          employeeId: newRequest.employeeId,
+          availableShiftId: selectedShift.id,
+          notes: newRequest.notes,
+          status: 'pending',
+        },
       ]);
+  
       setSuccess('Shift requested successfully');
       setIsRequestShiftDialogOpen(false);
     } catch (err) {
       setError('Failed to request shift. Please try again.');
-      console.error(err);
+      if (err instanceof Error) {
+        console.error('Error requesting shift:', (err as any)?.response?.data?.message || err.message);
+      } else {
+        console.error('Error requesting shift:', err);
+      }
     } finally {
       setLoading(false);
     }
   };
-
   const handleDeleteShift = async (shiftId: number) => {
     setLoading(true);
     try {
@@ -288,6 +272,86 @@ const UserDashboad: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleEditShift = async () => {
+    if (!editShift) return;
+
+    setLoading(true);
+    try {
+      console.log('Updating shift:', editShift);
+
+      // Call the API to update the shift
+      const updatedShiftResponse = await updateAvailableShiftById(editShift.id, {
+        date: editShift.date,
+        start: editShift.start,
+        end: editShift.end,
+      });
+
+      console.log('Updated shift response:', updatedShiftResponse);
+
+      // Update the local state with the updated shift
+      setAvailableShifts((prev) =>
+        prev.map((shift) =>
+          shift.id === editShift.id
+            ? { ...shift, date: editShift.date, start: editShift.start, end: editShift.end }
+            : shift
+        )
+      );
+
+      setSuccess('Shift updated successfully');
+      setIsEditShiftDialogOpen(false);
+    } catch (err) {
+      setError('Failed to update shift. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleRequestShiftFromEditDialog = async () => {
+    if (!editShift) return;
+  
+    setLoading(true);
+    try {
+      const payload = {
+        employeeId: currentEmployee.id,
+        shiftSlotId: editShift.id,
+        notes: '', // Optional: Add a default or empty note
+      };
+  
+      console.log('Requesting shift with payload:', payload); // Log the payload
+  
+      // Call the createRequestedShift function to handle the request
+      const newRequestResponse = await createRequestedShift(payload);
+  
+      console.log('Requested shift response:', newRequestResponse); // Log the response
+  
+      setRequestedShifts((prev) => [
+        ...prev,
+        {
+          id: newRequestResponse.data.id,
+          employeeId: currentEmployee.id,
+          availableShiftId: editShift.id,
+          notes: '',
+          status: 'pending',
+        },
+      ]);
+  
+      setSuccess('Shift requested successfully');
+      setIsEditShiftDialogOpen(false); // Close the edit dialog after requesting
+    } catch (err) {
+      const errorMessage =
+        (err as any)?.response?.data?.message || 'Failed to request shift. Please try again.';
+      if (err instanceof Error) {
+        console.error('Failed to request shift:', (err as any)?.response || err.message || err);
+      } else {
+        console.error('Failed to request shift:', err);
+      }
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle accepting a shift
   const handleAcceptShift = async (requestedShiftId: number) => {
     setLoading(true);
@@ -309,6 +373,10 @@ const UserDashboad: React.FC = () => {
     }
   };
 
+  const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
+    setEditShift(shift); // Set the selected shift for editing
+    setIsEditShiftDialogOpen(true); // Open the edit dialog
+  };
 
 // Enhanced handleGetShiftById function with better debugging
 const handleGetShiftById = async () => {
@@ -374,16 +442,8 @@ const handleGetShiftById = async () => {
     return 'available';
   };
 
-  // Utility function to get shift color based on status
-  const getShiftColor = (status: string): string => {
-    switch (status) {
-      case 'assigned': return '#4caf50';  // green
-      case 'approved': return '#4caf50';  // green
-      case 'pending': return '#ff9800';   // orange
-      case 'denied': return '#f44336';    // red
-      default: return '#2196f3';          // blue for available
-    }
-  };
+  // Utility function to get shift color based on status GetShiftColor
+
 
   // Utility function to get assigned employee name
   const getAssignedEmployeeName = (availableShiftId: number): string => {
@@ -415,7 +475,6 @@ const handleGetShiftById = async () => {
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
-      <Navbar /> {/* Add Navbar at the top */}
       <Box
         sx={{
           backgroundColor: '#232a31',
@@ -428,52 +487,73 @@ const handleGetShiftById = async () => {
           maxWidth={false} // Remove maxWidth restriction
           sx={{ px: { xs: 2, sm: 4, md: 6 } }} // Add responsive padding
         >
-          {/* Home Button
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-start' }}>
-            <Button variant="outlined" onClick={() => navigate('/')}>
-              Home
-            </Button>
-          </Box> */}
-          {/* Fillit Logo */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+
+          {/* Navbar with Logo, Home, Settings, and Hamburger Button */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+            {/* Logo */}
             <LogoOnly />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleNavigateHome}
+                sx={{ color: 'white' }}
+              >
+                Home
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleOpenSettings}
+                sx={{ color: 'white' }}
+              >
+                Settings
+              </Button>
+              <IconButton
+                edge="end"
+                color="inherit"
+                onClick={handleMenuOpen}
+                sx={{ color: 'white' }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <DropdownMenuItem onClick={handleMenuClose}>Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMenuClose}>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMenuClose}>Logout</DropdownMenuItem>
+            </Menu>
           </Box>
 
-          <Box sx={{ my: 4 }}>
+          <Box sx={{ my: 3 }}>
             <Typography
               variant="h4"
               component="h1"
               gutterBottom
               align="center"
-              sx={{ color: 'white' }} // Set text color to white
+              sx={{
+                color: '#4caf50', // Green color for emphasis
+                fontWeight: 'bold',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)', // Subtle shadow for depth
+                fontFamily: 'Roboto, sans-serif',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase', // Make it uppercase for a bold statement
+              }}
             >
               Shift Management System
             </Typography>
 
             {/* Filters */}
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center', gap: 2 }}>
-              <Button
-                variant={filter === 'all' ? 'contained' : 'outlined'}
-                onClick={() => setFilter('all')}
-              >
-                All Shifts
-              </Button>
-              <Button
-                variant={filter === 'requested' ? 'contained' : 'outlined'}
-                onClick={() => setFilter('requested')}
-              >
-                Requested Shifts
-              </Button>
-              <Button
-                variant={filter === 'accepted' ? 'contained' : 'outlined'}
-                onClick={() => setFilter('accepted')}
-              >
-                Accepted Shifts
-              </Button>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <ShiftFilters filter={filter} setFilter={setFilter} />
             </Box>
 
             {/* Employee selection */}
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
               <TextField
                 select
                 label="Current Employee"
@@ -494,7 +574,7 @@ const handleGetShiftById = async () => {
             </Box>
 
             {/* Week navigation */}
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Button variant="outlined" onClick={goToPreviousWeek}>
                 Previous Week
               </Button>
@@ -507,7 +587,7 @@ const handleGetShiftById = async () => {
             </Box>
 
             {/* Add new shift button */}
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
@@ -515,8 +595,28 @@ const handleGetShiftById = async () => {
               >
                 Add Available Shift
               </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={async () => {
+                  try {
+                    const response = await createEmployee({
+                      name: 'John Doe',
+                      email: `john${Math.floor(Math.random() * 10000)}@example.com`, // random email to avoid duplicate
+                      password: 'SuperSecret123!',
+                      phone: '1234567890'
+                    });
+                    console.log('Employee created successfully:', response);
+                    alert('Employee created successfully!');
+                  } catch (error) {
+                    console.error('Failed to create employee:', error);
+                    alert('Failed to create employee. Check console for details.');
+                  }
+                }}
+              >
+                Create Dummy Employee
+              </Button>
             </Box>
-
                     
             {/* Get Shift by ID Section */}
             <Box sx={{ mb: 4, p: 3, backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2 }}>
@@ -663,22 +763,14 @@ const handleGetShiftById = async () => {
                             </Typography>
                           )}
                           
-                          {status === 'available' && (
-                            <IconButton
-                              size="small"
-                              sx={{ position: 'absolute', top: 2, right: 2, color: 'white' }}
-                              onClick={() => {
-                                setSelectedShift(shift);
-                                setNewRequest({
-                                  ...newRequest,
-                                  availableShiftId: shift.id
-                                });
-                                setIsRequestShiftDialogOpen(true);
-                              }}
-                            >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-                          )}
+                          {/* Edit Button */}
+                          <IconButton
+                            size="small"
+                            sx={{ position: 'absolute', top: 2, right: 2, color: 'white' }}
+                            onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
                           
                           {status === 'pending' && (
                             <>
@@ -795,6 +887,69 @@ const handleGetShiftById = async () => {
                 disabled={loading}
               >
                 {loading ? <CircularProgress size={24} /> : "Add Shift"}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Edit Shift Dialog */}
+          <Dialog open={isEditShiftDialogOpen} onClose={() => setIsEditShiftDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Edit Shift</DialogTitle>
+            <DialogContent>
+              {editShift && (
+                <Box sx={{ mt: 2 }}>
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DatePicker
+                      label="Date"
+                      value={parseISO(editShift.date)}
+                      onChange={(newDate) => {
+                        if (newDate) {
+                          setEditShift((prev) => prev && { ...prev, date: format(newDate, 'yyyy-MM-dd') });
+                        }
+                      }}
+                      sx={{ width: '100%', mb: 2 }}
+                    />
+                  </LocalizationProvider>
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <TimePicker
+                        label="Start Time"
+                        value={parseISO(`2023-01-01T${editShift.start}`)}
+                        onChange={(newTime) => {
+                          if (newTime) {
+                            setEditShift((prev) => prev && { ...prev, start: format(newTime, 'HH:mm:ss') });
+                          }
+                        }}
+                        sx={{ width: '100%' }}
+                      />
+                    </LocalizationProvider>
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <TimePicker
+                        label="End Time"
+                        value={parseISO(`2023-01-01T${editShift.end}`)}
+                        onChange={(newTime) => {
+                          if (newTime) {
+                            setEditShift((prev) => prev && { ...prev, end: format(newTime, 'HH:mm:ss') });
+                          }
+                        }}
+                        sx={{ width: '100%' }}
+                      />
+                    </LocalizationProvider>
+                  </Box>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setIsEditShiftDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" onClick={handleEditShift} disabled={loading}>
+                {loading ? <CircularProgress size={24} /> : 'Save Changes'}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleRequestShiftFromEditDialog}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Request Shift'}
               </Button>
             </DialogActions>
           </Dialog>

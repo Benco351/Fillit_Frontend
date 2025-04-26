@@ -5,20 +5,27 @@ interface CreateRequestedShiftData {
     shiftSlotId: number;
     notes: string;
 }
+
   
 export const createRequestedShift = async (data: CreateRequestedShiftData) => {
-    try {
-      const response = await instance.post('/requested-shifts', data);
-  
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error creating requested shift:', error);
-      throw error; // Re-throw the error for further handling
+  try {
+    console.log('Request payload for createRequestedShift:', data); // Log the request payload
+    const response = await instance.post('/requested-shifts', data); // Ensure this matches the backend endpoint
+
+    if (!response.data || !response.data.data) {
+      throw new Error('No data returned from the server');
     }
+
+    console.log('Response from createRequestedShift:', response.data); // Log the response
+    return response.data; // Return the response data
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error creating requested shift:', (error as any).response || error.message); // Log detailed error
+    } else {
+      console.error('Error creating requested shift:', error); // Log generic error
+    }
+    throw error; // Re-throw the error for further handling
+  }
 };
 
 export const getRequestedShiftById = async (id: number ) => {
@@ -90,7 +97,6 @@ export const updateRequestedShiftById = async ( id: number , data: UpdateRequest
       throw error; // Re-throw the error for further handling
     }
 };
-  
-  
-  
-  
+
+
+
