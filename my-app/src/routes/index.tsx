@@ -8,6 +8,7 @@ import Main from '../pages/Main';
 import SignUpForm from '../components/auth/SignUpForm';
 import LoginForm from '../components/auth/LoginForm';
 import UserDashboard from '../pages/UserDashboard';
+import AdminDashboard from '../pages/AdminDashboard';
 
 const AppRoutes: React.FC = () => (
   <BrowserRouter>
@@ -17,6 +18,7 @@ const AppRoutes: React.FC = () => (
       <Route path={ROUTES.SIGNUP} element={<SignUpForm />} />
       <Route path={ROUTES.LOGIN} element={<LoginForm />} />
       <Route path={ROUTES.DASHBOARD} element={<UserDashboard />} />
+      <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
 
       {/* Protected routes */}
       <Route

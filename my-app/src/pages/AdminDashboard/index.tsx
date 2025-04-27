@@ -44,7 +44,7 @@ import { createEmployee } from '../../utils/apis/employeeShiftApis';
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 
-const UserDashboad: React.FC = () => {
+const AdminDashboard: React.FC = () => {
 
   const navigate = useNavigate();
 
@@ -1017,4 +1017,4 @@ const handleGetShiftById = async () => {
   );
 };
 
-export default UserDashboad;
+export default AdminDashboard;

@@ -16,7 +16,7 @@ interface AvailableShiftResponse {
   // Add other fields your backend returns
 }
 
-//done
+//DONE
 export const createAvailableShift = async (data: CreateAvailableShiftData): Promise<any> => {
   try {
     const response = await instance.post('/available-shifts', data);
@@ -35,7 +35,7 @@ export const createAvailableShift = async (data: CreateAvailableShiftData): Prom
   }
 };
 
-//done
+//DONE
 export const getAvailableShiftById = async (id: number ) => {
   try {
     const response = await instance.get(`/available-shifts/${id}`);
@@ -50,6 +50,7 @@ export const getAvailableShiftById = async (id: number ) => {
     throw error; // Re-throw the error for further handling
   }
 };
+
 
 interface GetAvailableShiftsParams {
     shift_date?: string; // format: YYYY-MM-DD

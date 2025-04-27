@@ -28,7 +28,7 @@ export const createRequestedShift = async (data: CreateRequestedShiftData) => {
   }
 };
 
-export const getRequestedShiftById = async (id: number ) => {
+export const getRequestedShiftById = async (id: number ) => { //??
     try {
       const response = await instance.get(`/requested-shifts/${id}`);
   
@@ -43,12 +43,13 @@ export const getRequestedShiftById = async (id: number ) => {
     }
 };
 
-interface GetRequestedShiftsParams {
+interface GetRequestedShiftsParams { 
     employeeId?: number;      // Filter by employee ID (optional)
     request_status?: string;  // Filter by request status (optional)
 }
-  
-export const getRequestedShifts = async (params: GetRequestedShiftsParams = {}) => {
+
+//add
+export const getRequestedShifts = async (params: GetRequestedShiftsParams = {}) => { 
     try {
       const response = await instance.get('/requested-shifts', { params });
   
@@ -63,6 +64,7 @@ export const getRequestedShifts = async (params: GetRequestedShiftsParams = {}) 
     }
 };
 
+//add - returns to available shift state
 export const deleteRequestedShiftById = async (id: number ) => {
     try {
       const response = await instance.delete(`/requested-shifts/${id}`);
@@ -82,7 +84,9 @@ interface UpdateRequestedShiftData {
     status: string;  // e.g., "denied", "approved"
     notes: string;   // Additional notes for the request
 }
-  
+ 
+//add - for admin (accept/deny)
+//add - for employee (cancel, note)
 export const updateRequestedShiftById = async ( id: number , data: UpdateRequestedShiftData ) => {
     try {
       const response = await instance.put(`/requested-shifts/${id}`, data);
