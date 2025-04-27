@@ -104,14 +104,18 @@ const UserDashboad: React.FC = () => {
   const fetchShiftsForWeek = async () => {
     setLoading(true);
     try {
-
-      // Fetch available shifts
       const startDate = format(currentWeekStart, 'yyyy-MM-dd');
       const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
-      
-      // Simulated API response
 
-      setAvailableShifts(availableShiftsResponse);
+      // Filter the simulated API response based on the current week's date range
+      const filteredAvailableShifts = availableShiftsResponse.filter(shift =>
+        isWithinInterval(new Date(shift.date), {
+          start: new Date(startDate),
+          end: new Date(endDate),
+        })
+      );
+
+      setAvailableShifts(filteredAvailableShifts);
       setRequestedShifts(
         requestedShiftsResponse.map(shift => ({
           ...shift,
@@ -159,46 +163,42 @@ const UserDashboad: React.FC = () => {
     setLoading(true);
     try {
       console.log('Adding new shift:', newShift);
-      
+
       const apiResponse = await createAvailableShift({
         date: new Date(newShift.date),
         start: newShift.start,
-        end: newShift.end
+        end: newShift.end,
       });
-  
-      // Log the complete response
+
       console.log('API response:', apiResponse);
-      
-      // Look for shift_id instead of id
+
       let shiftId = null;
-      
-      // Check for shift_id in different possible locations based on your backend response
+
       if (apiResponse && apiResponse.shift_id !== undefined) {
         shiftId = apiResponse.shift_id;
-      } 
-      else if (apiResponse && apiResponse.data && apiResponse.data.shift_id !== undefined) {
+      } else if (apiResponse && apiResponse.data && apiResponse.data.shift_id !== undefined) {
         shiftId = apiResponse.data.shift_id;
       }
-      
+
       if (shiftId === null) {
         console.error('Could not find shift_id in API response');
         setError('Shift created but ID is missing. Please refresh.');
         return;
       }
-  
+
       const addedShift: AvailableShift = {
-        id: shiftId, // Use the extracted shift_id as the id in your frontend
+        id: shiftId,
         date: format(new Date(newShift.date), 'yyyy-MM-dd'),
         start: newShift.start,
         end: newShift.end,
       };
-  
-      setAvailableShifts(prev => {
-        const updatedShifts = [...prev, addedShift];
-        console.log('Updated availableShifts:', updatedShifts);
-        return updatedShifts;
-      });
-  
+
+      // Update local state
+      setAvailableShifts((prev) => [...prev, addedShift]);
+
+      // Persist the new shift in the simulated API response
+      availableShiftsResponse.push(addedShift);
+
       setSuccess('Shift added successfully');
       setIsAddShiftDialogOpen(false);
     } catch (err) {
@@ -296,6 +296,12 @@ const UserDashboad: React.FC = () => {
         )
       );
 
+      // Persist the updated shift in the simulated API response
+      const index = availableShiftsResponse.findIndex((shift) => shift.id === editShift.id);
+      if (index !== -1) {
+        availableShiftsResponse[index] = { ...availableShiftsResponse[index], ...editShift };
+      }
+
       setSuccess('Shift updated successfully');
       setIsEditShiftDialogOpen(false);
     } catch (err) {
@@ -305,6 +311,7 @@ const UserDashboad: React.FC = () => {
       setLoading(false);
     }
   };
+
   const handleRequestShiftFromEditDialog = async () => {
     if (!editShift) return;
   
