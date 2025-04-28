@@ -53,11 +53,13 @@ export const getAvailableShiftById = async (id: number ) => {
 
 
 interface GetAvailableShiftsParams {
-    shift_date?: string; // format: YYYY-MM-DD
+    shift_date?: string; // format: YYYY-MM-DD //optional
     shift_start_after?: string; // format: HH:mm:ss
     shift_end_before?: string; // format: HH:mm:ss
     shift_start_before?: string; // format: HH:mm:ss
     shift_end_after?: string; // format: HH:mm:ss
+    shift_start_date?: string; // format: HH:mm:ss
+    shift_end_date?: string; // format: HH:mm:ss
 }
   
 export const getAvailableShifts = async (params: GetAvailableShiftsParams = {}) => {

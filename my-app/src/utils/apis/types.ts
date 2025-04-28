@@ -31,7 +31,9 @@ export const AvailableShiftQuerySchema = z.object({
     shift_start_before: z.string().time().optional(), 
     shift_start_after: z.string().time().optional(), 
     shift_end_before: z.string().time().optional(), 
-    shift_end_after: z.string().time().optional()
+    shift_end_after: z.string().time().optional(),
+    shift_start_date: z.coerce.date().optional(), //edit
+    shift_end_date: z.coerce.date().optional(), //edit
 }).strict();
 
 export type CreateAvailableShiftDTO = z.infer<typeof CreateAvailableShiftSchema>;

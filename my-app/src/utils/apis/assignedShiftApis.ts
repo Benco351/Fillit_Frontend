@@ -4,7 +4,7 @@ interface CreateAssignedShiftData {
     employeeId: number;
     shiftSlotId: number;
 }
-  
+ ///ADMINNNNN - assign shift to myself for admin
 export const createAssignedShift = async (data: CreateAssignedShiftData) => { // done
     try {
       const response = await instance.post('/assigned-shifts', data);
@@ -20,7 +20,8 @@ export const createAssignedShift = async (data: CreateAssignedShiftData) => { //
     }
 };
 
-export const deleteAssignedShiftById = async (id: number ) => { // done
+
+export const deleteAssignedShiftById = async (id: number ) => { 
     try {
       const response = await instance.delete(`/assigned-shifts/${id}`);
   

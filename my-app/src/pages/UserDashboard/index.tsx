@@ -32,8 +32,9 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
 import { intervalToDuration, formatDuration } from 'date-fns';
-import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
+import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById, getAvailableShifts } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift } from '../../utils/apis/requestedShiftsApis'; // Import the API function
+import { AvailableShiftQuerySchema } from '../../utils/apis/types'; // Import the schema for validation
 
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
@@ -44,7 +45,7 @@ import { createEmployee } from '../../utils/apis/employeeShiftApis';
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 
-const UserDashboad: React.FC = () => {
+const UserDashboard: React.FC = () => {
 
   const navigate = useNavigate();
 
@@ -97,39 +98,50 @@ const UserDashboad: React.FC = () => {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
   // Fetch shifts for the current week
-  useEffect(() => {
-    fetchShiftsForWeek();
-  }, [currentWeekStart]);
-
   const fetchShiftsForWeek = async () => {
     setLoading(true);
     try {
       const startDate = format(currentWeekStart, 'yyyy-MM-dd');
       const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
 
-      // Filter the simulated API response based on the current week's date range
-      const filteredAvailableShifts = availableShiftsResponse.filter(shift =>
-        isWithinInterval(new Date(shift.date), {
-          start: new Date(startDate),
-          end: new Date(endDate),
-        })
-      );
+      const queryParams = AvailableShiftQuerySchema.parse({
+        shift_start_date: new Date(startDate),
+        shift_end_date: new Date(endDate),
+      });
 
-      setAvailableShifts(filteredAvailableShifts);
-      setRequestedShifts(
-        requestedShiftsResponse.map(shift => ({
-          ...shift,
-          status: shift.status as 'pending' | 'approved' | 'denied',
-        }))
-      );
-      setAssignedShifts(assignedShiftsResponse);
+      const response = await getAvailableShifts({
+        shift_start_date: format(queryParams.shift_start_date!, 'yyyy-MM-dd'),
+        shift_end_date: format(queryParams.shift_end_date!, 'yyyy-MM-dd'),
+      });
+
+      console.log('API response for getAvailableShifts:', response);
+
+      if (response?.data && Array.isArray(response.data)) {
+        const mappedShifts = response.data.map((shift: any) => ({
+          id: shift.shift_id || shift.id,
+          date: shift.shift_date || shift.date,
+          start: shift.shift_time_start || shift.start,
+          end: shift.shift_time_end || shift.end,
+        }));
+
+        console.log('Mapped shifts:', mappedShifts);
+        setAvailableShifts(mappedShifts);
+      } else {
+        console.warn('No shifts returned from the API.');
+        setAvailableShifts([]);
+      }
     } catch (err) {
+      console.error('Error fetching shifts for the week:', err);
       setError('Failed to fetch shifts. Please try again later.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Automatically fetch shifts when the component mounts or the week changes
+  useEffect(() => {
+    fetchShiftsForWeek();
+  }, [currentWeekStart]);
 
   // Handle prev/next week navigation
   const goToPreviousWeek = () => {
@@ -1024,4 +1036,4 @@ const handleGetShiftById = async () => {
   );
 };
 
-export default UserDashboad;
+export default UserDashboard;
