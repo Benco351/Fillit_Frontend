@@ -1,35 +1,26 @@
 import {
   AppBar, AppBarProps, Box, Button, Container,
-  IconButton,
-  ThemeProvider,
-  Toolbar,
-  Typography,
-  useMediaQuery,
-  useScrollTrigger,
- 
- 
- } from '@mui/material';
- import { Link as RouterLink } from 'react-router-dom';
- import {
+  IconButton, ThemeProvider, Toolbar, Typography,
+  useMediaQuery, useScrollTrigger,
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import {
   MenuOutlined
- } from '@mui/icons-material';
- import React, { useState, useEffect } from 'react';
- import { alpha } from '@mui/system';
- import LogoOnly from '../../common/Logo';
- import { NavBarTheme } from '../../../assets/themes/themes';
- import { ROUTES } from '../../../routes/config/routes';
- 
- 
- 
- 
- const ElevationScroll = (props: { children: React.ReactElement<AppBarProps> }) => {
+} from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { alpha } from '@mui/system';
+import LogoOnly from '../../common/Logo';
+import { NavBarTheme } from '../../../assets/themes/themes';
+import { ROUTES } from '../../../routes/config/routes';
+import MobileDrawer from './MobileDrawer';
+
+const ElevationScroll = (props: { children: React.ReactElement<AppBarProps> }) => {
   const { children } = props;
   const trigger = useScrollTrigger({
     disableHysteresis: true,
     threshold: 0,
   });
- 
- 
+
   return React.cloneElement(children, {
     elevation: trigger ? 4 : 0,
     style: {
@@ -39,15 +30,13 @@ import {
       ...(children.props.style || {}),
     },
   });
- }
- 
- 
- 
- 
- const Navbar = () => {
+}
+
+const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const isMobile = useMediaQuery(NavBarTheme.breakpoints.down('md'));
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -55,8 +44,7 @@ import {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
- 
- 
+
   return (
     <ThemeProvider theme={NavBarTheme}>
       <ElevationScroll>
@@ -79,38 +67,34 @@ import {
                     fontWeight: 700,
                     display: 'flex',
                     alignItems: 'center',
-                    color: scrolled ? NavBarTheme.palette.primary.main : 'white'
+                    color: scrolled ? NavBarTheme.palette.primary.main : 'white',
                   }}
                 >
                   {/* Logo Section */}
-                   <LogoOnly/>
+                  <LogoOnly />
                 </Typography>
               </Box>
- 
- 
+
               {isMobile ? (
-                <IconButton
-                  edge="end"
-                  color="inherit"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                >
-                  <MenuOutlined />
-                </IconButton>
+                <>
+                  <IconButton
+                    edge="end"
+                    color="inherit"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  >
+                    <MenuOutlined />
+                  </IconButton>
+                  <MobileDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+                </>
               ) : (
                 <Box sx={{ display: 'flex', gap: 3 }}>
- 
- 
- 
- 
                   <Button
                     variant="contained"
                     color="primary"
                     sx={{ ml: 2 }}
                     component={RouterLink}
-                    to="/login"  // This is where it routes to
+                    to="/login"
                   >
- 
- 
                     Login
                   </Button>
                   <Button
@@ -118,32 +102,29 @@ import {
                     color="primary"
                     sx={{ ml: 2 }}
                     component={RouterLink}
-                    to="/signup"  // This is where it routes to
+                    to="/signup"
                   >
- 
- 
                     SignUp
                   </Button>
- 
- 
                   <Button
                     variant="contained"
                     color="primary"
                     sx={{ ml: 2 }}
                     component={RouterLink}
-                    to={ROUTES.DASHBOARD} // Ensure this uses ROUTES.DASHBOARD
+                    to={ROUTES.DASHBOARD}
                   >
                     Calendar
                   </Button>
-                  </Box>
-             )}
-           </Toolbar>
-         </Container>
-       </AppBar>
-     </ElevationScroll>
-   </ThemeProvider>
- );
-}
+                </Box>
+              )}
+            </Toolbar>
+          </Container>
+        </AppBar>
+      </ElevationScroll>
+    </ThemeProvider>
+  );
+};
+
 export default Navbar;
 
 
