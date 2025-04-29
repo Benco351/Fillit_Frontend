@@ -238,3 +238,43 @@ export const NavBarTheme = createTheme({
     },
   },
 });
+
+export const DrawerTheme = createTheme({
+  palette: {
+    primary: {
+      main: '#00c28c', // Green color from Fillit logo
+      dark: '#009e6f',
+      light: '#33cf9f',
+    },
+    secondary: {
+      main: '#2c353d', // Dark background from Fillit logo
+      dark: '#232a31',
+      light: '#4e5a64',
+    },
+    background: {
+      default: '#2c353d',
+      paper: '#3a3f47',
+    },
+  },
+  typography: {
+    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: { fontWeight: 700 },
+    h2: { fontWeight: 600 },
+    button: { fontWeight: 500, textTransform: 'none' },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: '#2c353d',
+          color: '#ffffff',
+          padding: '16px',
+          width: '280px',
+        },
+      },
+    },
+  },
+});
