@@ -11,6 +11,8 @@ import Features from '../../components/sections/Features';
 import Navbar from '../../components/layout/Navbar';
 import Header from '../../components/layout/Header';
 import { MainTheme } from '../../assets/themes/themes';
+import AIChatPopup from '../../components/aiChat';
+
 
 
 // Landing Page Component
@@ -33,6 +35,7 @@ const Main: React.FC = () => {
           {/* Footer */}
           <Footer />
         </Box>
+        <AIChatPopup /> {/* Ensure Chat Popup is outside the main content Box */}
       </ThemeProvider>
     </>
   );
