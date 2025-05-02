@@ -33,7 +33,8 @@ import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
 import { intervalToDuration, formatDuration } from 'date-fns';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
-import { createRequestedShift } from '../../utils/apis/requestedShiftsApis'; // Import the API function
+import { createRequestedShift, getRequestedShifts } from '../../utils/apis/requestedShiftsApis'; // Import the API function
+import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
 
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
@@ -96,6 +97,86 @@ const AdminDashboard: React.FC = () => {
   // Generate week days for the schedule
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
+  // Fetch all shifts (available, requested, and assigned) on component mount
+  useEffect(() => {
+    const fetchAllShifts = async () => {
+      setLoading(true);
+      try {
+        // Fetch available shifts
+        const availableShiftsResponse = await getAvailableShifts();
+        if (availableShiftsResponse?.data && Array.isArray(availableShiftsResponse.data)) {
+          const mappedAvailableShifts = availableShiftsResponse.data.map((shift: any) => ({
+            id: shift.shift_id || shift.id,
+            date: shift.shift_date || shift.date,
+            start: shift.shift_time_start || shift.start,
+            end: shift.shift_time_end || shift.end,
+          }));
+          setAvailableShifts(mappedAvailableShifts);
+        }
+
+        // Fetch requested shifts
+        const requestedShiftsResponse = await getRequestedShifts();
+        if (requestedShiftsResponse?.data && Array.isArray(requestedShiftsResponse.data)) {
+          const mappedRequestedShifts = requestedShiftsResponse.data.map((shift: any) => ({
+            id: shift.request_id || shift.id,
+            employeeId: shift.employee_id,
+            availableShiftId: shift.shift_slot_id,
+            notes: shift.notes || '',
+            status: shift.status || 'pending',
+          }));
+          setRequestedShifts(mappedRequestedShifts);
+        }
+
+        // Comment out assigned shifts if endpoint is missing or 404
+        // const assignedShiftsResponse = await getAssignedShifts();
+        // if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
+        //   const mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
+        //     id: shift.assigned_id || shift.id,
+        //     employeeId: shift.employee_id,
+        //     availableShiftId: shift.shift_slot_id,
+        //   }));
+        //   setAssignedShifts(mappedAssignedShifts);
+        // }
+      } catch (err) {
+        console.error('Error fetching shifts:', err);
+        setError('Failed to fetch shifts. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllShifts();
+  }, []);
+
+  // Fetch requested shifts on component mount
+  useEffect(() => {
+    const fetchRequestedShifts = async () => {
+      setLoading(true);
+      try {
+        const response = await getRequestedShifts();
+        console.log('Fetched requested shifts:', response);
+
+        if (response?.data && Array.isArray(response.data)) {
+          const mappedRequestedShifts = response.data.map((shift: any) => ({
+            id: shift.request_id || shift.id,
+            employeeId: shift.employee_id,
+            availableShiftId: shift.shift_slot_id,
+            notes: shift.notes || '',
+            status: shift.status || 'pending',
+          }));
+          setRequestedShifts(mappedRequestedShifts);
+        }
+      } catch (err) {
+        console.error('Error fetching requested shifts:', err);
+        setError('Failed to fetch requested shifts. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequestedShifts();
+  }, []);
+
   // Fetch shifts for the current week
   useEffect(() => {
     fetchShiftsForWeek();
@@ -130,6 +211,72 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Add a polling interval state
+  const POLLING_INTERVAL = 5000; // 5 seconds
+
+  // Fetch requested shifts periodically
+  useEffect(() => {
+    const fetchRequestedShifts = async () => {
+      try {
+        const response = await getRequestedShifts();
+        console.log('Fetched requested shifts:', response);
+
+        if (response?.data && Array.isArray(response.data)) {
+          setRequestedShifts(
+            response.data.map((shift: any) => ({
+              id: shift.request_id || shift.id,
+              employeeId: shift.employee_id,
+              availableShiftId: shift.shift_slot_id,
+              notes: shift.notes || '',
+              status: shift.status || 'pending',
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Error fetching requested shifts:', err);
+      }
+    };
+
+    // Initial fetch
+    fetchRequestedShifts();
+
+    // Set up polling
+    const interval = setInterval(fetchRequestedShifts, POLLING_INTERVAL);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
+
+  // Add this polling effect to always keep requestedShifts up-to-date
+  useEffect(() => {
+    const POLLING_INTERVAL = 1500; // 1.5 seconds for faster updates
+    let interval: NodeJS.Timeout;
+
+    const pollRequestedShifts = async () => {
+      try {
+        const response = await getRequestedShifts();
+        if (response?.data && Array.isArray(response.data)) {
+          setRequestedShifts(
+            response.data.map((shift: any) => ({
+              id: shift.request_id || shift.id,
+              employeeId: shift.employee_id,
+              availableShiftId: shift.shift_slot_id,
+              notes: shift.notes || '',
+              status: shift.status || 'pending',
+            }))
+          );
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+
+    pollRequestedShifts();
+    interval = setInterval(pollRequestedShifts, POLLING_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Handle prev/next week navigation
   const goToPreviousWeek = () => {
@@ -436,19 +583,18 @@ const handleGetShiftById = async () => {
   }
 };
 
-  // Utility function to get shift status for display
-  const getShiftStatus = (availableShiftId: number): string => {
-    const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
-    if (isAssigned) return 'assigned';
-    
-    const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
-    if (requestedShift) return requestedShift.status;
-    
-    return 'available';
-  };
+// Utility function to get shift status for display
+const getShiftStatus = (availableShiftId: number): string => {
+  // If any user has requested this shift, show its status (pending/approved/denied)
+  const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
+  if (requestedShift) return requestedShift.status;
 
-  // Utility function to get shift color based on status GetShiftColor
+  // If assigned, show assigned
+  const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
+  if (isAssigned) return 'assigned';
 
+  return 'available';
+};
 
   // Utility function to get assigned employee name
   const getAssignedEmployeeName = (availableShiftId: number): string => {
@@ -744,7 +890,7 @@ const handleGetShiftById = async () => {
                     .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                     .map(shift => {
                       const status = getShiftStatus(shift.id);
-                      const backgroundColor = getShiftColor(status);
+                      const backgroundColor = status === 'pending' ? 'orange' : getShiftColor(status);
                       
                       return (
                         <Box

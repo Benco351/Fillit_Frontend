@@ -44,26 +44,30 @@ export const getRequestedShiftById = async (id: number ) => { //??
 };
 
 interface GetRequestedShiftsParams { 
-    employeeId?: number;      // Filter by employee ID (optional)
+    request_employee_id?: number;      // Filter by employee ID (optional)
     request_status?: string;  // Filter by request status (optional)
 }
 
 //add
-export const getRequestedShifts = async (params: GetRequestedShiftsParams = {}) => { 
-    try {
-      const response = await instance.get('/requested-shifts', { params });
-  
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error fetching requested shifts:', error);
-      throw error; // Re-throw the error for further handling
-    }
-};
+export const getRequestedShifts = async (params: GetRequestedShiftsParams = {}) => {
+  try {
+    // Ensure the params object is correctly formed before sending
+    const response = await instance.get('/requested-shifts', { params });
 
+    if (!response.data.data) {
+      throw new Error('No data returned from the server');
+    }
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error fetching requested shifts:', error.message);
+    } else {
+      console.error('Error fetching requested shifts:', error);
+    }
+    throw error;
+  }
+};
 //add - returns to available shift state
 export const deleteRequestedShiftById = async (id: number ) => {
     try {
