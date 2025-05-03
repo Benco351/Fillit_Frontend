@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  Grid,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
+import {Box, Container, Paper, Typography, Grid, Button, Dialog, DialogTitle, DialogContent,
   DialogActions,
   TextField,
   MenuItem,
@@ -18,19 +9,16 @@ import {
   Snackbar,
   CircularProgress,
   CssBaseline,
-  ThemeProvider,
-  Menu,
-  MenuItem as DropdownMenuItem,
+  ThemeProvider
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { MainTheme } from '../../assets/themes/themes';
-import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
+import Navbar from '../../components/layout/userNavbar';
 import { intervalToDuration, formatDuration } from 'date-fns';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById, getAvailableShifts } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift, getRequestedShifts } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
@@ -186,22 +174,6 @@ const UserDashboard: React.FC = () => {
   };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleNavigateHome = () => {
-    navigate('/home'); // Navigate to the home page
-  };
-
-  const handleOpenSettings = () => {
-    navigate('/settings'); // Navigate to the settings page
-  };
 
   // Handle adding a new shift
   const handleAddShift = async () => {
@@ -542,47 +514,7 @@ const handleGetShiftById = async () => {
           maxWidth={false} // Remove maxWidth restriction
           sx={{ px: { xs: 2, sm: 4, md: 6 } }} // Add responsive padding
         >
-
-          {/* Navbar with Logo, Home, Settings, and Hamburger Button */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            {/* Logo */}
-            <LogoOnly />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleNavigateHome}
-                sx={{ color: 'white' }}
-              >
-                Home
-              </Button>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleOpenSettings}
-                sx={{ color: 'white' }}
-              >
-                Settings
-              </Button>
-              <IconButton
-                edge="end"
-                color="inherit"
-                onClick={handleMenuOpen}
-                sx={{ color: 'white' }}
-              >
-                <MenuIcon />
-              </IconButton>
-            </Box>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-            >
-              <DropdownMenuItem onClick={handleMenuClose}>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMenuClose}>Settings</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMenuClose}>Logout</DropdownMenuItem>
-            </Menu>
-          </Box>
+          <Navbar />
 
           <Box sx={{ my: 3 }}>
             <Typography

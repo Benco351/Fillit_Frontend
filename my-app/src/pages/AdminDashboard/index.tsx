@@ -29,7 +29,6 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIco
 import { MainTheme } from '../../assets/themes/themes';
 import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
 import { intervalToDuration, formatDuration } from 'date-fns';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
