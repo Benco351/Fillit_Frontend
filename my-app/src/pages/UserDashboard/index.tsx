@@ -6,11 +6,10 @@ import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-picker
 import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { MainTheme } from '../../assets/themes/themes';
-import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/layout/Footer';
 import Navbar from '../../components/layout/userNavbar';
 import { intervalToDuration, formatDuration } from 'date-fns';
-import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById, getAvailableShifts } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
+import {getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById, getAvailableShifts } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift, getRequestedShifts } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { AvailableShiftQuerySchema } from '../../utils/apis/types'; // Import the schema for validation
 
@@ -162,24 +161,6 @@ const UserDashboard: React.FC = () => {
     }
   };
   
-  const handleDeleteShift = async (shiftId: number) => {
-    setLoading(true);
-    try {
-      // Make API call to delete shift
-      const response = await deleteAvailableShiftById(shiftId);
-      console.log('Deleted shift from server:', response);
-  
-      // Update local state after successful deletion
-      setAvailableShifts(prev => prev.filter(shift => shift.id !== shiftId));
-  
-      setSuccess('Shift deleted successfully');
-    } catch (err) {
-      console.error('Failed to delete shift:', err);
-      setError('Failed to delete shift. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleEditShift = async () => {
     if (!editShift) return;
@@ -273,26 +254,6 @@ const UserDashboard: React.FC = () => {
     setIsRequestShiftDialogOpen(true);
   };
 
-  // Handle accepting a shift
-  const handleAcceptShift = async (requestedShiftId: number) => {
-    setLoading(true);
-    try {
-      // Simulate API call to accept the shift
-      console.log('Accepting shift:', requestedShiftId);
-
-      setRequestedShifts(prev =>
-        prev.map(shift =>
-          shift.id === requestedShiftId ? { ...shift, status: 'approved' } : shift
-        )
-      );
-      setSuccess('Shift accepted successfully');
-    } catch (err) {
-      setError('Failed to accept shift. Please try again.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
     setEditShift(shift); // Set the selected shift for editing
