@@ -1,13 +1,11 @@
-import{ instance } from './apiconfig'; // Adjust the import path as necessary
+import { instance } from './apiconfig'; // Adjust the import path as necessary
+import { 
+  CreateRequestedShiftDTO, 
+  UpdateRequestedShiftDTO, 
+  RequestedShiftQueryDTO 
+} from './types'; // Import types from types.ts
 
-interface CreateRequestedShiftData {
-    employeeId: number;
-    shiftSlotId: number;
-    notes: string;
-}
-
-  
-export const createRequestedShift = async (data: CreateRequestedShiftData) => {
+export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
   try {
     console.log('Request payload for createRequestedShift:', data); // Log the request payload
     const response = await instance.post('/requested-shifts', data); // Ensure this matches the backend endpoint
@@ -28,28 +26,22 @@ export const createRequestedShift = async (data: CreateRequestedShiftData) => {
   }
 };
 
-export const getRequestedShiftById = async (id: number ) => { //??
-    try {
-      const response = await instance.get(`/requested-shifts/${id}`);
-  
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error fetching requested shift by ID:', error);
-      throw error; // Re-throw the error for further handling
+export const getRequestedShiftById = async (id: number ) => { //?? 
+  try {
+    const response = await instance.get(`/requested-shifts/${id}`);
+
+    if (!response.data.data) {
+      throw new Error('No data returned from the server');
     }
+
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error('Error fetching requested shift by ID:', error);
+    throw error; // Re-throw the error for further handling
+  }
 };
 
-interface GetRequestedShiftsParams { 
-    request_employee_id?: number;      // Filter by employee ID (optional)
-    request_status?: string;  // Filter by request status (optional)
-}
-
-//add
-export const getRequestedShifts = async (params: GetRequestedShiftsParams = {}) => {
+export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) => {
   try {
     // Ensure the params object is correctly formed before sending
     const response = await instance.get('/requested-shifts', { params });
@@ -68,42 +60,35 @@ export const getRequestedShifts = async (params: GetRequestedShiftsParams = {}) 
     throw error;
   }
 };
-//add - returns to available shift state
+
 export const deleteRequestedShiftById = async (id: number ) => {
-    try {
-      const response = await instance.delete(`/requested-shifts/${id}`);
-  
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error deleting requested shift by ID:', error);
-      throw error; // Re-throw the error for further handling
+  try {
+    const response = await instance.delete(`/requested-shifts/${id}`);
+
+    if (!response.data.data) {
+      throw new Error('No data returned from the server');
     }
+
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error('Error deleting requested shift by ID:', error);
+    throw error; // Re-throw the error for further handling
+  }
 };
 
-interface UpdateRequestedShiftData {
-    status: string;  // e.g., "denied", "approved"
-    notes: string;   // Additional notes for the request
-}
- 
-//add - for admin (accept/deny)
-//add - for employee (cancel, note)
-export const updateRequestedShiftById = async ( id: number , data: UpdateRequestedShiftData ) => {
-    try {
-      const response = await instance.put(`/requested-shifts/${id}`, data);
-  
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error updating requested shift by ID:', error);
-      throw error; // Re-throw the error for further handling
+export const updateRequestedShiftById = async (id: number, data: UpdateRequestedShiftDTO) => {
+  try {
+    const response = await instance.put(`/requested-shifts/${id}`, data);
+
+    if (!response.data.data) {
+      throw new Error('No data returned from the server');
     }
+
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error('Error updating requested shift by ID:', error);
+    throw error; // Re-throw the error for further handling
+  }
 };
 
 

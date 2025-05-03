@@ -1,23 +1,11 @@
-import{ instance } from './apiconfig'; // Adjust the import path as necessary
+import { instance } from './apiconfig'; // Adjust the import path as necessary
+import {
+  CreateAvailableShiftDTO,
+  UpdateAvailableShiftDTO,
+  AvailableShiftQueryDTO,
+} from './types'; // Adjust the import path as necessary
 
-
-interface CreateAvailableShiftData {
-    date: Date; // format: YYYY-MM-DD
-    start: string; // format: HH:mm:ss
-    end: string;   // format: HH:mm:ss
-}
-
-// Update your interface to match the backend response
-interface AvailableShiftResponse {
-  shift_id: number; // Note: using shift_id instead of id to match backend
-  date: string;
-  start: string;
-  end: string;
-  // Add other fields your backend returns
-}
-
-//DONE
-export const createAvailableShift = async (data: CreateAvailableShiftData): Promise<any> => {
+export const createAvailableShift = async (data: CreateAvailableShiftDTO): Promise<any> => {
   try {
     const response = await instance.post('/available-shifts', data);
     
@@ -35,8 +23,7 @@ export const createAvailableShift = async (data: CreateAvailableShiftData): Prom
   }
 };
 
-//DONE
-export const getAvailableShiftById = async (id: number ) => {
+export const getAvailableShiftById = async (id: number) => {
   try {
     const response = await instance.get(`/available-shifts/${id}`);
     
@@ -51,33 +38,21 @@ export const getAvailableShiftById = async (id: number ) => {
   }
 };
 
-
-interface GetAvailableShiftsParams {
-    shift_date?: string; // format: YYYY-MM-DD //optional
-    shift_start_after?: string; // format: HH:mm:ss
-    shift_end_before?: string; // format: HH:mm:ss
-    shift_start_before?: string; // format: HH:mm:ss
-    shift_end_after?: string; // format: HH:mm:ss
-    shift_start_date?: string; // format: HH:mm:ss
-    shift_end_date?: string; // format: HH:mm:ss
-}
+export const getAvailableShifts = async (params: AvailableShiftQueryDTO = {}) => {
+  try {
+    const response = await instance.get('/available-shifts', { params });
   
-export const getAvailableShifts = async (params: GetAvailableShiftsParams = {}) => {
-    try {
-      const response = await instance.get('/available-shifts', { params });
-  
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error fetching available shifts:', error);
-      throw error; // Re-throw the error for further handling
+    if (!response.data.data) {
+      throw new Error('No data returned from the server');
     }
+  
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error('Error fetching available shifts:', error);
+    throw error; // Re-throw the error for further handling
+  }
 };
 
-//done
 export const deleteAvailableShiftById = async (id: number) => {
   try {
     const response = await instance.delete(`/available-shifts/${id}`);
@@ -89,26 +64,19 @@ export const deleteAvailableShiftById = async (id: number) => {
   }
 };
 
-interface UpdateAvailableShiftData {
-    date?: string; // format: YYYY-MM-DD
-    start?: string; // format: HH:mm:ss
-    end?: string;   // format: HH:mm:ss
-}
-
-//done
-export const updateAvailableShiftById = async (id: number, data: UpdateAvailableShiftData) => { //done
-    try {
-      const response = await instance.put(`/available-shifts/${id}`, data);
+export const updateAvailableShiftById = async (id: number, data: UpdateAvailableShiftDTO) => {
+  try {
+    const response = await instance.put(`/available-shifts/${id}`, data);
   
-      if (!response.data.data) {
-        throw new Error('No data returned from the server');
-      }
-  
-      return response.data; // Return the response data
-    } catch (error) {
-      console.error('Error updating available shift by ID:', error);
-      throw error; // Re-throw the error for further handling
+    if (!response.data.data) {
+      throw new Error('No data returned from the server');
     }
+  
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error('Error updating available shift by ID:', error);
+    throw error; // Re-throw the error for further handling
+  }
 };
 
 interface GetAssignedShiftsParams { 

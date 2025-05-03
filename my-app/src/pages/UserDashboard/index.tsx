@@ -105,8 +105,8 @@ const UserDashboard: React.FC = () => {
       const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
 
       const response = await getAvailableShifts({
-        shift_start_date: startDate,
-        shift_end_date: endDate,
+        shift_start_date: new Date (startDate),
+        shift_end_date: new Date (endDate),
       });
 
       console.log('API response for getAvailableShifts:', response);
@@ -324,7 +324,7 @@ const UserDashboard: React.FC = () => {
 
       // Call the API to update the shift
       const updatedShiftResponse = await updateAvailableShiftById(editShift.id, {
-        date: editShift.date,
+        date: new Date(editShift.date),
         start: editShift.start,
         end: editShift.end,
       });

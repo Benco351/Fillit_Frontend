@@ -427,7 +427,7 @@ const AdminDashboard: React.FC = () => {
 
       // Call the API to update the shift
       const updatedShiftResponse = await updateAvailableShiftById(editShift.id, {
-        date: editShift.date,
+        date: new Date(editShift.date),
         start: editShift.start,
         end: editShift.end,
       });
