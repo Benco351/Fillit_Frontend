@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Container, Paper, Typography, Grid, Button, Dialog, DialogTitle, DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  IconButton,
-  Chip,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  CssBaseline,
-  ThemeProvider
-} from '@mui/material';
+import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,TextField, MenuItem,
+  IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
@@ -35,55 +25,19 @@ import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 
 const UserDashboard: React.FC = () => {
 
-  const navigate = useNavigate();
-
-  // State for the current week
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
-  
-  // State for shifts
-  const [availableShifts, setAvailableShifts] = useState<AvailableShift[]>([]);
-  const [requestedShifts, setRequestedShifts] = useState<RequestedShift[]>([]);
-  const [assignedShifts, setAssignedShifts] = useState<AssignedShift[]>([]);
-  
-  // Current user (would normally come from auth context)
+    // Current user 
   const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
-  
-  // UI states/
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  
-  // Dialog states
-  const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState<boolean>(false);
-  const [isRequestShiftDialogOpen, setIsRequestShiftDialogOpen] = useState<boolean>(false);
-  const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false); // State for edit dialog
-  const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);
-  
-  // Form states
-  const [newShift, setNewShift] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    start: '09:00:00',
-    end: '17:00:00',
-  });
-  
-  const [newRequest, setNewRequest] = useState({
-    employeeId: currentEmployee.id,
-    availableShiftId: 0,
-    notes: '',
-  });
 
-  const [editShift, setEditShift] = useState<AvailableShift | null>(null); // State for the shift being edited
+  //These guys are in useUserDashboard
+  const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
+    error, success, filter, setFilter, refreshAvailableShifts, refreshRequestedShifts, setSuccess, 
+    setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, setNewShift,
+    isAddShiftDialogOpen, setIsAddShiftDialogOpen, isRequestShiftDialogOpen, setIsRequestShiftDialogOpen,
+    isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, editShift, setEditShift, shiftIdToFetch, setShiftIdToFetch,
+    fetchedShift, setFetchedShift,
+    weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested,
+  } = useUserDashboard(currentEmployee);
 
-  const [filter, setFilter] = useState<"all" | "requested" | "accepted">("all");
-
- // Filter state
-
-  // State for fetching a shift by ID
-  const [shiftIdToFetch, setShiftIdToFetch] = useState<number | ''>('');
-  const [fetchedShift, setFetchedShift] = useState<AvailableShift | null>(null);
-
-  // Generate week days for the schedule
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
   // Fetch shifts for the current week
   const fetchShiftsForWeek = async () => {
