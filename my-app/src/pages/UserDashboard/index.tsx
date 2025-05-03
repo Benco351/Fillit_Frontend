@@ -34,10 +34,9 @@ const UserDashboard: React.FC = () => {
     setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, setNewShift,
     isAddShiftDialogOpen, setIsAddShiftDialogOpen, isRequestShiftDialogOpen, setIsRequestShiftDialogOpen,
     isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, editShift, setEditShift, shiftIdToFetch, setShiftIdToFetch,
-    fetchedShift, setFetchedShift,
-    weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested,
+    fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
+    goToPreviousWeek
   } = useUserDashboard(currentEmployee);
-
 
   // Fetch shifts for the current week
   const fetchShiftsForWeek = async () => {
@@ -118,67 +117,8 @@ const UserDashboard: React.FC = () => {
     fetchRequestedShifts();
   }, [currentEmployee.id]); // This will trigger on employee ID change or on refresh
   
-  // Handle prev/next week navigation
-  const goToPreviousWeek = () => {
-    setCurrentWeekStart(prevWeek => addDays(prevWeek, -7));
-  };
-
-  const goToNextWeek = () => {
-    setCurrentWeekStart(prevWeek => addDays(prevWeek, 7));
-  };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  // Handle adding a new shift
-  const handleAddShift = async () => {
-    setLoading(true);
-    try {
-      console.log('Adding new shift:', newShift);
-
-      const apiResponse = await createAvailableShift({
-        date: new Date(newShift.date),
-        start: newShift.start,
-        end: newShift.end,
-      });
-
-      console.log('API response:', apiResponse);
-
-      let shiftId = null;
-
-      if (apiResponse && apiResponse.shift_id !== undefined) {
-        shiftId = apiResponse.shift_id;
-      } else if (apiResponse && apiResponse.data && apiResponse.data.shift_id !== undefined) {
-        shiftId = apiResponse.data.shift_id;
-      }
-
-      if (shiftId === null) {
-        console.error('Could not find shift_id in API response');
-        setError('Shift created but ID is missing. Please refresh.');
-        return;
-      }
-
-      const addedShift: AvailableShift = {
-        id: shiftId,
-        date: format(new Date(newShift.date), 'yyyy-MM-dd'),
-        start: newShift.start,
-        end: newShift.end,
-      };
-
-      // Update local state
-      setAvailableShifts((prev) => [...prev, addedShift]);
-
-      // Persist the new shift in the simulated API response
-      availableShiftsResponse.push(addedShift);
-
-      setSuccess('Shift added successfully');
-      setIsAddShiftDialogOpen(false);
-    } catch (err) {
-      setError('Failed to add shift. Please try again.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleRequestShift = async () => {
     if (!selectedShift) return;

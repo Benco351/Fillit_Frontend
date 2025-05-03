@@ -43,6 +43,17 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         availableShiftId: 0,
         notes: '',
       });
+  
+        // Handle prev/next week navigation
+  const goToPreviousWeek = () => {
+          setCurrentWeekStart(prevWeek => addDays(prevWeek, -7));
+        };
+      
+  const goToNextWeek = () => {
+          setCurrentWeekStart(prevWeek => addDays(prevWeek, 7));
+        };
+      
+
 
     // Dialog states
   const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState<boolean>(false);
@@ -134,8 +145,6 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     fetchedShift, setFetchedShift,
     weekDays,
     loadingAvailable,
-    loadingRequested,
-    setLoadingAvailable,
-    setLoadingRequested,
+    loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek
   };
 };
