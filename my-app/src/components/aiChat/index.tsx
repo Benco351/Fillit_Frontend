@@ -219,7 +219,20 @@ export default function MTAChatPopup(): JSX.Element {
                     )
                   }}
                 >
-                  <Typography variant="subtitle2" component="div">
+                  <Typography
+                    variant="subtitle2"
+                    component="div"
+                    sx={{
+                      fontWeight: 'bold',
+                      mb: 0.5,
+                      ...(msg.sender === 'You'
+                        ? { color: 'primary.contrastText' }
+                        : msg.isError
+                          ? { color: 'error.dark' }
+                          : { color: 'text.secondary' }
+                      )
+                    }}
+                  >
                     {msg.sender}
                   </Typography>
                   <Typography variant="body2">
