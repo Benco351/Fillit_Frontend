@@ -33,7 +33,7 @@ import Navbar from '../../components/layout/dashboardNavbar';
 import Footer from '../../components/layout/Footer';
 import { intervalToDuration, formatDuration } from 'date-fns';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
-import { createRequestedShift, getRequestedShifts } from '../../utils/apis/requestedShiftsApis'; // Import the API function
+import { createRequestedShift, getRequestedShifts, updateRequestedShiftById, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
 
 //Types
@@ -358,34 +358,34 @@ const AdminDashboard: React.FC = () => {
 
   const handleRequestShift = async () => {
     if (!selectedShift) return;
-  
+
     setLoading(true);
     try {
       console.log('Requesting shift:', newRequest);
-  
+
       // Call the API to create a requested shift
       const newRequestResponse = await createRequestedShift({
         employeeId: newRequest.employeeId,
         shiftSlotId: selectedShift.id,
         notes: newRequest.notes,
       });
-  
-      const newRequestData = newRequestResponse.data; // Ensure you have the correct data structure here
-  
+
+      const newRequestData = newRequestResponse.data;
+
       console.log('Requested shift response:', newRequestData);
-  
-      // Update the local state with the new requested shift
-      setRequestedShifts((prev) => [
-        ...prev,
-        {
-          id: newRequestData.id,
-          employeeId: newRequest.employeeId,
-          availableShiftId: selectedShift.id,
-          notes: newRequest.notes,
-          status: 'pending',
-        },
-      ]);
-  
+
+      // Fetch the updated requested shifts from the backend
+      const updatedRequestedShifts = await getRequestedShifts();
+      setRequestedShifts(
+        updatedRequestedShifts.data.map((shift: any) => ({
+          id: shift.request_id || shift.id,
+          employeeId: shift.employee_id,
+          availableShiftId: shift.shift_slot_id,
+          notes: shift.notes || '',
+          status: shift.status || 'pending',
+        }))
+      );
+
       setSuccess('Shift requested successfully');
       setIsRequestShiftDialogOpen(false);
     } catch (err) {
@@ -399,6 +399,7 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
   const handleDeleteShift = async (shiftId: number) => {
     setLoading(true);
     try {
@@ -508,18 +509,42 @@ const AdminDashboard: React.FC = () => {
   const handleAcceptShift = async (requestedShiftId: number) => {
     setLoading(true);
     try {
-      // Simulate API call to accept the shift
-      console.log('Accepting shift:', requestedShiftId);
+      console.log('Accepting shift with ID:', requestedShiftId);
 
+      // Call the API to update the requested shift status to "approved"
+      await updateRequestedShiftById(requestedShiftId, { status: 'approved' });
+
+      // Update the local state to reflect the change
       setRequestedShifts(prev =>
         prev.map(shift =>
           shift.id === requestedShiftId ? { ...shift, status: 'approved' } : shift
         )
       );
+
       setSuccess('Shift accepted successfully');
     } catch (err) {
+      console.error('Failed to accept shift:', err);
       setError('Failed to accept shift. Please try again.');
-      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteRequestedShift = async (requestedShiftId: number) => {
+    setLoading(true);
+    try {
+      console.log('Deleting requested shift with ID:', requestedShiftId);
+
+      // Call the API to delete the requested shift
+      await deleteRequestedShiftById(requestedShiftId);
+
+      // Update the local state to remove the deleted shift
+      setRequestedShifts(prev => prev.filter(shift => shift.id !== requestedShiftId));
+
+      setSuccess('Requested shift deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete requested shift:', err);
+      setError('Failed to delete requested shift. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -930,16 +955,22 @@ const getShiftStatus = (availableShiftId: number): string => {
                                 size="small"
                                 sx={{ fontSize: '0.6rem', height: 16, mt: 0.5 }}
                               />
-                              {currentEmployee.id === 1 && (
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  sx={{ mt: 1 }}
-                                  onClick={() => handleAcceptShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
-                                >
-                                  Accept
-                                </Button>
-                              )}
+                              <Button
+                                variant="contained"
+                                size="small"
+                                sx={{ mt: 1 }}
+                                onClick={() => handleAcceptShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                              >
+                                Accept
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                sx={{ mt: 1, ml: 1 }}
+                                onClick={() => handleDeleteRequestedShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                              >
+                                Delete
+                              </Button>
                             </>
                           )}
                           

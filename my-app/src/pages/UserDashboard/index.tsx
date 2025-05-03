@@ -645,13 +645,6 @@ const handleGetShiftById = async () => {
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setIsAddShiftDialogOpen(true)}
-              >
-                Add Available Shift
-              </Button>
-              <Button
-                variant="contained"
                 color="secondary"
                 onClick={async () => {
                   try {
@@ -852,76 +845,6 @@ const handleGetShiftById = async () => {
             </Box>
           </Box>
 
-          {/* Add Shift Dialog */}
-          <Dialog open={isAddShiftDialogOpen} onClose={() => setIsAddShiftDialogOpen(false)} maxWidth="sm" fullWidth>
-            <DialogTitle>Add Available Shift</DialogTitle>
-            <DialogContent>
-              <Box sx={{ mt: 2 }}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="Date"
-                    value={parseISO(newShift.date)}
-                    onChange={(newDate) => {
-                      if (newDate) {
-                        setNewShift(prev => ({
-                          ...prev,
-                          date: format(newDate, 'yyyy-MM-dd')
-                        }));
-                      }
-                    }}
-                    sx={{ width: '100%', mb: 2 }}
-                  />
-                </LocalizationProvider>
-                
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Box sx={{ flex: 1 }}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <TimePicker
-                        label="Start Time"
-                        value={parseISO(`2023-01-01T${newShift.start}`)}
-                        onChange={(newTime) => {
-                          if (newTime) {
-                            setNewShift(prev => ({
-                              ...prev,
-                              start: format(newTime, 'HH:mm:ss')
-                            }));
-                          }
-                        }}
-                        sx={{ width: '100%' }}
-                      />
-                    </LocalizationProvider>
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <TimePicker
-                        label="End Time"
-                        value={parseISO(`2023-01-01T${newShift.end}`)}
-                        onChange={(newTime) => {
-                          if (newTime) {
-                            setNewShift(prev => ({
-                              ...prev,
-                              end: format(newTime, 'HH:mm:ss')
-                            }));
-                          }
-                        }}
-                        sx={{ width: '100%' }}
-                      />
-                    </LocalizationProvider>
-                  </Box>
-                </Box>
-              </Box>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setIsAddShiftDialogOpen(false)}>Cancel</Button>
-              <Button 
-                variant="contained" 
-                onClick={handleAddShift}
-                disabled={loading}
-              >
-                {loading ? <CircularProgress size={24} /> : "Add Shift"}
-              </Button>
-            </DialogActions>
-          </Dialog>
 
           {/* Edit Shift Dialog */}
           <Dialog open={isEditShiftDialogOpen} onClose={() => setIsEditShiftDialogOpen(false)} maxWidth="sm" fullWidth>
