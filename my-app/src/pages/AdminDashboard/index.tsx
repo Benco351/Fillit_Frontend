@@ -24,6 +24,7 @@ import { createEmployee } from '../../utils/apis/employeeShiftApis';
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import Navbar from '../../components/layout/userNavbar';
+import RequestShiftDialog from '../../components/ShiftManagment';
 
 const AdminDashboard: React.FC = () => {
 
@@ -195,7 +196,7 @@ const AdminDashboard: React.FC = () => {
 
   // Add this polling effect to always keep requestedShifts up-to-date
   useEffect(() => {
-    const POLLING_INTERVAL = 1500; // 1.5 seconds for faster updates
+    const POLLING_INTERVAL = 3000; // 1.5 seconds for faster updates
     let interval: NodeJS.Timeout;
 
     const pollRequestedShifts = async () => {
@@ -1036,40 +1037,11 @@ const getShiftStatus = (availableShiftId: number): string => {
           </Dialog>
 
           {/* Request Shift Dialog */}
-          <Dialog open={isRequestShiftDialogOpen} onClose={() => setIsRequestShiftDialogOpen(false)} maxWidth="sm" fullWidth>
-            <DialogTitle>Request Shift</DialogTitle>
-            <DialogContent>
-              {selectedShift && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1">
-                    Date: {selectedShift.date}
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                    Time: {selectedShift.start.substring(0, 5)} - {selectedShift.end.substring(0, 5)}
-                  </Typography>
-                  <TextField
-                    label="Notes"
-                    multiline
-                    rows={4}
-                    value={newRequest.notes}
-                    onChange={(e) => setNewRequest(prev => ({ ...prev, notes: e.target.value }))}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                </Box>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setIsRequestShiftDialogOpen(false)}>Cancel</Button>
-              <Button 
-                variant="contained" 
-                onClick={handleRequestShift}
-                disabled={loading}
-              >
-                {loading ? <CircularProgress size={24} /> : "Request Shift"}
-              </Button>
-            </DialogActions>
-          </Dialog>
+          
+          <RequestShiftDialog/>
+
+
+
 
           {/* Snackbars for notifications */}
           <Snackbar

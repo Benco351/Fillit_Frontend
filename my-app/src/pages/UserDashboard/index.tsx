@@ -12,7 +12,6 @@ import { intervalToDuration, formatDuration } from 'date-fns';
 import {getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById, getAvailableShifts } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift, getRequestedShifts } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { AvailableShiftQuerySchema } from '../../utils/apis/types'; // Import the schema for validation
-
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
@@ -21,6 +20,7 @@ import {employees} from '../../components/CalendarFeatures/calendarStates';
 import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
+import RequestShiftDialog from '../../components/ShiftManagment';
 
 const UserDashboard: React.FC = () => {
 
@@ -323,9 +323,6 @@ const handleGetShiftById = async () => {
     
     return 'available';
   };
-
-  // Utility function to get shift color based on status GetShiftColor
-
 
   // Utility function to get assigned employee name
   const getAssignedEmployeeName = (availableShiftId: number): string => {
@@ -697,40 +694,7 @@ const handleGetShiftById = async () => {
           </Dialog>
 
           {/* Request Shift Dialog */}
-          <Dialog open={isRequestShiftDialogOpen} onClose={() => setIsRequestShiftDialogOpen(false)} maxWidth="sm" fullWidth>
-            <DialogTitle>Request Shift</DialogTitle>
-            <DialogContent>
-              {selectedShift && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1">
-                    Date: {selectedShift.date}
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                    Time: {selectedShift.start.substring(0, 5)} - {selectedShift.end.substring(0, 5)}
-                  </Typography>
-                  <TextField
-                    label="Notes"
-                    multiline
-                    rows={4}
-                    value={newRequest.notes}
-                    onChange={(e) => setNewRequest((prev) => ({ ...prev, notes: e.target.value }))}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                </Box>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setIsRequestShiftDialogOpen(false)}>Cancel</Button>
-              <Button 
-                variant="contained" 
-                onClick={handleRequestShift} // Trigger the API call
-                disabled={loading}
-              >
-                {loading ? <CircularProgress size={24} /> : "Request Shift"}
-              </Button>
-            </DialogActions>
-          </Dialog>
+          <RequestShiftDialog/>
 
           {/* Snackbars for notifications */}
           <Snackbar
