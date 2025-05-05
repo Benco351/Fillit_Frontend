@@ -1,26 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  Grid,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  IconButton,
-  Chip,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  CssBaseline,
-  ThemeProvider,
-  Menu,
-  MenuItem as DropdownMenuItem,
+import {Box, Container, Paper, Typography, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  MenuItem, IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, Menu, MenuItem as DropdownMenuItem,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
@@ -43,58 +23,24 @@ import {employees} from '../../components/CalendarFeatures/calendarStates';
 import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
+import Navbar from '../../components/layout/userNavbar';
 
 const AdminDashboard: React.FC = () => {
 
+      // Current user 
+    const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
+  
+    //These guys are in useUserDashboard
+    const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
+      error, success, filter, setFilter, refreshAvailableShifts, refreshRequestedShifts, setSuccess, 
+      setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, setNewShift,
+      isAddShiftDialogOpen, setIsAddShiftDialogOpen, isRequestShiftDialogOpen, setIsRequestShiftDialogOpen,
+      isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, editShift, setEditShift, shiftIdToFetch, setShiftIdToFetch,
+      fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
+      goToPreviousWeek
+    } = useUserDashboard(currentEmployee);
+
   const navigate = useNavigate();
-
-  // State for the current week
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
-  
-  // State for shifts
-  const [availableShifts, setAvailableShifts] = useState<AvailableShift[]>([]);
-  const [requestedShifts, setRequestedShifts] = useState<RequestedShift[]>([]);
-  const [assignedShifts, setAssignedShifts] = useState<AssignedShift[]>([]);
-  
-  // Current user (would normally come from auth context)
-  const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
-  
-  // UI states/
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  
-  // Dialog states
-  const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState<boolean>(false);
-  const [isRequestShiftDialogOpen, setIsRequestShiftDialogOpen] = useState<boolean>(false);
-  const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false); // State for edit dialog
-  const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);
-  
-  // Form states
-  const [newShift, setNewShift] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    start: '09:00:00',
-    end: '17:00:00',
-  });
-  
-  const [newRequest, setNewRequest] = useState({
-    employeeId: currentEmployee.id,
-    availableShiftId: 0,
-    notes: '',
-  });
-
-  const [editShift, setEditShift] = useState<AvailableShift | null>(null); // State for the shift being edited
-
-  const [filter, setFilter] = useState<"all" | "requested" | "accepted">("all");
-
- // Filter state
-
-  // State for fetching a shift by ID
-  const [shiftIdToFetch, setShiftIdToFetch] = useState<number | ''>('');
-  const [fetchedShift, setFetchedShift] = useState<AvailableShift | null>(null);
-
-  // Generate week days for the schedule
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
   // Fetch all shifts (available, requested, and assigned) on component mount
   useEffect(() => {
@@ -276,15 +222,6 @@ const AdminDashboard: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
-
-  // Handle prev/next week navigation
-  const goToPreviousWeek = () => {
-    setCurrentWeekStart(prevWeek => addDays(prevWeek, -7));
-  };
-
-  const goToNextWeek = () => {
-    setCurrentWeekStart(prevWeek => addDays(prevWeek, 7));
-  };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -663,46 +600,9 @@ const getShiftStatus = (availableShiftId: number): string => {
           sx={{ px: { xs: 2, sm: 4, md: 6 } }} // Add responsive padding
         >
 
-          {/* Navbar with Logo, Home, Settings, and Hamburger Button */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            {/* Logo */}
-            <LogoOnly />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleNavigateHome}
-                sx={{ color: 'white' }}
-              >
-                Home
-              </Button>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleOpenSettings}
-                sx={{ color: 'white' }}
-              >
-                Settings
-              </Button>
-              <IconButton
-                edge="end"
-                color="inherit"
-                onClick={handleMenuOpen}
-                sx={{ color: 'white' }}
-              >
-                <MenuIcon />
-              </IconButton>
-            </Box>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-            >
-              <DropdownMenuItem onClick={handleMenuClose}>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMenuClose}>Settings</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMenuClose}>Logout</DropdownMenuItem>
-            </Menu>
-          </Box>
+          <Navbar />
+
+
 
           <Box sx={{ my: 3 }}>
             <Typography
