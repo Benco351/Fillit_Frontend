@@ -604,8 +604,6 @@ const getShiftStatus = (availableShiftId: number): string => {
 
           <Navbar />
 
-
-
           <Box sx={{ my: 3 }}>
             <Typography
               variant="h4"
@@ -613,24 +611,37 @@ const getShiftStatus = (availableShiftId: number): string => {
               gutterBottom
               align="center"
               sx={{
-                color: '#00c28c', // Green color for emphasis
+                color: '#00c28c',
                 fontWeight: 'bold',
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)', // Subtle shadow for depth
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
                 fontFamily: 'Roboto, sans-serif',
                 letterSpacing: '0.1em',
-                textTransform: 'uppercase', // Make it uppercase for a bold statement
+                textTransform: 'uppercase',
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, // Responsive font size
               }}
             >
               Shift Management System
             </Typography>
 
             {/* Filters */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+            <Box sx={{ 
+              mb: 2, 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'center', 
+              gap: 2,
+              alignItems: { xs: 'stretch', sm: 'center' }
+            }}>
               <ShiftFilters filter={filter} setFilter={setFilter} />
             </Box>
 
             {/* Employee selection */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ 
+              mb: 2, 
+              display: 'flex', 
+              justifyContent: { xs: 'center', sm: 'flex-end' },
+              width: '100%'
+            }}>
               <TextField
                 select
                 label="Current Employee"
@@ -640,7 +651,11 @@ const getShiftStatus = (availableShiftId: number): string => {
                   const employee = employees.find(emp => emp.id === empId);
                   if (employee) setCurrentEmployee(employee);
                 }}
-                sx={{ width: 200, color: 'white', '& .MuiInputBase-input': { color: 'white' } }} // Set text color to white
+                sx={{ 
+                  width: { xs: '100%', sm: 200 },
+                  color: 'white',
+                  '& .MuiInputBase-input': { color: 'white' }
+                }}
               >
                 {employees.map((employee) => (
                   <MenuItem key={employee.id} value={employee.id}>
@@ -651,25 +666,50 @@ const getShiftStatus = (availableShiftId: number): string => {
             </Box>
 
             {/* Week navigation */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Button variant="outlined" onClick={goToPreviousWeek}>
+            <Box sx={{ 
+              mb: 2, 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              gap: 2
+            }}>
+              <Button 
+                variant="outlined" 
+                onClick={goToPreviousWeek}
+                fullWidth={false}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
                 Previous Week
               </Button>
               <WeekPicker
                 currentWeekStart={currentWeekStart}
                 onWeekChange={setCurrentWeekStart}
               />
-              <Button variant="outlined" onClick={goToNextWeek}>
+              <Button 
+                variant="outlined" 
+                onClick={goToNextWeek}
+                fullWidth={false}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
                 Next Week
               </Button>
             </Box>
 
             {/* Add new shift button */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ 
+              mb: 2, 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'flex-end',
+              gap: 2
+            }}>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => setIsAddShiftDialogOpen(true)}
+                fullWidth={false}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 Add Available Shift
               </Button>
@@ -680,7 +720,7 @@ const getShiftStatus = (availableShiftId: number): string => {
                   try {
                     const response = await createEmployee({
                       name: 'John Doe',
-                      email: `john${Math.floor(Math.random() * 10000)}@example.com`, // random email to avoid duplicate
+                      email: `john${Math.floor(Math.random() * 10000)}@example.com`,
                       password: 'SuperSecret123!',
                       phone: '1234567890'
                     });
@@ -691,216 +731,245 @@ const getShiftStatus = (availableShiftId: number): string => {
                     alert('Failed to create employee. Check console for details.');
                   }
                 }}
+                fullWidth={false}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 Create Dummy Employee
               </Button>
             </Box>
                     
             {/* Get Shift by ID Section */}
-            <Box sx={{ mb: 4, p: 3, backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2 }}>
+            <Box sx={{ 
+              mb: 4, 
+              p: { xs: 2, sm: 3 }, 
+              backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+              borderRadius: 2 
+            }}>
               <Typography
                 variant="h6"
-                sx={{ color: 'white', mb: 2 }}
+                sx={{ 
+                  color: 'white', 
+                  mb: 2,
+                  fontSize: { xs: '1rem', sm: '1.25rem' }
+                }}
               >
                 Get Available Shift by ID
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2, 
+                alignItems: { xs: 'stretch', sm: 'center' }, 
+                mb: 2 
+              }}>
                 <TextField
                   label="Shift ID"
                   type="number"
                   value={shiftIdToFetch}
                   onChange={(e) => setShiftIdToFetch(Number(e.target.value) || '')}
-                  sx={{ width: 200, backgroundColor: 'white' }}
+                  sx={{ 
+                    width: { xs: '100%', sm: 200 },
+                    backgroundColor: 'white'
+                  }}
                 />
                 <Button
                   variant="contained"
                   onClick={handleGetShiftById}
                   disabled={loading}
-                  sx={{ minWidth: 120 }}
+                  sx={{ 
+                    minWidth: { xs: '100%', sm: 120 }
+                  }}
                 >
                   {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
                 </Button>
               </Box>
-              
-              {/* Debug Info - Keep this during development */}
-              <Box sx={{ mt: 2, p: 2, backgroundColor: '#333', borderRadius: 1, color: '#0f0' }}>
-                <Typography variant="subtitle2" sx={{ color: '#0f0' }}>Debug Information:</Typography>
-                <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>
-                  Check browser console for full API response logs
-                </Typography>
-                {fetchedShift && (
-                  <>
-                    <Typography variant="caption" sx={{ color: '#0f0' }}>
-                      Current fetchedShift state:
-                    </Typography>
-                    <pre style={{ whiteSpace: 'pre-wrap', overflow: 'auto', maxHeight: '100px', fontSize: '0.75rem' }}>
-                      {JSON.stringify(fetchedShift, null, 2)}
-                    </pre>
-                  </>
-                )}
-              </Box>
-              
-              {/* Fixed Shift Details Display */}
-              {fetchedShift ? (
-                <Paper sx={{ mt: 2, p: 3, borderRadius: 2, boxShadow: 3 }}>
-                  <Typography variant="h6" color="primary" gutterBottom>
-                    Shift Details
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                      <Typography variant="body1">
-                        <strong>Shift ID:</strong> {fetchedShift.id || 'N/A'}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Date:</strong> {fetchedShift.date || 'N/A'}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                      <Typography variant="body1">
-                        <strong>Start Time:</strong> {fetchedShift.start || 'N/A'}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>End Time:</strong> {fetchedShift.end || 'N/A'}
-                      </Typography>
-                    </Box>
-                    {fetchedShift.start && fetchedShift.end && (
-                      <Typography variant="body1">
-                        <strong>Duration:</strong> {calculateDuration(fetchedShift.start, fetchedShift.end)}
-                      </Typography>
-                    )}
-                  </Box>
-                </Paper>
-              ) : error ? (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                  {error}
-                </Alert>
-              ) : success && !fetchedShift ? (
-                <Alert severity="info" sx={{ mt: 2 }}>
-                  No shift found with that ID.
-                </Alert>
-              ) : null}
-            </Box>
-            {/* Weekly Schedule */} 
 
-            {/* Weekly schedule grid */}
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'nowrap', // Prevent wrapping to the next row
-                justifyContent: 'space-between', // Ensure even spacing between days
-                gap: 2, // Add spacing between days
-              }}
-            >
-              {weekDays.map((day, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    flex: '1 1 calc(14.28% - 16px)', // Ensure all 7 days fit in one row
-                    minWidth: 150,
-                    p: 2,
-                    height: '100%',
-                    minHeight: 400,
-                    backgroundColor: 'white', // Set all columns to white
-                    borderRadius: 1,
-                    boxShadow: 3,
-                  }}
-                >
-                  <Typography variant="subtitle1" fontWeight="bold" align="center" gutterBottom>
-                    {format(day, 'EEE')}
-                  </Typography>
-                  <Typography variant="body2" align="center" gutterBottom sx={{ mb: 2 }}>
-                    {format(day, 'MMM d')}
-                  </Typography>
-                  
-                  {/* Shifts for this day */}
-                  {filteredShifts
-                    .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
-                    .map(shift => {
-                      const status = getShiftStatus(shift.id);
-                      const backgroundColor = status === 'pending' ? 'orange' : getShiftColor(status);
-                      
-                      return (
-                        <Box
-                          key={shift.id}
-                          sx={{
-                            mb: 1,
-                            p: 1,
-                            borderRadius: 1,
-                            backgroundColor,
-                            color: 'white',
-                            position: 'relative',
-                          }}
-                        >
-                          <Typography variant="body2">
-                            {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                          </Typography>
-                          
-                          {status === 'assigned' && (
-                            <Typography variant="caption" display="block">
-                              {getAssignedEmployeeName(shift.id)}
-                            </Typography>
-                          )}
-                          
-                          {/* Edit Button */}
-                          <IconButton
-                            size="small"
-                            sx={{ position: 'absolute', top: 2, right: 2, color: 'white' }}
-                            onClick={() => handleOpenEditDialogFromCalendar(shift)}
+              {/* Weekly schedule grid */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  flexWrap: { xs: 'nowrap', sm: 'nowrap' },
+                  justifyContent: 'space-between',
+                  gap: 2,
+                  overflowX: { sm: 'auto' },
+                  '&::-webkit-scrollbar': {
+                    height: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    borderRadius: '4px',
+                  },
+                }}
+              >
+                {weekDays.map((day, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      flex: { xs: '1 1 100%', sm: '1 1 calc(14.28% - 16px)' },
+                      minWidth: { xs: '100%', sm: 150 },
+                      p: { xs: 1, sm: 2 },
+                      height: '100%',
+                      minHeight: { xs: 300, sm: 400 },
+                      backgroundColor: 'white',
+                      borderRadius: 1,
+                      boxShadow: 3,
+                    }}
+                  >
+                    <Typography 
+                      variant="subtitle1" 
+                      fontWeight="bold" 
+                      align="center" 
+                      gutterBottom
+                      sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+                    >
+                      {format(day, 'EEE')}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      align="center" 
+                      gutterBottom 
+                      sx={{ 
+                        mb: 2,
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}
+                    >
+                      {format(day, 'MMM d')}
+                    </Typography>
+                    
+                    {/* Shifts for this day */}
+                    {filteredShifts
+                      .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
+                      .map(shift => {
+                        const status = getShiftStatus(shift.id);
+                        const backgroundColor = status === 'pending' ? 'orange' : getShiftColor(status);
+                        
+                        return (
+                          <Box
+                            key={shift.id}
+                            sx={{
+                              mb: 1,
+                              p: { xs: 0.5, sm: 1 },
+                              borderRadius: 1,
+                              backgroundColor,
+                              color: 'white',
+                              position: 'relative',
+                            }}
                           >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          
-                          {status === 'pending' && (
-                            <>
-                              <Chip
-                                label="Pending"
-                                size="small"
-                                sx={{ fontSize: '0.6rem', height: 16, mt: 0.5 }}
-                              />
-                              <Button
-                                variant="contained"
-                                size="small"
-                                sx={{ mt: 1 }}
-                                onClick={() => handleAcceptShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                            <Typography 
+                              variant="body2"
+                              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                            >
+                              {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                            </Typography>
+                            
+                            {status === 'assigned' && (
+                              <Typography 
+                                variant="caption" 
+                                display="block"
+                                sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
                               >
-                                Accept
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                sx={{ mt: 1, ml: 1 }}
-                                onClick={() => handleDeleteRequestedShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
-                              >
-                                Delete
-                              </Button>
-                            </>
-                          )}
-                          
-                          {status === 'denied' && (
-                            <Chip
-                              label="Denied"
+                                {getAssignedEmployeeName(shift.id)}
+                              </Typography>
+                            )}
+                            
+                            {/* Edit Button */}
+                            <IconButton
                               size="small"
-                              sx={{ fontSize: '0.6rem', height: 16, mt: 0.5, backgroundColor: '#d32f2f' }}
-                            />
-                          )}
-                          
-                          {/* Admin controls */}
-                          {currentEmployee.id === 1 && (
-                            <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                              <IconButton
+                              sx={{ 
+                                position: 'absolute', 
+                                top: 2, 
+                                right: 2, 
+                                color: 'white',
+                                padding: { xs: 0.5, sm: 1 }
+                              }}
+                              onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            
+                            {status === 'pending' && (
+                              <Box sx={{ 
+                                display: 'flex', 
+                                flexDirection: { xs: 'column', sm: 'row' },
+                                gap: 1,
+                                mt: 1
+                              }}>
+                                <Chip
+                                  label="Pending"
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
+                                    height: { xs: 14, sm: 16 }
+                                  }}
+                                />
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: { xs: '0.625rem', sm: '0.75rem' },
+                                    padding: { xs: '2px 8px', sm: '4px 12px' }
+                                  }}
+                                  onClick={() => handleAcceptShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                                >
+                                  Accept
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: { xs: '0.625rem', sm: '0.75rem' },
+                                    padding: { xs: '2px 8px', sm: '4px 12px' }
+                                  }}
+                                  onClick={() => handleDeleteRequestedShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                                >
+                                  Delete
+                                </Button>
+                              </Box>
+                            )}
+                            
+                            {status === 'denied' && (
+                              <Chip
+                                label="Denied"
                                 size="small"
-                                sx={{ color: 'white', p: 0.3 }}
-                                onClick={() => handleDeleteShift(shift.id)}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Box>
-                          )}
-                        </Box>
-                      );
-                    })}
-                </Box>
-              ))}
+                                sx={{ 
+                                  fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
+                                  height: { xs: 14, sm: 16 }, 
+                                  backgroundColor: '#d32f2f',
+                                  mt: 0.5 
+                                }}
+                              />
+                            )}
+                            
+                            {/* Admin controls */}
+                            {currentEmployee.id === 1 && (
+                              <Box sx={{ 
+                                mt: 1, 
+                                display: 'flex', 
+                                justifyContent: 'flex-end'
+                              }}>
+                                <IconButton
+                                  size="small"
+                                  sx={{ 
+                                    color: 'white', 
+                                    p: { xs: 0.2, sm: 0.3 }
+                                  }}
+                                  onClick={() => handleDeleteShift(shift.id)}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      })}
+                  </Box>
+                ))}
+              </Box>
             </Box>
           </Box>
 
@@ -1041,9 +1110,6 @@ const getShiftStatus = (availableShiftId: number): string => {
           {/* Request Shift Dialog */}
           
           <RequestShiftDialog/>
-
-
-
 
           {/* Snackbars for notifications */}
           <Snackbar

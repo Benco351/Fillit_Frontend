@@ -8,6 +8,7 @@ import { ROUTES } from '../../../routes/config/routes';
 import { NavBarTheme } from '../../../assets/themes/themes';
 import MobileDrawer from './MobileDrawer';
 
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -42,21 +43,21 @@ const Navbar = () => {
           <Button
             variant="contained"
             onClick={handleNavigateHome}
-            sx={{ color: 'white' }}
+            sx={{ color: 'black' }}
           >
             Home
           </Button>
           <Button
             variant="contained"
             onClick={handleOpenSettings}
-            sx={{ color: 'white' }}
+            sx={{ color: 'black' }}
           >
             Settings
           </Button>
           <Button
             variant="contained"
             onClick={handleNavigateHome}
-            sx={{ color: 'white' }}
+            sx={{ color: 'black' }}
           >
             Logout
           </Button>
