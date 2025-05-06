@@ -21,6 +21,7 @@ import { createEmployee } from '../../utils/apis/employeeShiftApis';
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import RequestShiftDialog from '../../components/ShiftManagment';
+import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 
 const UserDashboard: React.FC = () => {
 
@@ -417,9 +418,10 @@ const handleGetShiftById = async () => {
               <Button variant="outlined" onClick={goToPreviousWeek}>
                 Previous Week
               </Button>
-              <Typography variant="h6" sx={{ color: 'white' }}> {/* Set text color to white */}
-                {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d, yyyy')}
-              </Typography>
+              <WeekPicker
+                currentWeekStart={currentWeekStart}
+                onWeekChange={setCurrentWeekStart}
+              />
               <Button variant="outlined" onClick={goToNextWeek}>
                 Next Week
               </Button>

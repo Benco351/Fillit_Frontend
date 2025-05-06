@@ -25,6 +25,7 @@ import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import Navbar from '../../components/layout/userNavbar';
 import RequestShiftDialog from '../../components/ShiftManagment';
+import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 
 const AdminDashboard: React.FC = () => {
 
@@ -612,7 +613,7 @@ const getShiftStatus = (availableShiftId: number): string => {
               gutterBottom
               align="center"
               sx={{
-                color: '#00c28c', // Green color for emphasis
+                color: '#4caf50', // Green color for emphasis
                 fontWeight: 'bold',
                 textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)', // Subtle shadow for depth
                 fontFamily: 'Roboto, sans-serif',
@@ -649,15 +650,15 @@ const getShiftStatus = (availableShiftId: number): string => {
               </TextField>
             </Box>
 
-
             {/* Week navigation */}
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Button variant="outlined" onClick={goToPreviousWeek}>
                 Previous Week
               </Button>
-              <Typography variant="h6" sx={{ color: 'white' }}> {/* Set text color to white */}
-                {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d, yyyy')}
-              </Typography>
+              <WeekPicker
+                currentWeekStart={currentWeekStart}
+                onWeekChange={setCurrentWeekStart}
+              />
               <Button variant="outlined" onClick={goToNextWeek}>
                 Next Week
               </Button>
