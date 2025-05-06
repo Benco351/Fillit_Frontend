@@ -10,8 +10,8 @@ import Footer from '../../components/layout/Footer';
 import Navbar from '../../components/layout/userNavbar';
 import { intervalToDuration, formatDuration } from 'date-fns';
 import {getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById, getAvailableShifts } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
-import { createRequestedShift, getRequestedShifts } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
-import { AvailableShiftQuerySchema } from '../../utils/apis/types'; // Import the schema for validation
+import { createRequestedShift, getRequestedShifts, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
+import { AvailableShiftQuerySchema, RequestedShiftQueryDTO } from '../../utils/apis/types'; // Import the schema for validation
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
@@ -36,43 +36,11 @@ const UserDashboard: React.FC = () => {
     isAddShiftDialogOpen, setIsAddShiftDialogOpen, isRequestShiftDialogOpen, setIsRequestShiftDialogOpen,
     isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, editShift, setEditShift, shiftIdToFetch, setShiftIdToFetch,
     fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
-    goToPreviousWeek, handleEditShift
+    goToPreviousWeek, fetchShiftsForWeek
   } = useUserDashboard(currentEmployee);
 
-  // Fetch shifts for the current week
-  const fetchShiftsForWeek = async () => {
-    setLoading(true);
-    try {
-      const startDate = format(currentWeekStart, 'yyyy-MM-dd');
-      const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
-
-      const response = await getAvailableShifts({
-        shift_start_date: new Date (startDate),
-        shift_end_date: new Date (endDate),
-      });
-
-      console.log('API response for getAvailableShifts:', response);
-
-      if (response?.data && Array.isArray(response.data)) {
-        const mappedShifts = response.data.map((shift: any) => ({
-          id: shift.shift_id || shift.id,
-          date: shift.shift_date || shift.date,
-          start: shift.shift_time_start || shift.start,
-          end: shift.shift_time_end || shift.end,
-        }));
-
-        setAvailableShifts(mappedShifts);
-      } else {
-        console.warn('No shifts returned from the API.');
-        setAvailableShifts([]);
-      }
-    } catch (err) {
-      console.error('Error fetching shifts for the week:', err);
-      setError('Failed to fetch shifts. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [editLoading, setEditLoading] = useState(false); // Separate loading state for editing
+  const [requestLoading, setRequestLoading] = useState(false); // Separate loading state for requesting
 
   // Automatically fetch shifts when the component mounts or the week changes
   useEffect(() => {
@@ -121,7 +89,7 @@ const UserDashboard: React.FC = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const handleRequestShift = async () => {
+  const handleRequestShift = async (shift: AvailableShift) => {
     if (!selectedShift) return;
   
     setLoading(true);
@@ -164,53 +132,84 @@ const UserDashboard: React.FC = () => {
   };
   
 
+const handleEditShift = async () => {
+  if (!editShift) return;
 
+  setEditLoading(true); // Set edit-specific loading
+  try {
+    // Perform the edit shift API call or logic here
+    console.log('Editing shift:', editShift);
+    // Simulate API call success
+    setSuccess('Shift edited successfully');
+    setIsEditShiftDialogOpen(false); // Close the dialog after editing
+  } catch (err) {
+    console.error('Error editing shift:', err);
+    setError('Failed to edit shift. Please try again.');
+  } finally {
+    setEditLoading(false); // Reset edit-specific loading
+  }
+};
 
-  const handleRequestShiftFromEditDialog = async () => {
-    if (!editShift) return;
+const handleRequestShiftFromEditDialog = async () => {
+  if (!editShift) return;
 
-    setLoading(true);
-    try {
-      const payload = {
-        employeeId: currentEmployee.id, // Current employee ID
-        shiftSlotId: editShift.id, // Shift ID from the edit dialog
-        notes: '', // Optional: Add a default or empty note
-      };
+  setRequestLoading(true); // Set request-specific loading
+  try {
+    const payload = {
+      employeeId: currentEmployee.id, // Current employee ID
+      shiftSlotId: editShift.id, // Shift ID from the edit dialog
+      notes: '', // Optional: Add a default or empty note
+    };
 
-      console.log('Requesting shift with payload:', payload); // Log the payload
+    console.log('Requesting shift with payload:', payload); // Log the payload
 
-      // Call the createRequestedShift function to handle the request
-      const newRequestResponse = await createRequestedShift(payload);
+    // Call the createRequestedShift function to handle the request
+    const newRequestResponse = await createRequestedShift(payload);
 
-      console.log('Requested shift response:', newRequestResponse); // Log the response
+    console.log('Requested shift response:', newRequestResponse); // Log the response
 
-      // Update the local state with the new requested shift
-      setRequestedShifts((prev) => [
-        ...prev,
-        {
-          id: newRequestResponse.data.id,
-          employeeId: currentEmployee.id,
-          availableShiftId: editShift.id,
-          notes: '',
-          status: 'pending',
-        },
-      ]);
+    // Update the local state with the new requested shift
+    setRequestedShifts((prev) => [
+      ...prev,
+      {
+        id: newRequestResponse.data.id,
+        employeeId: currentEmployee.id,
+        availableShiftId: editShift.id,
+        notes: '',
+        status: 'pending',
+      },
+    ]);
 
-      setSuccess('Shift requested successfully');
-      setIsEditShiftDialogOpen(false); // Close the edit dialog after requesting
-    } catch (err) {
-      const errorMessage =
-        (err as any)?.response?.data?.message || 'Failed to request shift. Please try again.';
-      if (err instanceof Error) {
-        console.error('Failed to request shift:', (err as any)?.response || err.message || err);
-      } else {
-        console.error('Failed to request shift:', err);
-      }
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setSuccess('Shift requested successfully');
+    setIsEditShiftDialogOpen(false); // Close the edit dialog after requesting
+  } catch (err) {
+    const errorMessage =
+      (err as any)?.response?.data?.message || 'Failed to request shift. Please try again.';
+    console.error('Failed to request shift:', err);
+    setError(errorMessage);
+  } finally {
+    setRequestLoading(false); // Reset request-specific loading
+  }
+};
+
+const handleDeleteRequestedShift = async (requestId: number) => {
+  if (!requestId) return;
+
+  setLoading(true);
+  try {
+    await deleteRequestedShiftById(requestId);
+    
+    // Update local state by removing the deleted request
+    setRequestedShifts(prev => prev.filter(req => req.id !== requestId));
+    
+    setSuccess('Request cancelled successfully');
+  } catch (err) {
+    console.error('Error cancelling request:', err);
+    setError('Failed to cancel request. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleOpenRequestDialog = (shift: AvailableShift) => {
     setSelectedShift(shift);
@@ -327,7 +326,11 @@ const handleGetShiftById = async () => {
       >
         <Container
           maxWidth={false} // Remove maxWidth restriction
-          sx={{ px: { xs: 2, sm: 4, md: 6 } }} // Add responsive padding
+          sx={{ 
+            px: { xs: 1, sm: 2, md: 3 }, // Reduce padding to maximize width
+            width: '100%',
+            maxWidth: '100%' 
+          }}
         >
           <Navbar />
 
@@ -367,6 +370,8 @@ const handleGetShiftById = async () => {
               mb: 2, 
               display: 'flex', 
               justifyContent: { xs: 'center', sm: 'flex-end' },
+              alignItems: 'center', // Align items vertically
+              gap: 2, // Add spacing between dropdown and button
               width: '100%'
             }}>
               <TextField
@@ -390,6 +395,30 @@ const handleGetShiftById = async () => {
                   </MenuItem>
                 ))}
               </TextField>
+
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={async () => {
+                  try {
+                    const response = await createEmployee({
+                      name: 'John Doe',
+                      email: `john${Math.floor(Math.random() * 10000)}@example.com`,
+                      password: 'SuperSecret123!',
+                      phone: '1234567890'
+                    });
+                    console.log('Employee created successfully:', response);
+                    alert('Employee created successfully!');
+                  } catch (error) {
+                    console.error('Failed to create employee:', error);
+                    alert('Failed to create employee. Check console for details.');
+                  }
+                }}
+                fullWidth={false}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                Create Dummy Employee
+              </Button>
             </Box>
 
             {/* Week navigation */}
@@ -431,86 +460,20 @@ const handleGetShiftById = async () => {
               justifyContent: 'flex-end',
               gap: 2
             }}>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={async () => {
-                  try {
-                    const response = await createEmployee({
-                      name: 'John Doe',
-                      email: `john${Math.floor(Math.random() * 10000)}@example.com`,
-                      password: 'SuperSecret123!',
-                      phone: '1234567890'
-                    });
-                    console.log('Employee created successfully:', response);
-                    alert('Employee created successfully!');
-                  } catch (error) {
-                    console.error('Failed to create employee:', error);
-                    alert('Failed to create employee. Check console for details.');
-                  }
-                }}
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Create Dummy Employee
-              </Button>
-            </Box>
-                    
-            {/* Get Shift by ID Section */}
-            <Box sx={{ 
-              mb: 4, 
-              p: { xs: 2, sm: 3 }, 
-              backgroundColor: 'rgba(255, 255, 255, 0.1)', 
-              borderRadius: 2 
-            }}>
-              <Typography
-                variant="h6"
-                sx={{ 
-                  color: 'white', 
-                  mb: 2,
-                  fontSize: { xs: '1rem', sm: '1.25rem' }
-                }}
-              >
-                Get Available Shift by ID
-              </Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: 2, 
-                alignItems: { xs: 'stretch', sm: 'center' }, 
-                mb: 2 
-              }}>
-                <TextField
-                  label="Shift ID"
-                  type="number"
-                  value={shiftIdToFetch}
-                  onChange={(e) => setShiftIdToFetch(Number(e.target.value) || '')}
-                  sx={{ 
-                    width: { xs: '100%', sm: 200 },
-                    backgroundColor: 'white'
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  onClick={handleGetShiftById}
-                  disabled={loading}
-                  sx={{ 
-                    minWidth: { xs: '100%', sm: 120 }
-                  }}
-                >
-                  {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
-                </Button>
-              </Box>
+          
+                
 
               {/* Weekly schedule grid */}
               <Box
                 sx={{
                   display: 'flex',
                   flexDirection: { xs: 'column', sm: 'row' },
-                  flexWrap: { xs: 'nowrap', sm: 'nowrap' },
+                  flexWrap: 'nowrap',
                   justifyContent: 'space-between',
-                  gap: 2,
-                  overflowX: { sm: 'auto' },
+                  gap: 1, // Reduce gap to fit more content
+                  overflowX: 'auto',
+                  width: '100%', // Ensure full width
+                  height: 'calc(100vh - 300px)',
                   '&::-webkit-scrollbar': {
                     height: '8px',
                   },
@@ -528,11 +491,10 @@ const handleGetShiftById = async () => {
                   <Box
                     key={index}
                     sx={{
-                      flex: { xs: '1 1 100%', sm: '1 1 calc(14.28% - 16px)' },
-                      minWidth: { xs: '100%', sm: 150 },
-                      p: { xs: 1, sm: 2 },
+                      flex: 1,
+                      minWidth: 120, // Reduce minimum width to fit more columns
+                      p: { xs: 1, sm: 1.5 }, // Reduce padding
                       height: '100%',
-                      minHeight: { xs: 300, sm: 400 },
                       backgroundColor: 'white',
                       borderRadius: 1,
                       boxShadow: 3,
@@ -571,7 +533,7 @@ const handleGetShiftById = async () => {
                             key={shift.id}
                             sx={{
                               mb: 1,
-                              p: { xs: 0.5, sm: 1 },
+                              p: 1,
                               borderRadius: 1,
                               backgroundColor,
                               color: 'white',
@@ -595,28 +557,59 @@ const handleGetShiftById = async () => {
                               </Typography>
                             )}
                             
-                            {/* Edit Button */}
-                            <IconButton
-                              size="small"
-                              sx={{ 
-                                position: 'absolute', 
-                                top: 2, 
-                                right: 2, 
-                                color: 'white',
-                                padding: { xs: 0.5, sm: 1 }
-                              }}
-                              onClick={() => handleOpenEditDialogFromCalendar(shift)}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
+                            {/* Action Buttons */}
+                            <Box sx={{ 
+                              mt: 1,
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: 1
+                            }}>
+                              {status === 'available' && (
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={() => handleRequestShift(shift)}
+                                  sx={{ 
+                                    fontSize: '0.75rem',
+                                    padding: '2px 8px',
+                                    minWidth: 0,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                    }
+                                  }}
+                                >
+                                  Request
+                                </Button>
+                              )}
+                              {status === 'pending' && (
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  color="error"
+                                  onClick={() => handleDeleteRequestedShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                                  sx={{ 
+                                    fontSize: '0.75rem',
+                                    padding: '2px 8px',
+                                    minWidth: 0,
+                                    backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(255, 0, 0, 0.7)',
+                                    }
+                                  }}
+                                >
+                                  Cancel Request
+                                </Button>
+                              )}
+                            </Box>
                             
                             {status === 'pending' && (
                               <Chip
                                 label="Pending"
                                 size="small"
                                 sx={{ 
-                                  fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
-                                  height: { xs: 14, sm: 16 },
+                                  fontSize: '0.6rem', 
+                                  height: 16,
                                   mt: 0.5
                                 }}
                               />
@@ -627,8 +620,8 @@ const handleGetShiftById = async () => {
                                 label="Denied"
                                 size="small"
                                 sx={{ 
-                                  fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
-                                  height: { xs: 14, sm: 16 }, 
+                                  fontSize: '0.6rem', 
+                                  height: 16, 
                                   backgroundColor: '#d32f2f',
                                   mt: 0.5 
                                 }}
@@ -656,56 +649,7 @@ const handleGetShiftById = async () => {
               }
             }}
           >
-            <DialogTitle>Edit Shift</DialogTitle>
-            <DialogContent>
-              {editShift && (
-                <Box sx={{ mt: 2 }}>
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DatePicker
-                      label="Date"
-                      value={parseISO(editShift.date)}
-                      onChange={(newDate) => {
-                        if (newDate) {
-                          setEditShift((prev) => prev && { ...prev, date: format(newDate, 'yyyy-MM-dd') });
-                        }
-                      }}
-                      sx={{ width: '100%', mb: 2 }}
-                    />
-                  </LocalizationProvider>
 
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    gap: 2 
-                  }}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <TimePicker
-                        label="Start Time"
-                        value={parseISO(`2023-01-01T${editShift.start}`)}
-                        onChange={(newTime) => {
-                          if (newTime) {
-                            setEditShift((prev) => prev && { ...prev, start: format(newTime, 'HH:mm:ss') });
-                          }
-                        }}
-                        sx={{ width: '100%' }}
-                      />
-                    </LocalizationProvider>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <TimePicker
-                        label="End Time"
-                        value={parseISO(`2023-01-01T${editShift.end}`)}
-                        onChange={(newTime) => {
-                          if (newTime) {
-                            setEditShift((prev) => prev && { ...prev, end: format(newTime, 'HH:mm:ss') });
-                          }
-                        }}
-                        sx={{ width: '100%' }}
-                      />
-                    </LocalizationProvider>
-                  </Box>
-                </Box>
-              )}
-            </DialogContent>
             <DialogActions sx={{ 
               flexDirection: { xs: 'column', sm: 'row' },
               gap: 1,
@@ -721,20 +665,20 @@ const handleGetShiftById = async () => {
               <Button 
                 variant="contained" 
                 onClick={handleEditShift} 
-                disabled={loading}
+                disabled={editLoading} // Use edit-specific loading state
                 fullWidth={false}
                 sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
-                {loading ? <CircularProgress size={24} /> : 'Save Changes'}
+                {editLoading ? <CircularProgress size={24} /> : 'Save Changes'}
               </Button>
               <Button
                 variant="outlined"
                 onClick={handleRequestShiftFromEditDialog}
-                disabled={loading}
+                disabled={requestLoading} // Use request-specific loading state
                 fullWidth={false}
                 sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
-                {loading ? <CircularProgress size={24} /> : 'Request Shift'}
+                {requestLoading ? <CircularProgress size={24} /> : 'Request Shift'}
               </Button>
             </DialogActions>
           </Dialog>

@@ -101,30 +101,47 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false); // State for edit dialog
   const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);  
 
-  const fetchShiftsForWeek = useCallback(async () => {
-    setLoadingAvailable(true);
-    setError(null);
+  // Fetch shifts for the current week
+  const fetchShiftsForWeek = async () => {
+    setLoading(true);
     try {
-      const startDate = currentWeekStart;
-      const endDate = addDays(currentWeekStart, 6);
-      const response = await getAvailableShifts({ shift_start_date: startDate, shift_end_date: endDate });
+      const startDate = format(currentWeekStart, 'yyyy-MM-dd');
+      const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
+
+      const response = await getAvailableShifts({
+        shift_start_date: new Date (startDate),
+        shift_end_date: new Date (endDate),
+      });
+
+      console.log('API response for getAvailableShifts:', response);
+
       if (response?.data && Array.isArray(response.data)) {
-        setAvailableShifts(response.data.map((shift: any) => ({
+        const mappedShifts = response.data.map((shift: any) => ({
           id: shift.shift_id || shift.id,
           date: shift.shift_date || shift.date,
           start: shift.shift_time_start || shift.start,
           end: shift.shift_time_end || shift.end,
-        })));
+        }));
+
+        setAvailableShifts(mappedShifts);
       } else {
+        console.warn('No shifts returned from the API.');
         setAvailableShifts([]);
       }
     } catch (err) {
+      console.error('Error fetching shifts for the week:', err);
       setError('Failed to fetch shifts. Please try again later.');
     } finally {
-      setLoadingAvailable(false);
+      setLoading(false);
     }
-  }, [currentWeekStart]);
+  };
 
+    useEffect(() => {
+      fetchShiftsForWeek();
+    }, [currentWeekStart]);
+  
+
+  
   const fetchRequestedShifts = useCallback(async () => {
     setLoadingRequested(true);
     setError(null);
@@ -154,9 +171,29 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     fetchRequestedShifts();
   }, [fetchRequestedShifts]);
 
+
+    const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
+      setEditShift(shift); // Set the selected shift for editing
+      setIsEditShiftDialogOpen(true); // Open the edit dialog
+    };
+  
+  
+    // Utility function to get shift status for display
+    const getShiftStatus = (availableShiftId: number): string => {
+      const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
+      if (isAssigned) return 'assigned';
+      
+      const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
+      if (requestedShift) return requestedShift.status;
+      
+      return 'available';
+    };
+
   
 
   return {
+    handleOpenEditDialogFromCalendar,
+    getShiftStatus,
     currentWeekStart,
     setCurrentWeekStart,
     availableShifts,
@@ -185,6 +222,6 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     fetchedShift, setFetchedShift,
     weekDays,
     loadingAvailable,
-    loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek, handleEditShift
+    loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek, handleEditShift, fetchShiftsForWeek
   };
 };
