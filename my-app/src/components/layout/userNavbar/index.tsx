@@ -33,7 +33,7 @@ const Navbar = () => {
       <Box sx={{ display: 'flex', gap: 2 }}>
         <Button
           variant="contained"
-          color="success"
+          color="primary"
           onClick={handleNavigateHome}
           sx={{ color: 'white' }}
         >
@@ -41,7 +41,7 @@ const Navbar = () => {
         </Button>
         <Button
           variant="contained"
-          color="success"
+          color="primary"
           onClick={handleOpenSettings}
           sx={{ color: 'white' }}
         >
