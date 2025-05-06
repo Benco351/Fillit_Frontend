@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getAvailableShifts } from '../utils/apis/availableShiftApis';
+import { getAvailableShifts, updateAvailableShiftById } from '../utils/apis/availableShiftApis';
 import { getRequestedShifts } from '../utils/apis/requestedShiftsApis';
 import { AvailableShift, RequestedShift, AssignedShift } from '../components/CalendarFeatures/ShiftUtils';
-import { Employee } from '../components/CalendarFeatures/calendarStates';
+import { availableShiftsResponse, Employee } from '../components/CalendarFeatures/calendarStates';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { request } from 'http';
 import { se } from 'date-fns/locale';
@@ -52,7 +52,47 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   const goToNextWeek = () => {
           setCurrentWeekStart(prevWeek => addDays(prevWeek, 7));
         };
-      
+  
+  const handleEditShift = async () => {
+            if (!editShift) return;
+        
+            setLoading(true);
+            try {
+              console.log('Updating shift:', editShift);
+        
+              // Call the API to update the shift
+              const updatedShiftResponse = await updateAvailableShiftById(editShift.id, {
+                date: new Date(editShift.date),
+                start: editShift.start,
+                end: editShift.end,
+              });
+        
+              console.log('Updated shift response:', updatedShiftResponse);
+        
+              // Update the local state with the updated shift
+              setAvailableShifts((prev) =>
+                prev.map((shift) =>
+                  shift.id === editShift.id
+                    ? { ...shift, date: editShift.date, start: editShift.start, end: editShift.end }
+                    : shift
+                )
+              );
+        
+              // Persist the updated shift in the simulated API response
+              const index = availableShiftsResponse.findIndex((shift) => shift.id === editShift.id);
+              if (index !== -1) {
+                availableShiftsResponse[index] = { ...availableShiftsResponse[index], ...editShift };
+              }
+        
+              setSuccess('Shift updated successfully');
+              setIsEditShiftDialogOpen(false);
+            } catch (err) {
+              setError('Failed to update shift. Please try again.');
+              console.error(err);
+            } finally {
+              setLoading(false);
+            }
+          };
 
 
     // Dialog states
@@ -145,6 +185,6 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     fetchedShift, setFetchedShift,
     weekDays,
     loadingAvailable,
-    loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek
+    loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek, handleEditShift
   };
 };

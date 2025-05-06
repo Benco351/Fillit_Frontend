@@ -21,6 +21,7 @@ import { createEmployee } from '../../utils/apis/employeeShiftApis';
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import RequestShiftDialog from '../../components/ShiftManagment';
+//import EditShiftDialog from '../../components/ShiftManagment/editShift';
 import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 
 const UserDashboard: React.FC = () => {
@@ -35,7 +36,7 @@ const UserDashboard: React.FC = () => {
     isAddShiftDialogOpen, setIsAddShiftDialogOpen, isRequestShiftDialogOpen, setIsRequestShiftDialogOpen,
     isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, editShift, setEditShift, shiftIdToFetch, setShiftIdToFetch,
     fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
-    goToPreviousWeek
+    goToPreviousWeek, handleEditShift
   } = useUserDashboard(currentEmployee);
 
   // Fetch shifts for the current week
@@ -163,46 +164,7 @@ const UserDashboard: React.FC = () => {
   };
   
 
-  const handleEditShift = async () => {
-    if (!editShift) return;
 
-    setLoading(true);
-    try {
-      console.log('Updating shift:', editShift);
-
-      // Call the API to update the shift
-      const updatedShiftResponse = await updateAvailableShiftById(editShift.id, {
-        date: new Date(editShift.date),
-        start: editShift.start,
-        end: editShift.end,
-      });
-
-      console.log('Updated shift response:', updatedShiftResponse);
-
-      // Update the local state with the updated shift
-      setAvailableShifts((prev) =>
-        prev.map((shift) =>
-          shift.id === editShift.id
-            ? { ...shift, date: editShift.date, start: editShift.start, end: editShift.end }
-            : shift
-        )
-      );
-
-      // Persist the updated shift in the simulated API response
-      const index = availableShiftsResponse.findIndex((shift) => shift.id === editShift.id);
-      if (index !== -1) {
-        availableShiftsResponse[index] = { ...availableShiftsResponse[index], ...editShift };
-      }
-
-      setSuccess('Shift updated successfully');
-      setIsEditShiftDialogOpen(false);
-    } catch (err) {
-      setError('Failed to update shift. Please try again.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleRequestShiftFromEditDialog = async () => {
     if (!editShift) return;
