@@ -75,7 +75,7 @@ const WhyChooseUs = () => {
              ))}
           </Grid>
 
-          <Button
+          {/* <Button
             variant="contained"
             color="primary"
             size="large"
@@ -83,7 +83,7 @@ const WhyChooseUs = () => {
             sx={{ mt: 4 }}
           >
             Learn More
-          </Button>
+          </Button> */}
         </Grid>
       </Container>
     </Box>

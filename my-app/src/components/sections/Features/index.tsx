@@ -11,18 +11,14 @@ const features = [
   {
     icon: <DateRange fontSize="large" color="primary" />,
     title: "Smart Calendar",
-    description: "View and manage shifts with our interactive calendar that displays dates, hours, and employee assignments."
+    description: "View and manage shifts with our interactive calendar that displays dates, hours and statuses."
   },
-  {
-    icon: <CheckCircleSharp fontSize="large" color="primary" />,
-    title: "ChatGPT Integration",
-    description: "View and manage shifts with our interactive calendar that displays dates, hours, and employee assignments."
-  },
-  {
-    icon: <Chat fontSize="large" color="primary" />,
-    title: "Integrated Chat",
-    description: "Communicate seamlessly with P2P and group chats for quick team coordination and updates."
-  },
+  // {
+  //   icon: <CheckCircleSharp fontSize="large" color="primary" />,
+  //   title: "ChatGPT Integration",
+  //   description: "View and manage shifts with our interactive calendar that displays dates, hours, and employee assignments."
+  // },
+  
   {
     icon: <SwapHoriz fontSize="large" color="primary" />,
     title: "Easy Shift Switch",
@@ -43,6 +39,11 @@ const features = [
     title: "Push Notifications",
     description: "Stay updated with instant alerts about schedule changes and shift reminders."
   },
+  {
+    icon: <Chat fontSize="large" color="primary" />,
+    title: "Integrated Chat",
+    description: "Communicate seamlessly with P2P and group chats for quick team coordination and updates."
+  },
 ];
 
 //////////
@@ -50,8 +51,8 @@ const features = [
 const Features = () => {
 
   return (
-    <Container sx={{ py: { xs: 8, md: 12 } }}>
-      <Box sx={{ textAlign: 'center', mb: 8 }}>
+    <Container sx={{ py: { xs: 8, md: 12 } }} >
+      <Box sx={{ textAlign: 'center', mb: 8 }} >
         <Typography
           variant="h2"
           gutterBottom
