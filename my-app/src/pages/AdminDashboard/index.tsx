@@ -591,7 +591,7 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: '#232a31',
+          backgroundColor: 'secondary.main',
           minHeight: '100vh',
           py: 4,
           px: 2, // Add padding for better spacing
@@ -613,7 +613,7 @@ const getShiftStatus = (availableShiftId: number): string => {
               gutterBottom
               align="center"
               sx={{
-                color: '#4caf50', // Green color for emphasis
+                color: '#00c28c', // Green color for emphasis
                 fontWeight: 'bold',
                 textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)', // Subtle shadow for depth
                 fontFamily: 'Roboto, sans-serif',

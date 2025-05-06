@@ -357,7 +357,7 @@ const handleGetShiftById = async () => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: '#232a31',
+          backgroundColor: 'secondary.main',
           minHeight: '100vh',
           py: 4,
           px: 2, // Add padding for better spacing
