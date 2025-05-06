@@ -21,11 +21,11 @@ import { SignUpTheme } from '../../../assets/themes/themes';
 
 import {
   signUp,
-  getCurrentUser,
   updateUserAttributes,
 } from '@aws-amplify/auth';
 import axios from 'axios';
 
+console.log(process.env.REACT_APP_API_URL); // make sure this is set in your .env file
 // point this at your EB backend
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
@@ -61,8 +61,14 @@ const SignUpForm: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1) Pre-check in your DB
-      await api.get('/api/employees/verify', { params: { email: data.email } });
+      // 1) Persist in RDS via your backend
+      const createRes = await api.post('/api/employees', {
+        name:  data.name,
+        email: data.email,
+        phone: data.phone,
+      });
+      console.log('RDS create response:', createRes.data);
+      const employeeId = createRes.data.data.employee_id;
 
       // 2) Cognito sign-up
       const { nextStep } = await signUp({
@@ -72,7 +78,6 @@ const SignUpForm: React.FC = () => {
           userAttributes: {
             email: data.email,
             name:  data.name,
-            'custom:employeeId': 'sample', // placeholder for RDS ID
             ...(data.phone ? { phone_number: data.phone } : {}),
           },
         },
@@ -82,15 +87,7 @@ const SignUpForm: React.FC = () => {
         throw new Error(`signUp step: ${nextStep.signUpStep}`);
       }
 
-      // 3) Persist in RDS via your backend
-      const createRes = await api.post('/api/employees', {
-        name:  data.name,
-        email: data.email,
-        phone: data.phone,
-      });
-      const employeeId = createRes.data.data.employee_id;
-
-
+  
       // 4) Store RDS ID in Cognito custom attribute
       await updateUserAttributes({
         userAttributes: { 'custom:employeeId': String(employeeId) }
@@ -103,7 +100,7 @@ const SignUpForm: React.FC = () => {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         setAuthError('This email is already registered');
       } else {
-        console.error('Sign‑up flow error', err);
+        console.error('Sign-up flow error', err);
         setAuthError(err.message || 'Registration failed');
       }
     } finally {
@@ -129,9 +126,6 @@ const SignUpForm: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '100vh', // Ensure it covers the full viewport height
-          margin: 0,
-          padding: 0,
         }}
       >
         <Button
@@ -145,30 +139,8 @@ const SignUpForm: React.FC = () => {
           Home
         </Button>
 
-        <Container
-          maxWidth="sm"
-          sx={{
-            '@media (max-width: 600px)': {
-              bgcolor: 'transparent', // Transparent on mobile
-              border: 'none', // No border on mobile
-              p: 0, // Remove padding on mobile
-            },
-          }}
-        >
-          <Paper
-            elevation={0} // Remove shadow
-            sx={{
-              p: 4,
-              borderRadius: 8,
-              bgcolor: 'background.paper',
-              color: 'white',
-              '@media (max-width: 600px)': {
-                bgcolor: 'transparent', // Transparent on mobile
-                border: 'none', // No border on mobile
-                boxShadow: 'none', // Remove shadow on mobile
-              },
-            }}
-          >
+        <Container maxWidth="sm">
+          <Paper elevation={3} sx={{ p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white' }}>
             <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 700, color: 'primary.main' }}>
               Create Account
             </Typography>
