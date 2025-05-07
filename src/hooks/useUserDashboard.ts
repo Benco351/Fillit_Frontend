@@ -102,15 +102,15 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);  
 
   // Fetch shifts for the current week
-  const fetchShiftsForWeek = async () => {
+  const fetchShiftsForWeek = useCallback(async () => {
     setLoading(true);
     try {
       const startDate = format(currentWeekStart, 'yyyy-MM-dd');
       const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
 
       const response = await getAvailableShifts({
-        shift_start_date: new Date (startDate),
-        shift_end_date: new Date (endDate),
+        shift_start_date: new Date(startDate),
+        shift_end_date: new Date(endDate),
       });
 
       console.log('API response for getAvailableShifts:', response);
@@ -125,21 +125,18 @@ export const useUserDashboard = (currentEmployee: Employee) => {
 
         setAvailableShifts(mappedShifts);
       } else {
-        console.warn('No shifts returned from the API.');
         setAvailableShifts([]);
       }
     } catch (err) {
-      console.error('Error fetching shifts for the week:', err);
       setError('Failed to fetch shifts. Please try again later.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentWeekStart]); // Only depend on currentWeekStart
 
-    useEffect(() => {
-      fetchShiftsForWeek();
-    }, [currentWeekStart]);
-  
+  useEffect(() => {
+    fetchShiftsForWeek();
+  }, [fetchShiftsForWeek]);
 
   
   const fetchRequestedShifts = useCallback(async () => {
@@ -162,10 +159,6 @@ export const useUserDashboard = (currentEmployee: Employee) => {
       setLoadingRequested(false);
     }
   }, [currentEmployee.id]);
-
-  useEffect(() => {
-    fetchShiftsForWeek();
-  }, [fetchShiftsForWeek]);
 
   useEffect(() => {
     fetchRequestedShifts();

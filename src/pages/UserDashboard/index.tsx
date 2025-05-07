@@ -33,14 +33,15 @@ const UserDashboard: React.FC = () => {
   const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
     error, success, filter, setFilter, refreshAvailableShifts, refreshRequestedShifts, setSuccess, 
     setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, setNewShift,
-    isAddShiftDialogOpen, setIsAddShiftDialogOpen, isRequestShiftDialogOpen, setIsRequestShiftDialogOpen,
-    isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, editShift, setEditShift, shiftIdToFetch, setShiftIdToFetch,
+    isRequestShiftDialogOpen, setIsRequestShiftDialogOpen, isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, shiftIdToFetch, setShiftIdToFetch,
     fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
     goToPreviousWeek, fetchShiftsForWeek
   } = useUserDashboard(currentEmployee);
 
   const [editLoading, setEditLoading] = useState(false); // Separate loading state for editing
   const [requestLoading, setRequestLoading] = useState(false); // Separate loading state for requesting
+  const [requestingShifts, setRequestingShifts] = useState<number[]>([]); // Separate loading state for each shift request
+  const [cancelingShifts, setCancelingShifts] = useState<number[]>([]); // Separate loading state for each shift cancellation
 
   // Automatically fetch shifts when the component mounts or the week changes
   useEffect(() => {
@@ -90,124 +91,45 @@ const UserDashboard: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleRequestShift = async (shift: AvailableShift) => {
-    if (!selectedShift) return;
-  
-    setLoading(true);
+    setRequestingShifts(prev => [...prev, shift.id]);
     try {
       const payload = {
         employeeId: currentEmployee.id,
-        shiftSlotId: selectedShift.id,
-        notes: newRequest.notes || '',
+        shiftSlotId: shift.id,
+        notes: '',
       };
   
-      console.log("📤 Sending shift request payload:", payload); // Log payload
+      const response = await createRequestedShift(payload);
+      
+      // Use response.id instead of response.data.id
+      const newRequest = {
+        id: response.id,
+        employeeId: currentEmployee.id,
+        availableShiftId: shift.id,
+        notes: '',
+        status: 'pending' as const
+      };
   
-      const newRequestResponse = await createRequestedShift(payload);
-  
-      console.log("✅ Received response from createRequestedShift:", newRequestResponse); // Log API response
-  
-      const responseData = newRequestResponse.data;
-  
-      setRequestedShifts((prev) => [
-        ...prev,
-        {
-          id: responseData.request_id || responseData.id,
-          employeeId: currentEmployee.id,
-          availableShiftId: selectedShift.id,
-          notes: newRequest.notes,
-          status: 'pending',
-        },
-      ]);
-  
+      setRequestedShifts(prev => [...prev, newRequest]);
       setSuccess('Shift requested successfully');
-      setIsRequestShiftDialogOpen(false);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to request shift. Please try again.';
-      console.error("❌ Error requesting shift:", err); // Detailed error
-      setError(errorMessage);
+      setError('Failed to request shift. Please try again.');
     } finally {
-      setLoading(false);
+      setRequestingShifts(prev => prev.filter(id => id !== shift.id));
     }
   };
-  
-
-const handleEditShift = async () => {
-  if (!editShift) return;
-
-  setEditLoading(true); // Set edit-specific loading
-  try {
-    // Perform the edit shift API call or logic here
-    console.log('Editing shift:', editShift);
-    // Simulate API call success
-    setSuccess('Shift edited successfully');
-    setIsEditShiftDialogOpen(false); // Close the dialog after editing
-  } catch (err) {
-    console.error('Error editing shift:', err);
-    setError('Failed to edit shift. Please try again.');
-  } finally {
-    setEditLoading(false); // Reset edit-specific loading
-  }
-};
-
-const handleRequestShiftFromEditDialog = async () => {
-  if (!editShift) return;
-
-  setRequestLoading(true); // Set request-specific loading
-  try {
-    const payload = {
-      employeeId: currentEmployee.id, // Current employee ID
-      shiftSlotId: editShift.id, // Shift ID from the edit dialog
-      notes: '', // Optional: Add a default or empty note
-    };
-
-    console.log('Requesting shift with payload:', payload); // Log the payload
-
-    // Call the createRequestedShift function to handle the request
-    const newRequestResponse = await createRequestedShift(payload);
-
-    console.log('Requested shift response:', newRequestResponse); // Log the response
-
-    // Update the local state with the new requested shift
-    setRequestedShifts((prev) => [
-      ...prev,
-      {
-        id: newRequestResponse.data.id,
-        employeeId: currentEmployee.id,
-        availableShiftId: editShift.id,
-        notes: '',
-        status: 'pending',
-      },
-    ]);
-
-    setSuccess('Shift requested successfully');
-    setIsEditShiftDialogOpen(false); // Close the edit dialog after requesting
-  } catch (err) {
-    const errorMessage =
-      (err as any)?.response?.data?.message || 'Failed to request shift. Please try again.';
-    console.error('Failed to request shift:', err);
-    setError(errorMessage);
-  } finally {
-    setRequestLoading(false); // Reset request-specific loading
-  }
-};
 
 const handleDeleteRequestedShift = async (requestId: number) => {
   if (!requestId) return;
-
-  setLoading(true);
+  setCancelingShifts(prev => [...prev, requestId]);
   try {
     await deleteRequestedShiftById(requestId);
-    
-    // Update local state by removing the deleted request
     setRequestedShifts(prev => prev.filter(req => req.id !== requestId));
-    
     setSuccess('Request cancelled successfully');
   } catch (err) {
-    console.error('Error cancelling request:', err);
     setError('Failed to cancel request. Please try again.');
   } finally {
-    setLoading(false);
+    setCancelingShifts(prev => prev.filter(id => id !== requestId));
   }
 };
 
@@ -217,71 +139,13 @@ const handleDeleteRequestedShift = async (requestId: number) => {
   };
 
 
-  const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
-    setEditShift(shift); // Set the selected shift for editing
-    setIsEditShiftDialogOpen(true); // Open the edit dialog
-  };
-
-// Enhanced handleGetShiftById function with better debugging
-const handleGetShiftById = async () => {
-  if (!shiftIdToFetch) {
-    setError('Please enter a valid shift ID.');
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const response = await getAvailableShiftById(Number(shiftIdToFetch));
-    
-    // Log the entire response to see its structure
-    console.log('Complete API response:', response);
-    
-    // Check where the data might be located in the response
-    let shiftData;
-    if (response.data && response.data.data) {
-      // If the data is nested (common in API responses with metadata)
-      shiftData = response.data.data;
-      console.log('Found nested data:', shiftData);
-    } else if (response.data) {
-      // If data is directly in the response
-      shiftData = response.data;
-      console.log('Found direct data:', shiftData);
-    } else {
-      // No data found
-      console.log('No data found in response');
-      setError('No shift data found in the response.');
-      setFetchedShift(null);
-      setLoading(false);
-      return;
-    }
-    
-    // Transform the data regardless of where it was found
-    const transformedShift: AvailableShift = {
-      id: shiftData.shift_id || shiftData.id || Number(shiftIdToFetch),
-      date: shiftData.date || shiftData.shift_date || '',
-      start: shiftData.start || shiftData.shift_start || '',
-      end: shiftData.end || shiftData.shift_end || ''
-    };
-    
-    console.log('Transformed shift data:', transformedShift);
-    setFetchedShift(transformedShift);
-    setSuccess(`Shift with ID ${shiftIdToFetch} fetched successfully.`);
-  } catch (err) {
-    console.error('Error fetching shift:', err);
-    setError('Failed to fetch shift. Please try again.');
-    setFetchedShift(null);
-  } finally {
-    setLoading(false);
-  }
-};
-
   // Utility function to get shift status for display
   const getShiftStatus = (availableShiftId: number): string => {
-    const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
-    if (isAssigned) return 'assigned';
-    
     const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
     if (requestedShift) return requestedShift.status;
+    
+    const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
+    if (isAssigned) return 'assigned';
     
     return 'available';
   };
@@ -461,8 +325,7 @@ const handleGetShiftById = async () => {
               gap: 2
             }}>
           
-                
-
+              
               {/* Weekly schedule grid */}
               <Box
                 sx={{
@@ -569,6 +432,7 @@ const handleGetShiftById = async () => {
                                   size="small"
                                   variant="contained"
                                   onClick={() => handleRequestShift(shift)}
+                                  disabled={requestingShifts.includes(shift.id)}
                                   sx={{ 
                                     fontSize: '0.75rem',
                                     padding: '2px 8px',
@@ -579,7 +443,7 @@ const handleGetShiftById = async () => {
                                     }
                                   }}
                                 >
-                                  Request
+                                  {requestingShifts.includes(shift.id) ? 'Requesting...' : 'Request'}
                                 </Button>
                               )}
                               {status === 'pending' && (
@@ -587,7 +451,15 @@ const handleGetShiftById = async () => {
                                   size="small"
                                   variant="contained"
                                   color="error"
-                                  onClick={() => handleDeleteRequestedShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                                  onClick={() => {
+                                    const request = requestedShifts.find(req => req.availableShiftId === shift.id);
+                                    if (request && request.id) {
+                                      handleDeleteRequestedShift(request.id);
+                                    }
+                                  }}
+                                  disabled={cancelingShifts.includes(
+                                    requestedShifts.find(req => req.availableShiftId === shift.id)?.id || -1
+                                  )}
                                   sx={{ 
                                     fontSize: '0.75rem',
                                     padding: '2px 8px',
@@ -598,7 +470,10 @@ const handleGetShiftById = async () => {
                                     }
                                   }}
                                 >
-                                  Cancel Request
+                                  {cancelingShifts.includes(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!) 
+                                    ? 'Cancelling...' 
+                                    : 'Cancel Request'
+                                  }
                                 </Button>
                               )}
                             </Box>
@@ -636,53 +511,7 @@ const handleGetShiftById = async () => {
             </Box>
           </Box>
 
-          {/* Edit Shift Dialog */}
-          <Dialog 
-            open={isEditShiftDialogOpen} 
-            onClose={() => setIsEditShiftDialogOpen(false)} 
-            maxWidth="sm" 
-            fullWidth
-            sx={{
-              '& .MuiDialog-paper': {
-                width: { xs: '95%', sm: '500px' },
-                margin: { xs: 2, sm: 4 }
-              }
-            }}
-          >
-
-            <DialogActions sx={{ 
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 1,
-              p: { xs: 2, sm: 3 }
-            }}>
-              <Button 
-                onClick={() => setIsEditShiftDialogOpen(false)}
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="contained" 
-                onClick={handleEditShift} 
-                disabled={editLoading} // Use edit-specific loading state
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                {editLoading ? <CircularProgress size={24} /> : 'Save Changes'}
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={handleRequestShiftFromEditDialog}
-                disabled={requestLoading} // Use request-specific loading state
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                {requestLoading ? <CircularProgress size={24} /> : 'Request Shift'}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
+  
           {/* Request Shift Dialog */}
           <RequestShiftDialog/>
 

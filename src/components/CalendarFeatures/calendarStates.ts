@@ -1,4 +1,3 @@
-
 // Helper function to calculate duration between two time strings (HH:MM:SS format)
 export const calculateDuration = (startTime: string, endTime: string): string => {
   try {
@@ -65,14 +64,19 @@ export const assignedShiftsResponse = [
       ];
 
 export const getShiftColor = (status: string): string => {
-        switch (status) {
-          case 'assigned': return '#4caf50';  // green
-          case 'approved': return '#4caf50';  // green
-          case 'pending': return '#ff9800';   // orange
-          case 'denied': return '#f44336';    // red
-          default: return '#2196f3';          // blue for available
-        }
-      };
+  switch (status) {
+    case 'available':
+      return '#4caf50'; // Green
+    case 'pending':
+      return '#ff9800'; // Orange
+    case 'assigned':
+      return '#2196f3'; // Blue
+    case 'denied':
+      return '#f44336'; // Red
+    default:
+      return '#757575'; // Grey
+  }
+};
 
-      
+
 
