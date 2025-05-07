@@ -534,25 +534,37 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                                 gap: 1
                               }}>
                                 {status === 'available' && (
-                                  <Button
-                                    size="small"
-                                    variant="contained"
-                                    onClick={() => handleRequestShift(shift)}
-                                    disabled={requestingShifts.includes(shift.id)}
-                                    sx={{
-                                      ...commonButtonStyle,
-                                      fontSize: '0.75rem',
-                                      padding: '2px 8px',
-                                      minWidth: 0,
-                                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                      '&:hover': {
-                                        ...commonButtonStyle['&:hover'],
-                                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                      },
-                                    }}
-                                  >
-                                    {requestingShifts.includes(shift.id) ? 'Requesting...' : 'Request'}
-                                  </Button>
+                                  <Box sx={{ 
+                                    display: 'flex',
+                                    justifyContent: 'flex-end', // Align to the right
+                                    width: '100%',
+                                    mt: 1
+                                  }}>
+                                    <Button
+                                      size="small"
+                                      variant="contained"
+                                      onClick={() => handleRequestShift(shift)}
+                                      disabled={requestingShifts.includes(shift.id)}
+                                      sx={{
+                                        ...commonButtonStyle,
+                                        fontSize: '0.7rem',
+                                        padding: '1px 8px',
+                                        minWidth: '60px',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                        backdropFilter: 'blur(8px)',
+                                        borderRadius: '4px', // More rectangular shape
+                                        height: '20px',
+                                        lineHeight: '18px',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        '&:hover': {
+                                          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                                        },
+                                      }}
+                                    >
+                                      {requestingShifts.includes(shift.id) ? 'Requesting...' : 'Request'}
+                                    </Button>
+                                  </Box>
                                 )}
                                 {status === 'pending' && (
                                   <Button
