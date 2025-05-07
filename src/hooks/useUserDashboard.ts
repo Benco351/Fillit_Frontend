@@ -21,6 +21,58 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   const [filter, setFilter] = useState<'all' | 'requested' | 'accepted'>('all');
   const [assignedShifts, setAssignedShifts] = useState<AssignedShift[]>([]);
 
+  const commonButtonStyle = {
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08))',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.18)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)',
+    color: 'white',
+    textTransform: 'none',
+    fontWeight: 500,
+    letterSpacing: '0.5px',
+    padding: '10px 20px',
+    borderRadius: '12px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderRadius: '12px',
+      padding: '2px',
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))',
+      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+      WebkitMaskComposite: 'xor',
+      maskComposite: 'exclude',
+      pointerEvents: 'none',
+    },
+    '&:hover': {
+      transform: 'translateY(-2px) scale(1.02)',
+      boxShadow: '0 15px 35px 0 rgba(31, 38, 135, 0.25)',
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1))',
+      border: '1px solid rgba(255, 255, 255, 0.28)',
+    },
+    '&:active': {
+      transform: 'translateY(1px) scale(0.98)',
+      boxShadow: '0 5px 15px 0 rgba(31, 38, 135, 0.15)',
+    },
+    '&.MuiButton-sizeSmall': {
+      padding: '6px 16px',
+      fontSize: '0.75rem',
+      borderRadius: '8px',
+    },
+    '&:disabled': {
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))',
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+      boxShadow: 'none',
+      color: 'rgba(255, 255, 255, 0.3)',
+      transform: 'none',
+    }
+  };
+
   const [editShift, setEditShift] = useState<AvailableShift | null>(null); // State for the shift being edited
   
     // State for fetching a shift by ID
@@ -185,7 +237,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   
 
   return {
-    handleOpenEditDialogFromCalendar,
+    handleOpenEditDialogFromCalendar, commonButtonStyle,
     getShiftStatus,
     currentWeekStart,
     setCurrentWeekStart,

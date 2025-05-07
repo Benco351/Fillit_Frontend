@@ -4,19 +4,13 @@ import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogCo
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
 import Navbar from '../../components/layout/userNavbar';
-import { intervalToDuration, formatDuration } from 'date-fns';
-import {getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById, getAvailableShifts } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift, getRequestedShifts, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
-import { AvailableShiftQuerySchema, RequestedShiftQueryDTO } from '../../utils/apis/types'; // Import the schema for validation
-//Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
 import {employees} from '../../components/CalendarFeatures/calendarStates';
-
 import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
@@ -35,13 +29,14 @@ const UserDashboard: React.FC = () => {
     setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, setNewShift,
     isRequestShiftDialogOpen, setIsRequestShiftDialogOpen, isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, shiftIdToFetch, setShiftIdToFetch,
     fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
-    goToPreviousWeek, fetchShiftsForWeek
+    goToPreviousWeek, fetchShiftsForWeek, commonButtonStyle
   } = useUserDashboard(currentEmployee);
 
   const [editLoading, setEditLoading] = useState(false); // Separate loading state for editing
   const [requestLoading, setRequestLoading] = useState(false); // Separate loading state for requesting
   const [requestingShifts, setRequestingShifts] = useState<number[]>([]); // Separate loading state for each shift request
   const [cancelingShifts, setCancelingShifts] = useState<number[]>([]); // Separate loading state for each shift cancellation
+
 
   // Automatically fetch shifts when the component mounts or the week changes
   useEffect(() => {
@@ -89,7 +84,6 @@ const UserDashboard: React.FC = () => {
   
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
   const handleRequestShift = async (shift: AvailableShift) => {
     setRequestingShifts(prev => [...prev, shift.id]);
     try {
@@ -199,144 +193,178 @@ const handleDeleteRequestedShift = async (requestId: number) => {
           <Navbar />
 
           <Box sx={{ my: 3 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              align="center"
+            <Box
               sx={{
-                color: '#00c28c',
-                fontWeight: 'bold',
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-                fontFamily: 'Roboto, sans-serif',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, // Responsive font size
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mb: 3,
+                mt: 1,
               }}
             >
-              Shift Management System
-            </Typography>
-
-            {/* Filters */}
-            <Box sx={{ 
-              mb: 2, 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'center', 
-              gap: 2,
-              alignItems: { xs: 'stretch', sm: 'center' }
-            }}>
-              <ShiftFilters filter={filter} setFilter={setFilter} />
-            </Box>
-
-            {/* Employee selection */}
-            <Box sx={{ 
-              mb: 2, 
-              display: 'flex', 
-              justifyContent: { xs: 'center', sm: 'flex-end' },
-              alignItems: 'center', // Align items vertically
-              gap: 2, // Add spacing between dropdown and button
-              width: '100%'
-            }}>
-              <TextField
-                select
-                label="Current Employee"
-                value={currentEmployee.id}
-                onChange={(e) => {
-                  const empId = Number(e.target.value);
-                  const employee = employees.find(emp => emp.id === empId);
-                  if (employee) setCurrentEmployee(employee);
-                }}
-                sx={{ 
-                  width: { xs: '100%', sm: 200 },
-                  color: 'white',
-                  '& .MuiInputBase-input': { color: 'white' }
+              <Box
+                sx={{
+                  px: { xs: 2, sm: 4 },
+                  py: { xs: 1, sm: 2 },
+                  borderRadius: 2,
+                  background: '#1a1a1a', // darker background for contrast
+                  boxShadow: '0 8px 32px 0 rgba(0, 194, 140, 0.2)',
+                  maxWidth: '900px', // wider container
+                  width: '100%',
                 }}
               >
-                {employees.map((employee) => (
-                  <MenuItem key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </MenuItem>
-                ))}
-              </TextField>
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  align="center"
+                  noWrap // Forces single line
+                  sx={{
+                    color: '#00c28c', // Match your theme's primary color
+                    fontWeight: 900,
+                    fontFamily: '"Montserrat", "Roboto", sans-serif',
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
+                    fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem' }, // Slightly smaller for better fit
+                    lineHeight: 1.1,
+                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      letterSpacing: '0.04em',
+                      transform: 'scale(1.02)',
+                    },
+                  }}
+                >
+                  Shift Management System
+                </Typography>
+              </Box>
+            </Box>
 
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={async () => {
-                  try {
-                    const response = await createEmployee({
-                      name: 'John Doe',
-                      email: `john${Math.floor(Math.random() * 10000)}@example.com`,
-                      password: 'SuperSecret123!',
-                      phone: '1234567890'
-                    });
-                    console.log('Employee created successfully:', response);
-                    alert('Employee created successfully!');
-                  } catch (error) {
-                    console.error('Failed to create employee:', error);
-                    alert('Failed to create employee. Check console for details.');
-                  }
+            {/* Wrap everything after the title in a frame */}
+            <Box
+              sx={{
+                border: '2px solid rgba(0, 194, 140, 0.2)',
+                borderRadius: '12px',
+                padding: '24px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                margin: '24px 0',
+              }}
+            >
+              {/* Filters */}
+              <Box sx={{ mb: 3 }}>
+                <ShiftFilters filter={filter} setFilter={setFilter} />
+              </Box>
+
+              {/* Employee selection and Week navigation in one row */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' },
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 3,
+                  mb: 3,
                 }}
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
-                Create Dummy Employee
-              </Button>
-            </Box>
+                {/* Employee selection */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 2,
+                  width: { xs: '100%', md: 'auto' }
+                }}>
+                  <TextField
+                    select
+                    label="Current Employee"
+                    value={currentEmployee.id}
+                    onChange={(e) => {
+                      const empId = Number(e.target.value);
+                      const employee = employees.find(emp => emp.id === empId);
+                      if (employee) setCurrentEmployee(employee);
+                    }}
+                    sx={{ 
+                      width: { xs: '100%', sm: 200 },
+                      color: 'white',
+                      '& .MuiInputBase-input': { color: 'white' }
+                    }}
+                  >
+                    {employees.map((employee) => (
+                      <MenuItem key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
 
-            {/* Week navigation */}
-            <Box sx={{ 
-              mb: 2, 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              gap: 2
-            }}>
-              <Button 
-                variant="outlined" 
-                onClick={goToPreviousWeek}
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Previous Week
-              </Button>
-              <WeekPicker
-                currentWeekStart={currentWeekStart}
-                onWeekChange={setCurrentWeekStart}
-              />
-              <Button 
-                variant="outlined" 
-                onClick={goToNextWeek}
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Next Week
-              </Button>
-            </Box>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={async () => {
+                      try {
+                        const response = await createEmployee({
+                          name: 'John Doe',
+                          email: `john${Math.floor(Math.random() * 10000)}@example.com`,
+                          password: 'SuperSecret123!',
+                          phone: '1234567890'
+                        });
+                        console.log('Employee created successfully:', response);
+                        alert('Employee created successfully!');
+                      } catch (error) {
+                        console.error('Failed to create employee:', error);
+                        alert('Failed to create employee. Check console for details.');
+                      }
+                    }}
+                    fullWidth={false}
+                    sx={{
+                      ...commonButtonStyle, // Spread the common styles
+                      width: { xs: '100%', sm: 'auto' },
+                    }}
+                  >
+                    Create Dummy Employee
+                  </Button>
+                </Box>
 
-            {/* Add new shift button */}
-            <Box sx={{ 
-              mb: 2, 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'flex-end',
-              gap: 2
-            }}>
-          
-              
-              {/* Weekly schedule grid */}
+                {/* Week navigation */}
+                <Box sx={{ 
+                  display: 'flex',
+                  gap: 2,
+                  width: { xs: '100%', md: 'auto' }
+                }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={goToPreviousWeek}
+                    fullWidth={false}
+                    sx={{
+                      ...commonButtonStyle, // Spread the common styles
+                      width: { xs: '100%', sm: 'auto' },
+                    }}
+                  >
+                    Previous Week
+                  </Button>
+                  <WeekPicker
+                    currentWeekStart={currentWeekStart}
+                    onWeekChange={setCurrentWeekStart}
+                  />
+                  <Button 
+                    variant="outlined" 
+                    onClick={goToNextWeek}
+                    fullWidth={false}
+                    sx={{
+                      ...commonButtonStyle, // Spread the common styles
+                      width: { xs: '100%', sm: 'auto' },
+                    }}
+                  >
+                    Next Week
+                  </Button>
+                </Box>
+              </Box>
+
+              {/* Calendar Grid with increased spacing */}
               <Box
                 sx={{
                   display: 'flex',
                   flexDirection: { xs: 'column', sm: 'row' },
-                  flexWrap: 'nowrap',
-                  justifyContent: 'space-between',
-                  gap: 1, // Reduce gap to fit more content
+                  gap: 3,
                   overflowX: 'auto',
-                  width: '100%', // Ensure full width
-                  height: 'calc(100vh - 300px)',
+                  pb: 2,
                   '&::-webkit-scrollbar': {
                     height: '8px',
                   },
@@ -355,163 +383,234 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                     key={index}
                     sx={{
                       flex: 1,
-                      minWidth: 120, // Reduce minimum width to fit more columns
-                      p: { xs: 1, sm: 1.5 }, // Reduce padding
+                      minWidth: 150, // Slightly wider columns
+                      p: { xs: 1.5, sm: 2 }, // More padding
                       height: '100%',
-                      backgroundColor: 'white',
-                      borderRadius: 1,
-                      boxShadow: 3,
+                      backgroundColor: '#e8f5e9',
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      position: 'relative',
+                      backgroundImage: `
+                        linear-gradient(
+                          rgba(255,255,255, 0.2) 1px,
+                          transparent 1px
+                        )
+                      `,
+                      backgroundSize: '100% 25px', // Creates paper lines effect
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundImage: `
+                          radial-gradient(
+                            rgba(0,0,0,0.1) 1px,
+                            transparent 1px
+                          )
+                        `,
+                        backgroundSize: '4px 4px',
+                        opacity: 0.2,
+                        pointerEvents: 'none',
+                      },
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        top: '70px',
+                        height: '2px',
+                        background: 'rgba(0,0,0,0.1)',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      }
                     }}
                   >
-                    <Typography 
-                      variant="subtitle1" 
-                      fontWeight="bold" 
-                      align="center" 
-                      gutterBottom
-                      sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                    >
-                      {format(day, 'EEE')}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      align="center" 
-                      gutterBottom 
-                      sx={{ 
+                    <Box
+                      sx={{
                         mb: 2,
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        pb: 1,
+                        borderBottom: '1px solid rgba(0,0,0,0.1)',
+                        background: 'linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)',
+                        borderRadius: '4px 4px 0 0',
+                        position: 'relative',
+                        zIndex: 1,
                       }}
                     >
-                      {format(day, 'MMM d')}
-                    </Typography>
-                    
-                    {/* Shifts for this day */}
-                    {filteredShifts
-                      .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
-                      .map(shift => {
-                        const status = getShiftStatus(shift.id);
-                        const backgroundColor = getShiftColor(status);
-                        
-                        return (
-                          <Box
-                            key={shift.id}
-                            sx={{
-                              mb: 1,
-                              p: 1,
-                              borderRadius: 1,
-                              backgroundColor,
-                              color: 'white',
-                              position: 'relative',
-                            }}
-                          >
-                            <Typography 
-                              variant="body2"
-                              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                      <Typography 
+                        variant="subtitle1" 
+                        fontWeight="bold" 
+                        align="center" 
+                        gutterBottom
+                        sx={{ 
+                          fontSize: { xs: '0.875rem', sm: '1rem' },
+                          color: 'rgba(0,0,0,0.87)',
+                        }}
+                      >
+                        {format(day, 'EEE')}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        align="center" 
+                        sx={{ 
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          color: 'rgba(0,0,0,0.6)',
+                        }}
+                      >
+                        {format(day, 'MMM d')}
+                      </Typography>
+                    </Box>
+
+                    {/* Shifts container */}
+                    <Box
+                      sx={{
+                        mt: 2,
+                        maxHeight: 'calc(100% - 90px)', // Account for header height
+                        overflowY: 'auto',
+                        '&::-webkit-scrollbar': {
+                          width: '6px',
+                        },
+                        '&::-webkit-scrollbar-track': {
+                          backgroundColor: 'rgba(0,0,0,0.05)',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                          backgroundColor: 'rgba(0,0,0,0.1)',
+                          borderRadius: '3px',
+                        },
+                      }}
+                    >
+                      {filteredShifts
+                        .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
+                        .map(shift => {
+                          const status = getShiftStatus(shift.id);
+                          const backgroundColor = getShiftColor(status);
+                          
+                          return (
+                            <Box
+                              key={shift.id}
+                              sx={{
+                                mb: 1,
+                                p: 1,
+                                borderRadius: 1,
+                                backgroundColor,
+                                color: 'white',
+                                position: 'relative',
+                              }}
                             >
-                              {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                            </Typography>
-                            
-                            {status === 'assigned' && (
                               <Typography 
-                                variant="caption" 
-                                display="block"
-                                sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                variant="body2"
+                                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                               >
-                                {getAssignedEmployeeName(shift.id)}
+                                {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                               </Typography>
-                            )}
-                            
-                            {/* Action Buttons */}
-                            <Box sx={{ 
-                              mt: 1,
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              gap: 1
-                            }}>
-                              {status === 'available' && (
-                                <Button
-                                  size="small"
-                                  variant="contained"
-                                  onClick={() => handleRequestShift(shift)}
-                                  disabled={requestingShifts.includes(shift.id)}
-                                  sx={{ 
-                                    fontSize: '0.75rem',
-                                    padding: '2px 8px',
-                                    minWidth: 0,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                    }
-                                  }}
+                              
+                              {status === 'assigned' && (
+                                <Typography 
+                                  variant="caption" 
+                                  display="block"
+                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
                                 >
-                                  {requestingShifts.includes(shift.id) ? 'Requesting...' : 'Request'}
-                                </Button>
+                                  {getAssignedEmployeeName(shift.id)}
+                                </Typography>
                               )}
+                              
+                              {/* Action Buttons */}
+                              <Box sx={{ 
+                                mt: 1,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                gap: 1
+                              }}>
+                                {status === 'available' && (
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    onClick={() => handleRequestShift(shift)}
+                                    disabled={requestingShifts.includes(shift.id)}
+                                    sx={{
+                                      ...commonButtonStyle,
+                                      fontSize: '0.75rem',
+                                      padding: '2px 8px',
+                                      minWidth: 0,
+                                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                      '&:hover': {
+                                        ...commonButtonStyle['&:hover'],
+                                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                      },
+                                    }}
+                                  >
+                                    {requestingShifts.includes(shift.id) ? 'Requesting...' : 'Request'}
+                                  </Button>
+                                )}
+                                {status === 'pending' && (
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    color="error"
+                                    onClick={() => {
+                                      const request = requestedShifts.find(req => req.availableShiftId === shift.id);
+                                      if (request && request.id) {
+                                        handleDeleteRequestedShift(request.id);
+                                      }
+                                    }}
+                                    disabled={cancelingShifts.includes(
+                                      requestedShifts.find(req => req.availableShiftId === shift.id)?.id || -1
+                                    )}
+                                    sx={{
+                                      ...commonButtonStyle,
+                                      fontSize: '0.75rem',
+                                      padding: '2px 8px',
+                                      minWidth: 0,
+                                      backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                                      '&:hover': {
+                                        ...commonButtonStyle['&:hover'],
+                                        backgroundColor: 'rgba(255, 0, 0, 0.7)',
+                                      },
+                                    }}
+                                  >
+                                    {cancelingShifts.includes(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!) 
+                                      ? 'Cancelling...' 
+                                      : 'Cancel Request'
+                                    }
+                                  </Button>
+                                )}
+                              </Box>
+                              
                               {status === 'pending' && (
-                                <Button
+                                <Chip
+                                  label="Pending"
                                   size="small"
-                                  variant="contained"
-                                  color="error"
-                                  onClick={() => {
-                                    const request = requestedShifts.find(req => req.availableShiftId === shift.id);
-                                    if (request && request.id) {
-                                      handleDeleteRequestedShift(request.id);
-                                    }
-                                  }}
-                                  disabled={cancelingShifts.includes(
-                                    requestedShifts.find(req => req.availableShiftId === shift.id)?.id || -1
-                                  )}
                                   sx={{ 
-                                    fontSize: '0.75rem',
-                                    padding: '2px 8px',
-                                    minWidth: 0,
-                                    backgroundColor: 'rgba(255, 0, 0, 0.5)',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(255, 0, 0, 0.7)',
-                                    }
+                                    fontSize: '0.6rem', 
+                                    height: 16,
+                                    mt: 0.5
                                   }}
-                                >
-                                  {cancelingShifts.includes(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!) 
-                                    ? 'Cancelling...' 
-                                    : 'Cancel Request'
-                                  }
-                                </Button>
+                                />
+                              )}
+                              
+                              {status === 'denied' && (
+                                <Chip
+                                  label="Denied"
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: '0.6rem', 
+                                    height: 16, 
+                                    backgroundColor: '#d32f2f',
+                                    mt: 0.5 
+                                  }}
+                                />
                               )}
                             </Box>
-                            
-                            {status === 'pending' && (
-                              <Chip
-                                label="Pending"
-                                size="small"
-                                sx={{ 
-                                  fontSize: '0.6rem', 
-                                  height: 16,
-                                  mt: 0.5
-                                }}
-                              />
-                            )}
-                            
-                            {status === 'denied' && (
-                              <Chip
-                                label="Denied"
-                                size="small"
-                                sx={{ 
-                                  fontSize: '0.6rem', 
-                                  height: 16, 
-                                  backgroundColor: '#d32f2f',
-                                  mt: 0.5 
-                                }}
-                              />
-                            )}
-                          </Box>
-                        );
-                      })}
+                          );
+                        })}
+                    </Box>
                   </Box>
                 ))}
               </Box>
             </Box>
           </Box>
 
-  
           {/* Request Shift Dialog */}
           <RequestShiftDialog/>
 
@@ -543,9 +642,11 @@ const handleDeleteRequestedShift = async (requestId: number) => {
               transform: { xs: 'none', sm: 'translateX(-50%)' }
             }}
           >
-            <Alert severity="success" onClose={() => setSuccess(null)}>
-              {success}
-            </Alert>
+            <>
+              <Alert severity="success" onClose={() => setSuccess(null)}>
+                {success}
+              </Alert>
+            </>
           </Snackbar>
         </Container>
       </Box>
