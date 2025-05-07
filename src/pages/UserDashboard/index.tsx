@@ -615,39 +615,47 @@ const handleDeleteRequestedShift = async (requestId: number) => {
           <RequestShiftDialog/>
 
           {/* Snackbars for notifications */}
-          <Snackbar
-            open={!!error}
-            autoHideDuration={6000}
-            onClose={() => setError(null)}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            sx={{
-              bottom: { xs: 0, sm: 24 },
-              left: { xs: 0, sm: '50%' },
-              transform: { xs: 'none', sm: 'translateX(-50%)' }
-            }}
-          >
-            <Alert severity="error" onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          </Snackbar>
-          
-          <Snackbar
-            open={!!success}
-            autoHideDuration={6000}
-            onClose={() => setSuccess(null)}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            sx={{
-              bottom: { xs: 0, sm: 24 },
-              left: { xs: 0, sm: '50%' },
-              transform: { xs: 'none', sm: 'translateX(-50%)' }
-            }}
-          >
-            <>
-              <Alert severity="success" onClose={() => setSuccess(null)}>
-                {success}
-              </Alert>
-            </>
-          </Snackbar>
+          <Box sx={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 2000 }}>
+            {error && (
+              <Snackbar
+                open={!!error}
+                autoHideDuration={6000}
+                onClose={() => setError(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                ClickAwayListenerProps={{ mouseEvent: false, touchEvent: false }}
+              >
+                <Alert 
+                  elevation={6} 
+                  variant="filled" 
+                  severity="error" 
+                  onClose={() => setError(null)}
+                  sx={{ width: '100%' }}
+                >
+                  {error}
+                </Alert>
+              </Snackbar>
+            )}
+            
+            {success && (
+              <Snackbar
+                open={!!success}
+                autoHideDuration={6000}
+                onClose={() => setSuccess(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                ClickAwayListenerProps={{ mouseEvent: false, touchEvent: false }}
+              >
+                <Alert 
+                  elevation={6} 
+                  variant="filled" 
+                  severity="success" 
+                  onClose={() => setSuccess(null)}
+                  sx={{ width: '100%' }}
+                >
+                  {success}
+                </Alert>
+              </Snackbar>
+            )}
+          </Box>
         </Container>
       </Box>
       <Footer /> {/* Add Footer at the bottom */}
