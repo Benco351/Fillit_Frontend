@@ -17,6 +17,7 @@ import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import RequestShiftDialog from '../../components/ShiftManagment';
 //import EditShiftDialog from '../../components/ShiftManagment/editShift';
 import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
+import ActionButtons from '../../components/sections/UserPage/ActionButtons';
 import UserDashboardTitle from '../../components/sections/UserPage';
 
 const UserDashboard: React.FC = () => {
@@ -58,6 +59,7 @@ const UserDashboard: React.FC = () => {
   
         if (response?.data && Array.isArray(response.data)) {
           const mappedRequestedShifts = response.data.map((shift: any) => ({
+            request_shift_id: shift.id,
             id: shift.request_id || shift.id,
             employeeId: shift.employee_id,
             availableShiftId: shift.shift_slot_id,
@@ -83,6 +85,7 @@ const UserDashboard: React.FC = () => {
     fetchRequestedShifts();
   }, [currentEmployee.id]); // This will trigger on employee ID change or on refresh
   
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleRequestShift = async (shift: AvailableShift) => {
     setRequestingShifts(prev => [...prev, shift.id]);
@@ -95,16 +98,29 @@ const UserDashboard: React.FC = () => {
   
       const response = await createRequestedShift(payload);
       
-      // Use response.id instead of response.data.id
-      const newRequest = {
+      // Create new request with pending status
+      const newRequestedShift: RequestedShift = {
         id: response.id,
+        request_shift_id: response.id,
         employeeId: currentEmployee.id,
         availableShiftId: shift.id,
         notes: '',
-        status: 'pending' as const
+        status: 'pending'
       };
-  
-      setRequestedShifts(prev => [...prev, newRequest]);
+
+      // Update local state immediately and ensure it persists
+      setRequestedShifts(prev => {
+        const existingIndex = prev.findIndex(
+          req => req.availableShiftId === shift.id
+        );
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = newRequestedShift;
+          return updated;
+        }
+        return [...prev, newRequestedShift];
+      });
+
       setSuccess('Shift requested successfully');
     } catch (err) {
       setError('Failed to request shift. Please try again.');
@@ -113,33 +129,72 @@ const UserDashboard: React.FC = () => {
     }
   };
 
-const handleDeleteRequestedShift = async (requestId: number) => {
-  if (!requestId) return;
-  setCancelingShifts(prev => [...prev, requestId]);
-  try {
-    await deleteRequestedShiftById(requestId);
-    setRequestedShifts(prev => prev.filter(req => req.id !== requestId));
-    setSuccess('Request cancelled successfully');
-  } catch (err) {
-    setError('Failed to cancel request. Please try again.');
-  } finally {
-    setCancelingShifts(prev => prev.filter(id => id !== requestId));
-  }
-};
-
-  const handleOpenRequestDialog = (shift: AvailableShift) => {
-    setSelectedShift(shift);
-    setIsRequestShiftDialogOpen(true);
+  const handleCancelRequest = async (requestId: number) => {
+    setCancelingShifts(prev => [...prev, requestId]);
+    try {
+      await deleteRequestedShiftById(requestId);
+      // Remove the cancelled request from local state
+      setRequestedShifts(prev => prev.filter(req => req.id !== requestId));
+      setSuccess('Request cancelled successfully');
+      // Refresh the requested shifts
+      await refreshRequestedShifts();
+    } catch (err) {
+      setError('Failed to cancel request. Please try again.');
+    } finally {
+      setCancelingShifts(prev => prev.filter(id => id !== requestId));
+    }
   };
 
+  // Modify the polling effect to preserve pending status
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await getRequestedShifts({ request_employee_id: currentEmployee.id });
+        if (response?.data) {
+          setRequestedShifts(prevRequests => {
+            const newRequests = response.data.map(shift => ({
+              id: shift.id,
+              request_shift_id: shift.id,
+              employeeId: shift.employeeId,
+              availableShiftId: shift.availableShiftId,
+              notes: shift.notes || '',
+              status: shift.status || 'pending'
+            }));
+
+            // Merge new requests with existing ones, preserving pending status
+            const mergedRequests = [...prevRequests];
+            newRequests.forEach(newReq => {
+              const existingIndex = mergedRequests.findIndex(existing => 
+                existing.availableShiftId === newReq.availableShiftId
+              );
+              if (existingIndex === -1) {
+                mergedRequests.push(newReq);
+              } else if (mergedRequests[existingIndex].status !== 'pending') {
+                mergedRequests[existingIndex] = newReq;
+              }
+            });
+            return mergedRequests;
+          });
+        }
+      } catch (error) {
+        console.error('Error polling shifts:', error);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [currentEmployee.id]);
 
   // Utility function to get shift status for display
   const getShiftStatus = (availableShiftId: number): string => {
     const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
-    if (requestedShift) return requestedShift.status;
+    if (requestedShift) {
+      return requestedShift.status;
+    }
     
     const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
-    if (isAssigned) return 'assigned';
+    if (isAssigned) {
+      return 'assigned';
+    }
     
     return 'available';
   };
@@ -193,10 +248,9 @@ const handleDeleteRequestedShift = async (requestId: number) => {
           <Navbar />
 
           <Box sx={{ my: 3 }}>
-
-            <UserDashboardTitle />
-
-
+            {/* Title Box */}
+            <UserDashboardTitle/>
+       
             {/* Filters - Moved outside and above the frame */}
             <Box sx={{ 
               mb: 3, 
@@ -452,7 +506,7 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                         .map(shift => {
                           const status = getShiftStatus(shift.id);
-                          const backgroundColor = getShiftColor(status);
+                          const backgroundColor = status === 'pending' ? '#ff9800' : getShiftColor(status);
                           
                           return (
                             <Box
@@ -461,7 +515,7 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                                 mb: 1,
                                 p: 1,
                                 borderRadius: 1,
-                                backgroundColor,
+                                backgroundColor, // Use the determined color
                                 color: 'white',
                                 position: 'relative',
                               }}
@@ -484,90 +538,18 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                               )}
                               
                               {/* Action Buttons */}
-                              <Box sx={{ 
-                                mt: 1,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                gap: 1
-                              }}>
-                                {status === 'available' && (
-                                  <Box sx={{ 
-                                    display: 'flex',
-                                    justifyContent: 'flex-end', // Align to the right
-                                    width: '100%',
-                                    mt: 1
-                                  }}>
-                                    <Button
-                                      size="small"
-                                      variant="contained"
-                                      onClick={() => handleRequestShift(shift)}
-                                      disabled={requestingShifts.includes(shift.id)}
-                                      sx={{
-                                        ...commonButtonStyle,
-                                        fontSize: '0.7rem',
-                                        padding: '1px 8px',
-                                        minWidth: '60px',
-                                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                                        backdropFilter: 'blur(8px)',
-                                        borderRadius: '4px', // More rectangular shape
-                                        height: '20px',
-                                        lineHeight: '18px',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        '&:hover': {
-                                          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                                        },
-                                      }}
-                                    >
-                                      {requestingShifts.includes(shift.id) ? 'Requesting...' : 'Request'}
-                                    </Button>
-                                  </Box>
+                              <ActionButtons
+                                shift={shift}
+                                status={status}
+                                requesting={requestingShifts.includes(shift.id)}
+                                canceling={cancelingShifts.includes(
+                                  requestedShifts.find(req => req.availableShiftId === shift.id)?.id || -1
                                 )}
-                                {status === 'pending' && (
-                                  <Button
-                                    size="small"
-                                    variant="contained"
-                                    color="error"
-                                    onClick={() => {
-                                      const request = requestedShifts.find(req => req.availableShiftId === shift.id);
-                                      if (request && request.id) {
-                                        handleDeleteRequestedShift(request.id);
-                                      }
-                                    }}
-                                    disabled={cancelingShifts.includes(
-                                      requestedShifts.find(req => req.availableShiftId === shift.id)?.id || -1
-                                    )}
-                                    sx={{
-                                      ...commonButtonStyle,
-                                      fontSize: '0.75rem',
-                                      padding: '2px 8px',
-                                      minWidth: 0,
-                                      backgroundColor: 'rgba(255, 0, 0, 0.5)',
-                                      '&:hover': {
-                                        ...commonButtonStyle['&:hover'],
-                                        backgroundColor: 'rgba(255, 0, 0, 0.7)',
-                                      },
-                                    }}
-                                  >
-                                    {cancelingShifts.includes(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!) 
-                                      ? 'Cancelling...' 
-                                      : 'Cancel Request'
-                                    }
-                                  </Button>
-                                )}
-                              </Box>
-                              
-                              {status === 'pending' && (
-                                <Chip
-                                  label="Pending"
-                                  size="small"
-                                  sx={{ 
-                                    fontSize: '0.6rem', 
-                                    height: 16,
-                                    mt: 0.5
-                                  }}
-                                />
-                              )}
+                                requestedShifts={requestedShifts}
+                                onRequestShift={handleRequestShift}
+                                handleDeleteRequestedShift={handleCancelRequest}
+                                buttonStyle={commonButtonStyle}
+                              />
                               
                               {status === 'denied' && (
                                 <Chip

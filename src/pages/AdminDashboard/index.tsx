@@ -65,6 +65,7 @@ const AdminDashboard: React.FC = () => {
         const requestedShiftsResponse = await getRequestedShifts();
         if (requestedShiftsResponse?.data && Array.isArray(requestedShiftsResponse.data)) {
           const mappedRequestedShifts = requestedShiftsResponse.data.map((shift: any) => ({
+            request_shift_id: shift.request_id || shift.id,
             id: shift.request_id || shift.id,
             employeeId: shift.employee_id,
             availableShiftId: shift.shift_slot_id,
@@ -105,6 +106,7 @@ const AdminDashboard: React.FC = () => {
 
         if (response?.data && Array.isArray(response.data)) {
           const mappedRequestedShifts = response.data.map((shift: any) => ({
+            request_shift_id: shift.request_id || shift.id,
             id: shift.request_id || shift.id,
             employeeId: shift.employee_id,
             availableShiftId: shift.shift_slot_id,
@@ -144,12 +146,7 @@ const AdminDashboard: React.FC = () => {
       );
 
       setAvailableShifts(filteredAvailableShifts);
-      setRequestedShifts(
-        requestedShiftsResponse.map(shift => ({
-          ...shift,
-          status: shift.status as 'pending' | 'approved' | 'denied',
-        }))
-      );
+
       setAssignedShifts(assignedShiftsResponse);
     } catch (err) {
       setError('Failed to fetch shifts. Please try again later.');
@@ -172,6 +169,7 @@ const AdminDashboard: React.FC = () => {
         if (response?.data && Array.isArray(response.data)) {
           setRequestedShifts(
             response.data.map((shift: any) => ({
+              request_shift_id: shift.request_id || shift.id,
               id: shift.request_id || shift.id,
               employeeId: shift.employee_id,
               availableShiftId: shift.shift_slot_id,
@@ -206,6 +204,7 @@ const AdminDashboard: React.FC = () => {
         if (response?.data && Array.isArray(response.data)) {
           setRequestedShifts(
             response.data.map((shift: any) => ({
+              request_shift_id: shift.request_id || shift.id,
               id: shift.request_id || shift.id,
               employeeId: shift.employee_id,
               availableShiftId: shift.shift_slot_id,
@@ -308,7 +307,7 @@ const AdminDashboard: React.FC = () => {
         notes: newRequest.notes,
       });
 
-      const newRequestData = newRequestResponse.data;
+      const newRequestData = newRequestResponse;
 
       console.log('Requested shift response:', newRequestData);
 
@@ -316,6 +315,7 @@ const AdminDashboard: React.FC = () => {
       const updatedRequestedShifts = await getRequestedShifts();
       setRequestedShifts(
         updatedRequestedShifts.data.map((shift: any) => ({
+          request_shift_id: shift.request_id || shift.id,
           id: shift.request_id || shift.id,
           employeeId: shift.employee_id,
           availableShiftId: shift.shift_slot_id,
@@ -416,17 +416,7 @@ const AdminDashboard: React.FC = () => {
   
       console.log('Requested shift response:', newRequestResponse); // Log the response
   
-      setRequestedShifts((prev) => [
-        ...prev,
-        {
-          id: newRequestResponse.data.id,
-          employeeId: currentEmployee.id,
-          availableShiftId: editShift.id,
-          notes: '',
-          status: 'pending',
-        },
-      ]);
-  
+
       setSuccess('Shift requested successfully');
       setIsEditShiftDialogOpen(false); // Close the edit dialog after requesting
     } catch (err) {

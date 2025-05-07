@@ -193,20 +193,28 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   
   const fetchRequestedShifts = useCallback(async () => {
     setLoadingRequested(true);
-    setError(null);
     try {
       const response = await getRequestedShifts({ request_employee_id: currentEmployee.id });
-      if (response?.data && Array.isArray(response.data)) {
-        setRequestedShifts(response.data.map((shift: any) => ({
-          id: shift.request_id || shift.id,
-          employeeId: shift.employee_id,
-          availableShiftId: shift.shift_slot_id,
-          notes: shift.notes || '',
-          status: shift.status || 'pending',
-        })));
+      if (response?.data) {
+        setRequestedShifts(prevRequests => {
+          const newRequests = response.data.map(shift => ({
+            id: shift.id,
+            request_shift_id: shift.id,
+            employeeId: shift.employeeId,
+            availableShiftId: shift.availableShiftId,
+            notes: shift.notes || '',
+            status: shift.status || 'pending'
+          }));
+
+          // Preserve existing pending requests
+          return prevRequests.map(prev => {
+            const newReq = newRequests.find(nr => nr.availableShiftId === prev.availableShiftId);
+            return (prev.status === 'pending' && !newReq) ? prev : (newReq || prev);
+          });
+        });
       }
     } catch (err) {
-      setError('Failed to fetch requested shifts. Please try again later.');
+      setError('Failed to fetch requested shifts');
     } finally {
       setLoadingRequested(false);
     }
@@ -216,6 +224,48 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     fetchRequestedShifts();
   }, [fetchRequestedShifts]);
 
+  // Update the polling effect to better preserve pending status
+  useEffect(() => {
+    let ignoreStaleRequest = false;
+    const pollInterval = setInterval(async () => {
+      try {
+        const params = { request_employee_id: currentEmployee.id };
+        const response = await getRequestedShifts(params);
+        
+        if (!ignoreStaleRequest && response?.data) {
+          setRequestedShifts(prevRequests => {
+            const newRequests = response.data.map(shift => ({
+              id: shift.id,
+              request_shift_id: shift.id,
+              employeeId: shift.employeeId,
+              availableShiftId: shift.availableShiftId,
+              notes: shift.notes || '',
+              status: shift.status || 'pending'
+            }));
+
+            // Keep existing pending requests and merge with new data
+            return prevRequests.map(existingReq => {
+              const newReq = newRequests.find(
+                req => req.availableShiftId === existingReq.availableShiftId
+              );
+              // Preserve pending status unless server explicitly changes it
+              if (existingReq.status === 'pending' && (!newReq || newReq.status === 'pending')) {
+                return existingReq;
+              }
+              return newReq || existingReq;
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Error polling shifts:', error);
+      }
+    }, 10000); // Increased to 10 seconds to reduce update frequency
+
+    return () => {
+      ignoreStaleRequest = true;
+      clearInterval(pollInterval);
+    };
+  }, [currentEmployee.id]);
 
     const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
       setEditShift(shift); // Set the selected shift for editing

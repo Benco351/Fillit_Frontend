@@ -6,6 +6,7 @@ export interface AvailableShift {
 }
 
 export interface RequestedShift {
+  request_shift_id: number;
   id: number;
   employeeId: number;
   availableShiftId: number;

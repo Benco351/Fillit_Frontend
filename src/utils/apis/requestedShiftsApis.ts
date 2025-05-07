@@ -5,17 +5,45 @@ import {
   RequestedShiftQueryDTO 
 } from './types'; // Import types from types.ts
 
+interface RequestedShiftResponse {
+  request_id: number;
+  request_shift_id: number;
+  request_employee_id: number;
+  request_notes: string | null;
+  request_status: 'pending' | 'approved' | 'denied';
+  availableShift?: {
+    shift_date: string;
+    shift_time_start: string;
+    shift_time_end: string;
+  };
+  employee?: {
+    employee_name: string;
+    employee_email: string;
+  };
+}
+
 export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
   try {
-    const response = await instance.post('/requested-shifts', data);
-    // Accept both response.data and response.data.data
-    const result = response.data?.data || response.data;
-    if (!result) {
+    console.log('Request payload for createRequestedShift:', data); // Log the request payload
+    const response = await instance.post<{ status: string; message: string; data: RequestedShiftResponse }>('/requested-shifts', {
+      employeeId: data.employeeId,
+      shiftSlotId: data.shiftSlotId,
+      notes: data.notes || ''
+    });
+
+    if (!response.data?.data) {
       throw new Error('No data returned from the server');
     }
-    return result;
+
+    console.log('Response from createRequestedShift:', response.data); // Log the response
+    return {
+      id: response.data.data.request_id,
+      employeeId: response.data.data.request_employee_id,
+      availableShiftId: response.data.data.request_shift_id,
+      notes: response.data.data.request_notes || '',
+      status: response.data.data.request_status
+    };
   } catch (error) {
-    // ...existing error handling...
     if (error instanceof Error) {
       console.error('Error creating requested shift:', (error as any).response || error.message); // Log detailed error
     } else {
@@ -43,13 +71,28 @@ export const getRequestedShiftById = async (id: number ) => { //??
 export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) => {
   try {
     // Ensure the params object is correctly formed before sending
-    const response = await instance.get('/requested-shifts', { params });
+    const response = await instance.get<{ status: string; message: string; data: RequestedShiftResponse[] }>('/requested-shifts', {
+      params: {
+        request_employee_id: params.request_employee_id,
+        request_status: params.request_status
+      }
+    });
 
-    if (!response.data.data) {
+    if (!response.data?.data) {
       throw new Error('No data returned from the server');
     }
 
-    return response.data;
+    return {
+      data: response.data.data.map(shift => ({
+        id: shift.request_id,
+        employeeId: shift.request_employee_id,
+        availableShiftId: shift.request_shift_id,
+        notes: shift.request_notes || '',
+        status: shift.request_status,
+        availableShift: shift.availableShift,
+        employee: shift.employee
+      }))
+    };
   } catch (error) {
     if (error instanceof Error) {
       console.error('Error fetching requested shifts:', error.message);
@@ -63,14 +106,15 @@ export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) =>
 export const deleteRequestedShiftById = async (id: number ) => {
   try {
     const response = await instance.delete(`/requested-shifts/${id}`);
-    // Accept any 2xx response as success
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error('Failed to delete requested shift');
+
+    if (!response.data.data) {
+      throw new Error('No data returned from the server');
     }
-    return response.data;
+
+    return response.data; // Return the response data
   } catch (error) {
     console.error('Error deleting requested shift by ID:', error);
-    throw error;
+    throw error; // Re-throw the error for further handling
   }
 };
 
