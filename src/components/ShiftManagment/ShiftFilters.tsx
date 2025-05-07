@@ -6,31 +6,21 @@ type Props = {
   setFilter: Dispatch<SetStateAction<"all" | "requested" | "accepted">>;
 };
 
-const glassFilterButtonStyle = {
-  background: 'rgba(255, 255, 255, 0.08)',
-  backdropFilter: 'blur(8px)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
-  borderRadius: '10px',
-  padding: '8px 20px',
-  color: 'white',
-  fontSize: '0.9rem',
-  fontWeight: '500',
+const filterButtonStyle = {
   minWidth: '120px',
-  textTransform: 'none',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-  transition: 'all 0.3s ease',
+  background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+  backdropFilter: 'blur(8px)',
+  border: '1px solid rgba(0, 194, 140, 0.3)',
+  borderRadius: '10px',
+  color: '#00c28c',
   '&.active': {
-    background: 'rgba(0, 194, 140, 0.2)',
-    border: '1px solid rgba(0, 194, 140, 0.3)',
-    boxShadow: '0 4px 16px rgba(0, 194, 140, 0.15)',
+    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.2), rgba(0, 194, 140, 0.3))',
+    border: '1px solid rgba(0, 194, 140, 0.5)',
+    boxShadow: '0 4px 12px rgba(0, 194, 140, 0.2)',
   },
   '&:hover': {
-    background: 'rgba(255, 255, 255, 0.12)',
-    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)',
+    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
     transform: 'translateY(-1px)',
-  },
-  '&:active': {
-    transform: 'translateY(1px)',
   }
 };
 
@@ -40,8 +30,8 @@ const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
       <ButtonGroup sx={{ gap: 1 }}>
         <Button
           sx={{
-            ...glassFilterButtonStyle,
-            ...(filter === 'all' && { '&.active': glassFilterButtonStyle['&.active'] })
+            ...filterButtonStyle,
+            ...(filter === 'all' && { '&.active': filterButtonStyle['&.active'] })
           }}
           className={filter === 'all' ? 'active' : ''}
           onClick={() => setFilter('all')}
@@ -50,8 +40,8 @@ const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
         </Button>
         <Button
           sx={{
-            ...glassFilterButtonStyle,
-            ...(filter === 'requested' && { '&.active': glassFilterButtonStyle['&.active'] })
+            ...filterButtonStyle,
+            ...(filter === 'requested' && { '&.active': filterButtonStyle['&.active'] })
           }}
           className={filter === 'requested' ? 'active' : ''}
           onClick={() => setFilter('requested')}
@@ -60,8 +50,8 @@ const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
         </Button>
         <Button
           sx={{
-            ...glassFilterButtonStyle,
-            ...(filter === 'accepted' && { '&.active': glassFilterButtonStyle['&.active'] })
+            ...filterButtonStyle,
+            ...(filter === 'accepted' && { '&.active': filterButtonStyle['&.active'] })
           }}
           className={filter === 'accepted' ? 'active' : ''}
           onClick={() => setFilter('accepted')}

@@ -193,6 +193,7 @@ const handleDeleteRequestedShift = async (requestId: number) => {
           <Navbar />
 
           <Box sx={{ my: 3 }}>
+            {/* Title Box */}
             <Box
               sx={{
                 display: 'flex',
@@ -239,7 +240,18 @@ const handleDeleteRequestedShift = async (requestId: number) => {
               </Box>
             </Box>
 
-            {/* Wrap everything after the title in a frame */}
+            {/* Filters - Moved outside and above the frame */}
+            <Box sx={{ 
+              mb: 3, 
+              display: 'flex', 
+              justifyContent: 'center',
+              alignItems: 'center',
+              mt: 4
+            }}>
+              <ShiftFilters filter={filter} setFilter={setFilter} />
+            </Box>
+
+            {/* Frame Box */}
             <Box
               sx={{
                 border: '2px solid rgba(0, 194, 140, 0.2)',
@@ -250,11 +262,6 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                 margin: '24px 0',
               }}
             >
-              {/* Filters */}
-              <Box sx={{ mb: 3 }}>
-                <ShiftFilters filter={filter} setFilter={setFilter} />
-              </Box>
-
               {/* Employee selection and Week navigation in one row */}
               <Box
                 sx={{
@@ -365,6 +372,7 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                   gap: 3,
                   overflowX: 'auto',
                   pb: 2,
+                  minHeight: '600px', // Set minimum height for the container
                   '&::-webkit-scrollbar': {
                     height: '8px',
                   },
@@ -382,10 +390,12 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                   <Box
                     key={index}
                     sx={{
-                      flex: 1,
-                      minWidth: 150, // Slightly wider columns
-                      p: { xs: 1.5, sm: 2 }, // More padding
-                      height: '100%',
+                      flex: '1 1 0', // This ensures equal width columns
+                      minWidth: 150,
+                      maxWidth: 'calc(100% / 7)', // Ensures columns don't grow too wide
+                      height: '600px', // Fixed height for all columns
+                      display: 'flex',
+                      flexDirection: 'column',
                       backgroundColor: '#e8f5e9',
                       borderRadius: '8px',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -436,6 +446,7 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                         borderRadius: '4px 4px 0 0',
                         position: 'relative',
                         zIndex: 1,
+                        flexShrink: 0, // Prevents header from shrinking
                       }}
                     >
                       <Typography 
@@ -465,9 +476,9 @@ const handleDeleteRequestedShift = async (requestId: number) => {
                     {/* Shifts container */}
                     <Box
                       sx={{
-                        mt: 2,
-                        maxHeight: 'calc(100% - 90px)', // Account for header height
+                        flex: 1, // Takes remaining space
                         overflowY: 'auto',
+                        p: 1,
                         '&::-webkit-scrollbar': {
                           width: '6px',
                         },
