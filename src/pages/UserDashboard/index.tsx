@@ -17,6 +17,7 @@ import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import RequestShiftDialog from '../../components/ShiftManagment';
 //import EditShiftDialog from '../../components/ShiftManagment/editShift';
 import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
+import UserDashboardTitle from '../../components/sections/UserPage';
 
 const UserDashboard: React.FC = () => {
 
@@ -82,7 +83,6 @@ const UserDashboard: React.FC = () => {
     fetchRequestedShifts();
   }, [currentEmployee.id]); // This will trigger on employee ID change or on refresh
   
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleRequestShift = async (shift: AvailableShift) => {
     setRequestingShifts(prev => [...prev, shift.id]);
@@ -193,52 +193,9 @@ const handleDeleteRequestedShift = async (requestId: number) => {
           <Navbar />
 
           <Box sx={{ my: 3 }}>
-            {/* Title Box */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                mb: 3,
-                mt: 1,
-              }}
-            >
-              <Box
-                sx={{
-                  px: { xs: 2, sm: 4 },
-                  py: { xs: 1, sm: 2 },
-                  borderRadius: 2,
-                  background: '#1a1a1a', // darker background for contrast
-                  boxShadow: '0 8px 32px 0 rgba(0, 194, 140, 0.2)',
-                  maxWidth: '900px', // wider container
-                  width: '100%',
-                }}
-              >
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  align="center"
-                  noWrap // Forces single line
-                  sx={{
-                    color: '#00c28c', // Match your theme's primary color
-                    fontWeight: 900,
-                    fontFamily: '"Montserrat", "Roboto", sans-serif',
-                    letterSpacing: '0.02em',
-                    textTransform: 'uppercase',
-                    fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem' }, // Slightly smaller for better fit
-                    lineHeight: 1.1,
-                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      letterSpacing: '0.04em',
-                      transform: 'scale(1.02)',
-                    },
-                  }}
-                >
-                  Shift Management System
-                </Typography>
-              </Box>
-            </Box>
+
+            <UserDashboardTitle />
+
 
             {/* Filters - Moved outside and above the frame */}
             <Box sx={{ 
