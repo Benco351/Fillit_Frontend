@@ -19,6 +19,7 @@ import RequestShiftDialog from '../../components/ShiftManagment';
 import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 import ActionButtons from '../../components/sections/UserPage/ActionButtons';
 import UserDashboardTitle from '../../components/sections/UserPage';
+import Filter from '../../components/CalendarFeatures/Filter';
 
 const UserDashboard: React.FC = () => {
 
@@ -251,16 +252,9 @@ const UserDashboard: React.FC = () => {
             {/* Title Box */}
             <UserDashboardTitle/>
        
-            {/* Filters - Moved outside and above the frame */}
-            <Box sx={{ 
-              mb: 3, 
-              display: 'flex', 
-              justifyContent: 'center',
-              alignItems: 'center',
-              mt: 4
-            }}>
-              <ShiftFilters filter={filter} setFilter={setFilter} />
-            </Box>
+            {/* Filters - Pass filter and setFilter props */}
+            <Filter filter={filter} setFilter={setFilter} />
+   
 
             {/* Frame Box */}
             <Box
