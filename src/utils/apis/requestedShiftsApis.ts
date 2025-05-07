@@ -103,18 +103,21 @@ export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) =>
   }
 };
 
-export const deleteRequestedShiftById = async (id: number ) => {
+
+
+export const deleteRequestedShiftById = async (id: number) => {
   try {
     const response = await instance.delete(`/requested-shifts/${id}`);
 
-    if (!response.data.data) {
-      throw new Error('No data returned from the server');
+    // Only throw if the overall response is malformed, not if data is null
+    if (!response.data || response.data.status !== 'ok') {
+      throw new Error('Unexpected server response');
     }
 
-    return response.data; // Return the response data
+    return response.data; // Still returns { status, message, data: null }
   } catch (error) {
     console.error('Error deleting requested shift by ID:', error);
-    throw error; // Re-throw the error for further handling
+    throw error;
   }
 };
 

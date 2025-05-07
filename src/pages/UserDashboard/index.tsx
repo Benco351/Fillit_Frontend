@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,TextField, MenuItem,
   IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
@@ -130,15 +128,19 @@ const UserDashboard: React.FC = () => {
     }
   };
 
-  const handleCancelRequest = async (requestId: number) => {
+  const handleCancelRequest = async (requestId: number, availableShiftId: number) => {
     setCancelingShifts(prev => [...prev, requestId]);
     try {
       await deleteRequestedShiftById(requestId);
       // Remove the cancelled request from local state
       setRequestedShifts(prev => prev.filter(req => req.id !== requestId));
       setSuccess('Request cancelled successfully');
-      // Refresh the requested shifts
-      await refreshRequestedShifts();
+      // Update the shift status to "available"
+      setAvailableShifts(prev =>
+        prev.map(shift =>
+          shift.id === availableShiftId ? { ...shift, status: 'available' } : shift
+        )
+      );
     } catch (err) {
       setError('Failed to cancel request. Please try again.');
     } finally {
@@ -255,7 +257,6 @@ const UserDashboard: React.FC = () => {
             {/* Filters - Pass filter and setFilter props */}
             <Filter filter={filter} setFilter={setFilter} />
    
-
             {/* Frame Box */}
             <Box
               sx={{
@@ -541,7 +542,7 @@ const UserDashboard: React.FC = () => {
                                 )}
                                 requestedShifts={requestedShifts}
                                 onRequestShift={handleRequestShift}
-                                handleDeleteRequestedShift={handleCancelRequest}
+                                handleDeleteRequestedShift={(requestId) => handleCancelRequest(requestId, shift.id)}
                                 buttonStyle={commonButtonStyle}
                               />
                               
@@ -566,9 +567,6 @@ const UserDashboard: React.FC = () => {
               </Box>
             </Box>
           </Box>
-
-          {/* Request Shift Dialog */}
-          <RequestShiftDialog/>
 
           {/* Snackbars for notifications */}
           <Box sx={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 2000 }}>

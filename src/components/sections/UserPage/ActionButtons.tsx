@@ -8,7 +8,7 @@ interface ActionButtonsProps {
   canceling: boolean;
   requestedShifts: any[];
   onRequestShift: (shift: AvailableShift) => Promise<void>;
-  handleDeleteRequestedShift: (id: number) => Promise<void>;
+  handleDeleteRequestedShift: (id: number, availableShiftId: number) => Promise<void>;
   buttonStyle?: Record<string, any>; // Make sure this matches the prop name we're using
 }
 
@@ -73,7 +73,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             onClick={() => {
               const request = requestedShifts.find(req => req.availableShiftId === shift.id);
               if (request?.id) {
-                handleDeleteRequestedShift(request.id);
+                handleDeleteRequestedShift(request.id, shift.id); // Pass availableShiftId
               }
             }}
             disabled={canceling}
