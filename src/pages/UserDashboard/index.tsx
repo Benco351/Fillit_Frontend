@@ -522,6 +522,16 @@ const UserDashboard: React.FC = () => {
                                 {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                               </Typography>
                               
+                              {status === 'approved' && (
+                                <Typography 
+                                  variant="caption" 
+                                  display="block"
+                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                >
+                                  Request Approved
+                                </Typography>
+                              )}
+                              
                               {status === 'assigned' && (
                                 <Typography 
                                   variant="caption" 

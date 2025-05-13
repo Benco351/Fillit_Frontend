@@ -69,7 +69,7 @@ export const getShiftColor = (status: string): string => {
       return '#4caf50'; // Green
     case 'pending':
       return '#ff9800'; // Orange
-    case 'assigned':
+    case 'approved':
       return '#2196f3'; // Blue
     case 'denied':
       return '#f44336'; // Red

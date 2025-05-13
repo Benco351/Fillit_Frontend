@@ -65,8 +65,8 @@ const AdminDashboard: React.FC = () => {
         const requestedShiftsResponse = await getRequestedShifts();
         if (requestedShiftsResponse?.data && Array.isArray(requestedShiftsResponse.data)) {
           const mappedRequestedShifts = requestedShiftsResponse.data.map((shift: any) => ({
-            request_shift_id: shift.request_id || shift.id,
-            id: shift.request_id || shift.id,
+            request_shift_id: shift.id,
+            id: shift.id,
             employeeId: shift.employee_id,
             availableShiftId: shift.shift_slot_id,
             notes: shift.notes || '',
@@ -106,8 +106,8 @@ const AdminDashboard: React.FC = () => {
 
         if (response?.data && Array.isArray(response.data)) {
           const mappedRequestedShifts = response.data.map((shift: any) => ({
-            request_shift_id: shift.request_id || shift.id,
-            id: shift.request_id || shift.id,
+            request_shift_id: shift.id,
+            id: shift.id,
             employeeId: shift.employee_id,
             availableShiftId: shift.shift_slot_id,
             notes: shift.notes || '',
@@ -156,73 +156,37 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Add a polling interval state
-  const POLLING_INTERVAL = 5000; // 5 seconds
+  // Update the polling interval to be more frequent
+  const POLLING_INTERVAL = 2000; // Poll every 2 seconds instead of 5
 
-  // Fetch requested shifts periodically
+  // Add a more robust polling effect for requested shifts
   useEffect(() => {
-    const fetchRequestedShifts = async () => {
+    const pollShifts = async () => {
       try {
         const response = await getRequestedShifts();
-        console.log('Fetched requested shifts:', response);
-
         if (response?.data && Array.isArray(response.data)) {
-          setRequestedShifts(
-            response.data.map((shift: any) => ({
-              request_shift_id: shift.request_id || shift.id,
-              id: shift.request_id || shift.id,
-              employeeId: shift.employee_id,
-              availableShiftId: shift.shift_slot_id,
-              notes: shift.notes || '',
-              status: shift.status || 'pending',
-            }))
-          );
+          // Map the requested shifts correctly
+          const mappedShifts = response.data.map(shift => ({
+            request_shift_id: shift.id,
+            id: shift.id,
+            employeeId: shift.employeeId || shift.employeeId,
+            availableShiftId: shift.availableShiftId,
+            notes: shift.notes || '',
+            status: shift.status || 'pending'
+          }));
+
+          console.log('Mapped requested shifts:', mappedShifts); // Debug log
+          setRequestedShifts(mappedShifts);
         }
       } catch (err) {
-        console.error('Error fetching requested shifts:', err);
+        console.error('Error polling shifts:', err);
       }
     };
 
-    // Initial fetch
-    fetchRequestedShifts();
-
-    // Set up polling
-    const interval = setInterval(fetchRequestedShifts, POLLING_INTERVAL);
-
-    // Cleanup interval on component unmount
+    pollShifts();
+    const interval = setInterval(pollShifts, 2000); // Poll every 2 seconds
     return () => clearInterval(interval);
   }, []);
-
-  // Add this useEffect for periodic polling of requested shifts
-  useEffect(() => {
-    const pollRequestedShifts = async () => {
-      try {
-        const response = await getRequestedShifts();
-        if (response?.data && Array.isArray(response.data)) {
-          const mappedRequestedShifts = response.data.map((shift: any) => ({
-            request_shift_id: shift.request_id || shift.id,
-            id: shift.request_id || shift.id,
-            employeeId: shift.employee_id,
-            availableShiftId: shift.shift_slot_id,
-            notes: shift.notes || '',
-            status: shift.status || 'pending',
-          }));
-          setRequestedShifts(mappedRequestedShifts);
-        }
-      } catch (err) {
-        console.error('Error polling requested shifts:', err);
-      }
-    };
-
-    // Initial fetch
-    pollRequestedShifts();
-
-    // Set up polling interval (every 5 seconds)
-    const interval = setInterval(pollRequestedShifts, 5000);
-
-    // Cleanup on unmount
-    return () => clearInterval(interval);
-  }, []); // Empty dependency array to run only on mount
 
   // Add automatic refresh after actions
   const refreshDashboard = async () => {
@@ -251,37 +215,6 @@ const AdminDashboard: React.FC = () => {
       console.error('Error refreshing dashboard:', err);
     }
   };
-
-  // Add this polling effect to always keep requestedShifts up-to-date
-  useEffect(() => {
-    const POLLING_INTERVAL = 3000; // 1.5 seconds for faster updates
-    let interval: NodeJS.Timeout;
-
-    const pollRequestedShifts = async () => {
-      try {
-        const response = await getRequestedShifts();
-        if (response?.data && Array.isArray(response.data)) {
-          setRequestedShifts(
-            response.data.map((shift: any) => ({
-              request_shift_id: shift.request_id || shift.id,
-              id: shift.request_id || shift.id,
-              employeeId: shift.employee_id,
-              availableShiftId: shift.shift_slot_id,
-              notes: shift.notes || '',
-              status: shift.status || 'pending',
-            }))
-          );
-        }
-      } catch (err) {
-        // Optionally handle error
-      }
-    };
-
-    pollRequestedShifts();
-    interval = setInterval(pollRequestedShifts, POLLING_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -581,17 +514,20 @@ const handleGetShiftById = async () => {
   }
 };
 
-// Utility function to get shift status for display
+// Update the getShiftStatus function to better handle status checks
 const getShiftStatus = (availableShiftId: number): string => {
-  // If any user has requested this shift, show its status (pending/approved/denied)
-  const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
-  if (requestedShift) return requestedShift.status;
+  const requestedShift = requestedShifts.find(s => {
+    console.log('Checking shift:', s, 'against ID:', availableShiftId); // Debug log
+    return s.availableShiftId === availableShiftId;
+  });
 
-  // If assigned, show assigned
+  if (requestedShift) {
+    console.log('Found requested shift:', requestedShift); // Debug log
+    return requestedShift.status;
+  }
+
   const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
-  if (isAssigned) return 'assigned';
-
-  return 'available';
+  return isAssigned ? 'assigned' : 'available';
 };
 
   // Utility function to get assigned employee name
@@ -901,7 +837,14 @@ const getShiftStatus = (availableShiftId: number): string => {
                       .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                       .map(shift => {
                         const status = getShiftStatus(shift.id);
-                        const backgroundColor = status === 'pending' ? 'orange' : getShiftColor(status);
+                        console.log(`Shift ${shift.id} status:`, status); // Debug log
+                        const backgroundColor = 
+                          status === 'approved' ? '#2196f3' :  // Blue
+                          status === 'pending' ? '#ff9800' :   // Orange
+                          status === 'denied' ? '#f44336' :    // Red
+                          '#4caf50';                          // Green (available);
+                        
+                        console.log(`Rendering shift ${shift.id} with status:`, status); // Debug log
                         
                         return (
                           <Box
@@ -910,7 +853,7 @@ const getShiftStatus = (availableShiftId: number): string => {
                               mb: 1,
                               p: { xs: 0.5, sm: 1 },
                               borderRadius: 1,
-                              backgroundColor,
+                              backgroundColor, // This will be orange (#ff9800) for pending status
                               color: 'white',
                               position: 'relative',
                             }}
@@ -921,6 +864,16 @@ const getShiftStatus = (availableShiftId: number): string => {
                             >
                               {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                             </Typography>
+                            
+                            {status === 'approved' && (
+                              <Typography 
+                                variant="caption" 
+                                display="block"
+                                sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                              >
+                                Request Approved
+                              </Typography>
+                            )}
                             
                             {status === 'assigned' && (
                               <Typography 
@@ -948,26 +901,32 @@ const getShiftStatus = (availableShiftId: number): string => {
                             </IconButton>
                             
                             {status === 'pending' && (
-                              <Box sx={{ 
-                                display: 'flex', 
-                                flexDirection: { xs: 'column', sm: 'row' },
-                                gap: 1,
-                                mt: 1
-                              }}>
-                                <Chip
-                                  label="Pending"
-                                  size="small"
-                                  sx={{ 
-                                    fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
-                                    height: { xs: 14, sm: 16 }
-                                  }}
-                                />
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 6,
+                                  px: 1,
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  zIndex: 2
+                                }}
+                              >
                                 <Button
                                   variant="contained"
                                   size="small"
-                                  sx={{ 
-                                    fontSize: { xs: '0.625rem', sm: '0.75rem' },
-                                    padding: { xs: '2px 8px', sm: '4px 12px' }
+                                  sx={{
+                                    minWidth: 80,
+                                    px: 2,
+                                    py: 0.5,
+                                    fontSize: '0.85rem',
+                                    lineHeight: 1.2,
+                                    borderRadius: 1,
+                                    boxShadow: 'none',
+                                    textTransform: 'none'
                                   }}
                                   onClick={() => handleAcceptShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
                                 >
@@ -976,9 +935,15 @@ const getShiftStatus = (availableShiftId: number): string => {
                                 <Button
                                   variant="outlined"
                                   size="small"
-                                  sx={{ 
-                                    fontSize: { xs: '0.625rem', sm: '0.75rem' },
-                                    padding: { xs: '2px 8px', sm: '4px 12px' }
+                                  sx={{
+                                    minWidth: 80,
+                                    px: 2,
+                                    py: 0.5,
+                                    fontSize: '0.85rem',
+                                    lineHeight: 1.2,
+                                    borderRadius: 1,
+                                    boxShadow: 'none',
+                                    textTransform: 'none'
                                   }}
                                   onClick={() => handleDeleteRequestedShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
                                 >
