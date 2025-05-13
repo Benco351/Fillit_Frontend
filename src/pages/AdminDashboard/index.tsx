@@ -193,6 +193,65 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Add this useEffect for periodic polling of requested shifts
+  useEffect(() => {
+    const pollRequestedShifts = async () => {
+      try {
+        const response = await getRequestedShifts();
+        if (response?.data && Array.isArray(response.data)) {
+          const mappedRequestedShifts = response.data.map((shift: any) => ({
+            request_shift_id: shift.request_id || shift.id,
+            id: shift.request_id || shift.id,
+            employeeId: shift.employee_id,
+            availableShiftId: shift.shift_slot_id,
+            notes: shift.notes || '',
+            status: shift.status || 'pending',
+          }));
+          setRequestedShifts(mappedRequestedShifts);
+        }
+      } catch (err) {
+        console.error('Error polling requested shifts:', err);
+      }
+    };
+
+    // Initial fetch
+    pollRequestedShifts();
+
+    // Set up polling interval (every 5 seconds)
+    const interval = setInterval(pollRequestedShifts, 5000);
+
+    // Cleanup on unmount
+    return () => clearInterval(interval);
+  }, []); // Empty dependency array to run only on mount
+
+  // Add automatic refresh after actions
+  const refreshDashboard = async () => {
+    try {
+      const [availableResponse, requestedResponse] = await Promise.all([
+        getAvailableShifts(),
+        getRequestedShifts()
+      ]);
+
+      if (availableResponse?.data) {
+        setAvailableShifts(availableResponse.data);
+      }
+      if (requestedResponse?.data) {
+        setRequestedShifts(
+          requestedResponse.data.map((shift: any) => ({
+            request_shift_id: shift.request_id || shift.id,
+            id: shift.request_id || shift.id,
+            employeeId: shift.employee_id,
+            availableShiftId: shift.shift_slot_id,
+            notes: shift.notes || '',
+            status: shift.status || 'pending',
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Error refreshing dashboard:', err);
+    }
+  };
+
   // Add this polling effect to always keep requestedShifts up-to-date
   useEffect(() => {
     const POLLING_INTERVAL = 3000; // 1.5 seconds for faster updates
@@ -301,31 +360,17 @@ const AdminDashboard: React.FC = () => {
       console.log('Requesting shift:', newRequest);
 
       // Call the API to create a requested shift
-      const newRequestResponse = await createRequestedShift({
+      await createRequestedShift({
         employeeId: newRequest.employeeId,
         shiftSlotId: selectedShift.id,
         notes: newRequest.notes,
       });
 
-      const newRequestData = newRequestResponse;
-
-      console.log('Requested shift response:', newRequestData);
-
-      // Fetch the updated requested shifts from the backend
-      const updatedRequestedShifts = await getRequestedShifts();
-      setRequestedShifts(
-        updatedRequestedShifts.data.map((shift: any) => ({
-          request_shift_id: shift.request_id || shift.id,
-          id: shift.request_id || shift.id,
-          employeeId: shift.employee_id,
-          availableShiftId: shift.shift_slot_id,
-          notes: shift.notes || '',
-          status: shift.status || 'pending',
-        }))
-      );
-
       setSuccess('Shift requested successfully');
       setIsRequestShiftDialogOpen(false);
+
+      // Refresh the dashboard
+      await refreshDashboard();
     } catch (err) {
       setError('Failed to request shift. Please try again.');
       if (err instanceof Error) {
@@ -581,7 +626,7 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: 'secondary.main',
+          backgroundColor: '#e0e0e0', // Changed from '#f5f5f5' to a darker gray
           minHeight: '100vh',
           py: 4,
           px: 2, // Add padding for better spacing
@@ -607,10 +652,12 @@ const getShiftStatus = (availableShiftId: number): string => {
                 fontFamily: 'Roboto, sans-serif',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, // Responsive font size
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
+                WebkitTextStroke: '1px #424242', // Add text outline
+                textStroke: '1px #424242', // For broader browser support
               }}
             >
-              Shift Management System
+              Admin Management System
             </Typography>
 
             {/* Filters */}
@@ -668,7 +715,15 @@ const getShiftStatus = (availableShiftId: number): string => {
                 variant="outlined" 
                 onClick={goToPreviousWeek}
                 fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
+                sx={{ 
+                  width: { xs: '100%', sm: 'auto' },
+                  border: '1px solid #424242',
+                  borderRadius: '20px', // Changed from 0 to 20px for round shape
+                  color: '#212121', // Darker text color
+                  '&:hover': {
+                    border: '1px solid #424242',
+                  }
+                }}
               >
                 Previous Week
               </Button>
@@ -680,7 +735,15 @@ const getShiftStatus = (availableShiftId: number): string => {
                 variant="outlined" 
                 onClick={goToNextWeek}
                 fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
+                sx={{ 
+                  width: { xs: '100%', sm: 'auto' },
+                  border: '1px solid #424242',
+                  borderRadius: '20px', // Changed from 0 to 20px for round shape
+                  color: '#212121', // Darker text color
+                  '&:hover': {
+                    border: '1px solid #424242',
+                  }
+                }}
               >
                 Next Week
               </Button>
@@ -733,7 +796,8 @@ const getShiftStatus = (availableShiftId: number): string => {
               mb: 4, 
               p: { xs: 2, sm: 3 }, 
               backgroundColor: 'rgba(255, 255, 255, 0.1)', 
-              borderRadius: 2 
+              borderRadius: 0, // Changed from 2 to 0 for rectangular shape
+              border: '1px solid #424242', // Added border
             }}>
               <Typography
                 variant="h6"
@@ -806,8 +870,9 @@ const getShiftStatus = (availableShiftId: number): string => {
                       height: '100%',
                       minHeight: { xs: 300, sm: 400 },
                       backgroundColor: 'white',
-                      borderRadius: 1,
+                      borderRadius: 0, // Changed from 1 to 0 for rectangular shape
                       boxShadow: 3,
+                      border: '1px solid #424242',
                     }}
                   >
                     <Typography 
