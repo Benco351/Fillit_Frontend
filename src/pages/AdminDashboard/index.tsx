@@ -15,6 +15,8 @@ import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, 
 import { createRequestedShift, getRequestedShifts, updateRequestedShiftById, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
 
+import { createAssignedShift } from '../../utils/apis/assignedShiftApis';
+
 //Types
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
@@ -26,8 +28,11 @@ import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import Navbar from '../../components/layout/userNavbar';
 import RequestShiftDialog from '../../components/ShiftManagment';
 import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
+//import AddShift from '../../components/ShiftManagment/AdminSettings';
+//import handleAddShift from '../../components/ShiftManagment/AdminSettings';
 
 const AdminDashboard: React.FC = () => {
+     
 
       // Current user 
     const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
@@ -75,16 +80,6 @@ const AdminDashboard: React.FC = () => {
           setRequestedShifts(mappedRequestedShifts);
         }
 
-        // Comment out assigned shifts if endpoint is missing or 404
-        // const assignedShiftsResponse = await getAssignedShifts();
-        // if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
-        //   const mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
-        //     id: shift.assigned_id || shift.id,
-        //     employeeId: shift.employee_id,
-        //     availableShiftId: shift.shift_slot_id,
-        //   }));
-        //   setAssignedShifts(mappedAssignedShifts);
-        // }
       } catch (err) {
         console.error('Error fetching shifts:', err);
         setError('Failed to fetch shifts. Please try again later.');
@@ -233,6 +228,8 @@ const AdminDashboard: React.FC = () => {
   const handleOpenSettings = () => {
     navigate('/settings'); // Navigate to the settings page
   };
+
+
 
   // Handle adding a new shift
   const handleAddShift = async () => {
@@ -416,6 +413,18 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       console.log('Accepting shift with ID:', requestedShiftId);
+
+      // Find the requested shift details
+      const requestedShift = requestedShifts.find(shift => shift.id === requestedShiftId);
+      if (!requestedShift) {
+        throw new Error('Requested shift not found');
+      }
+
+      // Call the API to create an assigned shift
+      await createAssignedShift({
+        employeeId: requestedShift.employeeId,
+        shiftSlotId: requestedShift.availableShiftId,
+      });
 
       // Call the API to update the requested shift status to "approved"
       await updateRequestedShiftById(requestedShiftId, { status: 'approved' });
