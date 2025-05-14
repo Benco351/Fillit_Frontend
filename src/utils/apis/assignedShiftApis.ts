@@ -2,6 +2,10 @@ import { instance } from './apiconfig'; // Adjust the import path as necessary
 import { CreateAssignedShiftDTO, AssignedShiftQueryDTO, SwapAssignedShiftsDTO } from './types'; // Import types
 
 //ADMINNNNN - assign shift to myself for admin
+// information button - mail and employee
+//assigned shift - same thing
+// see both available and request - add a rectangle under available
+
 export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // done
     try {
         const response = await instance.post('/assigned-shifts', data);
@@ -10,8 +14,11 @@ export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // 
             throw new Error('No data returned from the server');
         }
 
+        console.log('Shift assinged SUCCESS', response.data);
         return response.data; // Return the response data
-    } catch (error) {
+    } 
+    
+    catch (error) {
         console.error('Error creating assigned shift:', error);
         throw error; // Re-throw the error for further handling
     }
