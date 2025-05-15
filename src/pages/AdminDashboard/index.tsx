@@ -249,25 +249,6 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array means this only sets up on mount
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleNavigateHome = () => {
-    navigate('/home'); // Navigate to the home page
-  };
-
-  const handleOpenSettings = () => {
-    navigate('/settings'); // Navigate to the settings page
-  };
-
-
 
   // Handle adding a new shift
   const handleAddShift = async () => {
@@ -320,37 +301,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleRequestShift = async () => {
-    if (!selectedShift) return;
-
-    setLoading(true);
-    try {
-      console.log('Requesting shift:', newRequest);
-
-      // Call the API to create a requested shift
-      await createRequestedShift({
-        employeeId: newRequest.employeeId,
-        shiftSlotId: selectedShift.id,
-        notes: newRequest.notes,
-      });
-
-      setSuccess('Shift requested successfully');
-      setIsRequestShiftDialogOpen(false);
-
-      // Refresh the dashboard
-      await refreshDashboard();
-    } catch (err) {
-      setError('Failed to request shift. Please try again.');
-      if (err instanceof Error) {
-        console.error('Error requesting shift:', (err as any)?.response?.data?.message || err.message);
-      } else {
-        console.error('Error requesting shift:', err);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
+ 
   const handleDeleteShift = async (shiftId: number) => {
     setLoading(true);
     try {
@@ -491,14 +442,18 @@ const AdminDashboard: React.FC = () => {
       // Call the API to update the requested shift status to "denied"
       await updateRequestedShiftById(requestedShiftId, { status: 'denied' });
 
-      // Update the local state to reflect the change
-      setRequestedShifts(prev =>
-        prev.map(shift =>
-          shift.id === requestedShiftId ? { ...shift, status: 'denied' } : shift
-        )
-      );
+      // Refresh the requested shifts to ensure the denied status persists
+      const updatedRequestedShifts = await getRequestedShifts();
+      if (updatedRequestedShifts?.data) {
+        setRequestedShifts(
+          updatedRequestedShifts.data.map(shift => ({
+            ...shift,
+            request_shift_id: shift.id, // Add the missing property
+          }))
+        );
+      }
 
-      setSuccess('Requested shift denied successfully');
+      setSuccess('Requested shift denied successfully.');
     } catch (err) {
       console.error('Failed to deny requested shift:', err);
       setError('Failed to deny requested shift. Please try again.');
@@ -585,15 +540,15 @@ const handleGetShiftById = async () => {
   }
 };
 
-// Update the getShiftStatus function to better handle status checks
+// Update the getShiftStatus function to show denied shifts as "available" for the admin
 const getShiftStatus = (availableShiftId: number): string => {
-  const requestedShift = requestedShifts.find(s => {
-    console.log('Checking shift:', s, 'against ID:', availableShiftId); // Debug log
-    return s.availableShiftId === availableShiftId;
-  });
+  const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
 
   if (requestedShift) {
-    console.log('Found requested shift:', requestedShift); // Debug log
+    // If the shift is denied, show it as "available" for the admin
+    if (requestedShift.status === 'denied' && currentEmployee.id === 1) {
+      return 'available';
+    }
     return requestedShift.status;
   }
 
@@ -848,218 +803,260 @@ const getShiftStatus = (availableShiftId: number): string => {
               {/* Weekly schedule grid */}
               <Box
                 sx={{
-                  display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  flexWrap: { xs: 'nowrap', sm: 'nowrap' },
-                  justifyContent: 'space-between',
-                  gap: 2,
-                  overflowX: { sm: 'auto' },
-                  '&::-webkit-scrollbar': {
-                    height: '8px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    borderRadius: '4px',
-                  },
+                  border: '2px solid rgba(0, 194, 140, 0.2)',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)', // Match the user's dark background
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                  margin: '24px 0',
                 }}
               >
-                {weekDays.map((day, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      flex: { xs: '1 1 100%', sm: '1 1 calc(14.28% - 16px)' },
-                      minWidth: { xs: '100%', sm: 150 },
-                      p: { xs: 1, sm: 2 },
-                      height: '100%',
-                      minHeight: { xs: 300, sm: 400 },
-                      backgroundColor: 'white',
-                      borderRadius: 0, // Changed from 1 to 0 for rectangular shape
-                      boxShadow: 3,
-                      border: '1px solid #424242',
-                    }}
-                  >
-                    <Typography 
-                      variant="subtitle1" 
-                      fontWeight="bold" 
-                      align="center" 
-                      gutterBottom
-                      sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                    >
-                      {format(day, 'EEE')}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      align="center" 
-                      gutterBottom 
-                      sx={{ 
-                        mb: 2,
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: 3,
+                    overflowX: 'auto',
+                    pb: 2,
+                    minHeight: '600px',
+                    '&::-webkit-scrollbar': {
+                      height: '8px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '4px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      borderRadius: '4px',
+                    },
+                  }}
+                >
+                  {weekDays.map((day, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        flex: { xs: '1 1 100%', sm: '1 1 calc(14.28% - 16px)' },
+                        minWidth: { xs: '100%', sm: 150 },
+                        p: { xs: 1, sm: 2 },
+                        height: '100%',
+                        minHeight: { xs: 300, sm: 400 },
+                        backgroundColor: 'white',
+                        borderRadius: 0, // Changed from 1 to 0 for rectangular shape
+                        boxShadow: 3,
+                        border: '1px solid #424242',
                       }}
                     >
-                      {format(day, 'MMM d')}
-                    </Typography>
-                    
-                    {/* Shifts for this day */}
-                    {filteredShifts
-                      .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
-                      .map(shift => {
-                        const status = getShiftStatus(shift.id);
-                        console.log(`Shift ${shift.id} status:`, status); // Debug log
-                        const backgroundColor = 
-                          status === 'approved' ? '#2196f3' :  // Blue
-                          status === 'pending' ? '#ff9800' :   // Orange
-                          status === 'denied' ? '#f44336' :    // Red
-                          '#4caf50';                          // Green (available);
-                        
-                        console.log(`Rendering shift ${shift.id} with status:`, status); // Debug log
-                        
-                        return (
-                          <Box
-                            key={shift.id}
-                            sx={{
-                              mb: 1,
-                              p: { xs: 0.5, sm: 1 },
-                              borderRadius: 1,
-                              backgroundColor, // This will be orange (#ff9800) for pending status
-                              color: 'white',
-                              position: 'relative',
-                            }}
-                          >
-                            <Typography 
-                              variant="body2"
-                              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                            >
-                              {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                            </Typography>
-                            
-                            {status === 'approved' && (
-                              <Typography 
-                                variant="caption" 
-                                display="block"
-                                sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                              >
-                                Request Approved
-                              </Typography>
-                            )}
-                            
-                            {status === 'assigned' && (
-                              <Typography 
-                                variant="caption" 
-                                display="block"
-                                sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                              >
-                                {getAssignedEmployeeName(shift.id)}
-                              </Typography>
-                            )}
-                            
-                            {/* Edit Button */}
-                            <IconButton
-                              size="small"
-                              sx={{ 
-                                position: 'absolute', 
-                                top: 2, 
-                                right: 2, 
+                      <Typography 
+                        variant="subtitle1" 
+                        fontWeight="bold" 
+                        align="center" 
+                        gutterBottom
+                        sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+                      >
+                        {format(day, 'EEE')}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        align="center" 
+                        gutterBottom 
+                        sx={{ 
+                          mb: 2,
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }}
+                      >
+                        {format(day, 'MMM d')}
+                      </Typography>
+                      
+                      {/* Shifts for this day */}
+                      {filteredShifts
+                        .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
+                        .map(shift => {
+                          const status = getShiftStatus(shift.id);
+                          const backgroundColor = 
+                            status === 'approved' ? '#2196f3' :  // Blue
+                            status === 'denied' ? '#f44336' :    // Red
+                            '#4caf50';                          // Green (available);
+
+                          const requestedShift = requestedShifts.find(req => req.availableShiftId === shift.id);
+                          const requester = requestedShift
+                            ? employees.find(emp => emp.id === requestedShift.employeeId)
+                            : null;
+
+                          return (
+                            <Box
+                              key={shift.id}
+                              sx={{
+                                mb: 1,
+                                p: { xs: 0.5, sm: 1 },
+                                borderRadius: 1,
+                                backgroundColor, // Main background color
                                 color: 'white',
-                                padding: { xs: 0.5, sm: 1 }
+                                position: 'relative',
                               }}
-                              onClick={() => handleOpenEditDialogFromCalendar(shift)}
                             >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                            
-                            {status === 'pending' && (
-                              <Box
-                                sx={{
-                                  position: 'absolute',
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 6,
-                                  px: 1,
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  gap: 1,
-                                  zIndex: 2
-                                }}
+                              <Typography 
+                                variant="body2"
+                                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                               >
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  sx={{
-                                    minWidth: 80,
-                                    px: 2,
-                                    py: 0.5,
-                                    fontSize: '0.85rem',
-                                    lineHeight: 1.2,
-                                    borderRadius: 1,
-                                    boxShadow: 'none',
-                                    textTransform: 'none'
-                                  }}
-                                  onClick={() => handleAcceptShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                                {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                              </Typography>
+                              
+                              {status === 'approved' && (
+                                <Typography 
+                                  variant="caption" 
+                                  display="block"
+                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
                                 >
-                                  Accept
-                                </Button>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  sx={{
-                                    minWidth: 80,
-                                    px: 2,
-                                    py: 0.5,
-                                    fontSize: '0.85rem',
-                                    lineHeight: 1.2,
-                                    borderRadius: 1,
-                                    boxShadow: 'none',
-                                    textTransform: 'none'
-                                  }}
-                                  onClick={() => handleDenyRequestedShift(requestedShifts.find(req => req.availableShiftId === shift.id)?.id!)}
+                                  Request Approved
+                                </Typography>
+                              )}
+                              
+                              {status === 'assigned' && (
+                                <Typography 
+                                  variant="caption" 
+                                  display="block"
+                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
                                 >
-                                  Deny
-                                </Button>
-                              </Box>
-                            )}
-                            
-                            {status === 'denied' && (
-                              <Chip
-                                label="Denied"
-                                size="small"
-                                sx={{ 
-                                  fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
-                                  height: { xs: 14, sm: 16 }, 
-                                  backgroundColor: '#d32f2f',
-                                  mt: 0.5 
-                                }}
-                              />
-                            )}
-                            
-                            {/* Admin controls */}
-                            {currentEmployee.id === 1 && (
-                              <Box sx={{ 
-                                mt: 1, 
-                                display: 'flex', 
-                                justifyContent: 'flex-end'
-                              }}>
+                                  {getAssignedEmployeeName(shift.id)}
+                                </Typography>
+                              )}
+
+                              {/* "i" button for requested shifts */}
+                              {requestedShift && requestedShift.status === 'pending' && (
                                 <IconButton
                                   size="small"
-                                  sx={{ 
-                                    color: 'white', 
-                                    p: { xs: 0.2, sm: 0.3 }
+                                  sx={{
+                                    position: 'absolute',
+                                    top: 2,
+                                    left: 2,
+                                    color: 'white',
+                                    backgroundColor: '#ff9800',
+                                    width: 22,
+                                    height: 22,
+                                    fontSize: '0.85rem',
+                                    '&:hover': {
+                                      backgroundColor: '#f57c00',
+                                    },
                                   }}
-                                  onClick={() => handleDeleteShift(shift.id)}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    if (requester) {
+                                      alert(`User Info:\nName: ${requester.name}\nEmail: ${requester.email}`);
+                                    } else {
+                                      alert('User Info not found');
+                                    }
+                                  }}
                                 >
-                                  <DeleteIcon fontSize="small" />
+                                  i
                                 </IconButton>
-                              </Box>
-                            )}
-                          </Box>
-                        );
-                      })}
-                  </Box>
-                ))}
+                              )}
+
+                              {/* Edit Button */}
+                              <IconButton
+                                size="small"
+                                sx={{ 
+                                  position: 'absolute', 
+                                  top: 2, 
+                                  right: 2, 
+                                  color: 'white',
+                                  padding: { xs: 0.5, sm: 1 }
+                                }}
+                                onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              
+                              {status === 'pending' && (
+                                <Box
+                                  sx={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 6,
+                                    px: 1,
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    zIndex: 2
+                                  }}
+                                >
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    sx={{
+                                      minWidth: 80,
+                                      px: 2,
+                                      py: 0.5,
+                                      fontSize: '0.85rem',
+                                      lineHeight: 1.2,
+                                      borderRadius: 1,
+                                      boxShadow: 'none',
+                                      textTransform: 'none'
+                                    }}
+                                    onClick={() => handleAcceptShift(requestedShift?.id!)}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                      minWidth: 80,
+                                      px: 2,
+                                      py: 0.5,
+                                      fontSize: '0.85rem',
+                                      lineHeight: 1.2,
+                                      borderRadius: 1,
+                                      boxShadow: 'none',
+                                      textTransform: 'none'
+                                    }}
+                                    onClick={() => handleDenyRequestedShift(requestedShift?.id!)}
+                                  >
+                                    Deny
+                                  </Button>
+                                </Box>
+                              )}
+                              
+                              {status === 'denied' && currentEmployee.id !== 1 && (
+                                <Chip
+                                  label="Denied"
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
+                                    height: { xs: 14, sm: 16 }, 
+                                    backgroundColor: '#d32f2f',
+                                    mt: 0.5 
+                                  }}
+                                />
+                              )}
+                              
+                              {/* Admin controls */}
+                              {currentEmployee.id === 1 && (
+                                <Box sx={{ 
+                                  mt: 1, 
+                                  display: 'flex', 
+                                  justifyContent: 'flex-end'
+                                }}>
+                                  <IconButton
+                                    size="small"
+                                    sx={{ 
+                                      color: 'white', 
+                                      p: { xs: 0.2, sm: 0.3 }
+                                    }}
+                                    onClick={() => handleDeleteShift(shift.id)}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              )}
+                            </Box>
+                          );
+                        })}
+                    </Box>
+                  ))}
+                </Box>
               </Box>
             </Box>
           </Box>

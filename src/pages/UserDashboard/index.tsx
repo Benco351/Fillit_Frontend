@@ -187,19 +187,20 @@ const UserDashboard: React.FC = () => {
     return () => clearInterval(pollInterval);
   }, [currentEmployee.id]);
 
-  // Utility function to get shift status for display
+  // Update the getShiftStatus function to ensure users see denied shifts as "denied"
   const getShiftStatus = (availableShiftId: number): string => {
     const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
+
     if (requestedShift) {
+      // If the shift is denied, show it as "denied" for users
+      if (requestedShift.status === 'denied') {
+        return 'denied';
+      }
       return requestedShift.status;
     }
-    
+
     const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
-    if (isAssigned) {
-      return 'assigned';
-    }
-    
-    return 'available';
+    return isAssigned ? 'assigned' : 'available';
   };
 
   // Utility function to get assigned employee name
@@ -501,7 +502,10 @@ const UserDashboard: React.FC = () => {
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                         .map(shift => {
                           const status = getShiftStatus(shift.id);
-                          const backgroundColor = status === 'pending' ? '#ff9800' : getShiftColor(status);
+                          const backgroundColor = 
+                            status === 'denied' ? '#f44336' : // Red for denied shifts
+                            status === 'pending' ? '#ff9800' : // Orange for pending shifts
+                            getShiftColor(status); // Default color for other statuses
                           
                           return (
                             <Box
@@ -542,6 +546,19 @@ const UserDashboard: React.FC = () => {
                                 </Typography>
                               )}
                               
+                              {status === 'denied' && (
+                                <Chip
+                                  label="Shift Denied"
+                                  size="small"
+                                  sx={{ 
+                                    fontSize: '0.6rem', 
+                                    height: 16, 
+                                    backgroundColor: '#d32f2f',
+                                    mt: 0.5 
+                                  }}
+                                />
+                              )}
+                              
                               {/* Action Buttons */}
                               <ActionButtons
                                 shift={shift}
@@ -555,19 +572,6 @@ const UserDashboard: React.FC = () => {
                                 handleDeleteRequestedShift={(requestId) => handleCancelRequest(requestId, shift.id)}
                                 buttonStyle={commonButtonStyle}
                               />
-                              
-                              {status === 'denied' && (
-                                <Chip
-                                  label="Denied"
-                                  size="small"
-                                  sx={{ 
-                                    fontSize: '0.6rem', 
-                                    height: 16, 
-                                    backgroundColor: '#d32f2f',
-                                    mt: 0.5 
-                                  }}
-                                />
-                              )}
                             </Box>
                           );
                         })}

@@ -84,7 +84,7 @@ export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) =>
 
     return {
       data: response.data.data.map(shift => ({
-        id: shift.request_id,
+        id: shift.request_id, // <-- This should match the backend's primary key
         employeeId: shift.request_employee_id,
         availableShiftId: shift.request_shift_id,
         notes: shift.request_notes || '',

@@ -35,12 +35,13 @@ export const calculateDuration = (startTime: string, endTime: string): string =>
 export interface Employee {
     id: number;
     name: string;
+    email: string;
   }
 
 export const employees: Employee[] = [
-  { id: 1, name: 'John Doe' },
-  { id: 2, name: 'Jane Smith' },
-  { id: 3, name: 'Bob Johnson' },
+  { id: 1, name: 'John Doe', email: 'john@gmail.com' },
+  { id: 2, name: 'Jane Smith', email: 'jane@gmail.com'  },
+  { id: 3, name: 'Bob Johnson', email: 'bob@gmail.com' },
 ];
 
       // Simulated API response
