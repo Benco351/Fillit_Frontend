@@ -2,7 +2,7 @@ import { instance } from './apiconfig'; // Adjust the import path as necessary
 import { CreateAssignedShiftDTO, AssignedShiftQueryDTO, SwapAssignedShiftsDTO } from './types'; // Import types
 
 //ADMINNNNN - assign shift to myself for admin
-// information button - mail and employee
+// information button - mail and employee - done
 //assigned shift - same thing
 // see both available and request - add a rectangle under available
 

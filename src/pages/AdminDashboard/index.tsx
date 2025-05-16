@@ -827,7 +827,7 @@ const getShiftStatus = (availableShiftId: number): string => {
                       borderRadius: '4px',
                     },
                     '&::-webkit-scrollbar-thumb': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      backgroundColor: 'rgba(248, 18, 18, 0.32)',
                       borderRadius: '4px',
                     },
                   }}
@@ -883,119 +883,114 @@ const getShiftStatus = (availableShiftId: number): string => {
                             ? employees.find(emp => emp.id === requestedShift.employeeId)
                             : null;
 
-                          return (
-                            <Box
-                              key={shift.id}
-                              sx={{
-                                mb: 1,
-                                p: { xs: 0.5, sm: 1 },
-                                borderRadius: 1,
-                                backgroundColor, // Main background color
-                                color: 'white',
-                                position: 'relative',
-                              }}
-                            >
-                              <Typography 
-                                variant="body2"
-                                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                              >
-                                {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                              </Typography>
-                              
-                              {status === 'approved' && (
-                                <Typography 
-                                  variant="caption" 
-                                  display="block"
-                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                                >
-                                  Request Approved
-                                </Typography>
-                              )}
-                              
-                              {status === 'assigned' && (
-                                <Typography 
-                                  variant="caption" 
-                                  display="block"
-                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                                >
-                                  {getAssignedEmployeeName(shift.id)}
-                                </Typography>
-                              )}
+                          const showPendingRequestBar = requestedShift && requestedShift.status === 'pending';
 
-                              {/* "i" button for requested shifts */}
-                              {requestedShift && requestedShift.status === 'pending' && (
+                          return (
+                            <Box key={shift.id} sx={{ mb: 1, position: 'relative' }}>
+                              {/* Shift slot - match user dashboard size and round style */}
+                              <Box
+                                sx={{
+                                  p: 1,
+                                  borderRadius: '10px', // Rounded corners
+                                  backgroundColor,
+                                  color: 'white',
+                                  position: 'relative',
+                                  minHeight: 48, // Minimum height to match user dashboard
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                >
+                                  {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                                </Typography>
+                                {status === 'approved' && (
+                                  <Typography
+                                    variant="caption"
+                                    display="block"
+                                    sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                  >
+                                    Request Approved
+                                    
+                                  </Typography>
+                                )}
+                                {status === 'assigned' && (
+                                  <Typography
+                                    variant="caption"
+                                    display="block"
+                                    sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                  >
+                                    {getAssignedEmployeeName(shift.id)}
+                                  </Typography>
+                                )}
+                                {/* Edit Button */}
                                 <IconButton
                                   size="small"
                                   sx={{
                                     position: 'absolute',
                                     top: 2,
-                                    left: 2,
+                                    right: 2,
                                     color: 'white',
-                                    backgroundColor: '#ff9800',
-                                    width: 22,
-                                    height: 22,
-                                    fontSize: '0.85rem',
-                                    '&:hover': {
-                                      backgroundColor: '#f57c00',
-                                    },
+                                    padding: { xs: 0.5, sm: 1 }
                                   }}
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    if (requester) {
-                                      alert(`User Info:\nName: ${requester.name}\nEmail: ${requester.email}`);
-                                    } else {
-                                      alert('User Info not found');
-                                    }
-                                  }}
+                                  onClick={() => handleOpenEditDialogFromCalendar(shift)}
                                 >
-                                  i
+                                  <EditIcon fontSize="small" />
                                 </IconButton>
-                              )}
-
-                              {/* Edit Button */}
-                              <IconButton
-                                size="small"
-                                sx={{ 
-                                  position: 'absolute', 
-                                  top: 2, 
-                                  right: 2, 
-                                  color: 'white',
-                                  padding: { xs: 0.5, sm: 1 }
-                                }}
-                                onClick={() => handleOpenEditDialogFromCalendar(shift)}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                              
-                              {status === 'pending' && (
+                              </Box>
+                              {/* Orange rectangle for pending request directly under the slot, no space */}
+                              {showPendingRequestBar && (
                                 <Box
                                   sx={{
-                                    position: 'absolute',
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 6,
-                                    px: 1,
+                                    width: '100%',
+                                    minHeight: 60,
+                                    backgroundColor: '#ff9800',
+                                    borderRadius: '0 0 4px 4px',
                                     display: 'flex',
-                                    justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    gap: 1,
-                                    zIndex: 2
+                                    justifyContent: 'center',
+                                    gap: 0.5,
+                                    zIndex: 2,
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                                    mt: 0 // No space between slot and rectangle
                                   }}
                                 >
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      color: 'white',
+                                      backgroundColor: '#ff9800',
+                                      '&:hover': { backgroundColor: '#f57c00' },
+                                      fontSize: '1rem'
+                                    }}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      if (requester) {
+                                        alert(`User Info:\nName: ${requester.name}\nEmail: ${requester.email}`);
+                                      } else {
+                                        alert('User Info not found');
+                                      }
+                                    }}
+                                  >
+                                    i
+                                  </IconButton>
                                   <Button
                                     variant="contained"
                                     size="small"
                                     sx={{
-                                      minWidth: 80,
-                                      px: 2,
-                                      py: 0.5,
-                                      fontSize: '0.85rem',
-                                      lineHeight: 1.2,
-                                      borderRadius: 1,
-                                      boxShadow: 'none',
-                                      textTransform: 'none'
+                                      backgroundColor: '#00c28c',
+                                      color: 'white',
+                                      minWidth: 60,
+                                      mx: 0.1,
+                                      '&:hover': { backgroundColor: '#009e74' }
                                     }}
-                                    onClick={() => handleAcceptShift(requestedShift?.id!)}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleAcceptShift(requestedShift.id);
+                                    }}
                                   >
                                     Accept
                                   </Button>
@@ -1003,22 +998,21 @@ const getShiftStatus = (availableShiftId: number): string => {
                                     variant="outlined"
                                     size="small"
                                     sx={{
-                                      minWidth: 80,
-                                      px: 2,
-                                      py: 0.5,
-                                      fontSize: '0.85rem',
-                                      lineHeight: 1.2,
-                                      borderRadius: 1,
-                                      boxShadow: 'none',
-                                      textTransform: 'none'
+                                      borderColor: '#fff',
+                                      color: '#fff',
+                                      minWidth: 60,
+                                      mx: 0.5,
+                                      '&:hover': { borderColor: '#fff', backgroundColor: '#e57373', color: '#fff' }
                                     }}
-                                    onClick={() => handleDenyRequestedShift(requestedShift?.id!)}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleDenyRequestedShift(requestedShift.id);
+                                    }}
                                   >
                                     Deny
                                   </Button>
                                 </Box>
                               )}
-                              
                               {status === 'denied' && currentEmployee.id !== 1 && (
                                 <Chip
                                   label="Denied"
@@ -1031,7 +1025,6 @@ const getShiftStatus = (availableShiftId: number): string => {
                                   }}
                                 />
                               )}
-                              
                               {/* Admin controls */}
                               {currentEmployee.id === 1 && (
                                 <Box sx={{ 
@@ -1191,6 +1184,28 @@ const getShiftStatus = (availableShiftId: number): string => {
                 disabled={loading}
               >
                 {loading ? <CircularProgress size={24} /> : 'Request Shift'}
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={async () => {
+                  if (editShift) {
+                    setLoading(true);
+                    try {
+                      await deleteAvailableShiftById(editShift.id);
+                      setSuccess('Shift deleted successfully');
+                      setIsEditShiftDialogOpen(false);
+                      setAvailableShifts(prev => prev.filter(shift => shift.id !== editShift.id));
+                    } catch (error) {
+                      setError('Failed to delete shift. Please try again.');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }
+                }}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Delete Shift'}
               </Button>
             </DialogActions>
           </Dialog>
