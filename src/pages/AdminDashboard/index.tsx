@@ -5,7 +5,7 @@ import {Box, Container, Paper, Typography, Grid, Button, Dialog, DialogTitle, Di
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon, Info as InfoIcon } from '@mui/icons-material';
 import { MainTheme } from '../../assets/themes/themes';
 import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +48,28 @@ const AdminDashboard: React.FC = () => {
     } = useUserDashboard(currentEmployee);
 
   const navigate = useNavigate();
+
+  // State for deny confirmation dialog
+  const [denyDialogOpen, setDenyDialogOpen] = useState(false);
+  const [denyRequestId, setDenyRequestId] = useState<number | null>(null);
+
+  const handleOpenDenyDialog = (requestId: number) => {
+    setDenyRequestId(requestId);
+    setDenyDialogOpen(true);
+  };
+
+  const handleConfirmDeny = async () => {
+    if (denyRequestId !== null) {
+      await handleDenyRequestedShift(denyRequestId);
+      setDenyDialogOpen(false);
+      setDenyRequestId(null);
+    }
+  };
+
+  const handleCancelDeny = () => {
+    setDenyDialogOpen(false);
+    setDenyRequestId(null);
+  };
 
   // Fetch all shifts (available, requested, and assigned) on component mount
   useEffect(() => {
@@ -858,69 +880,30 @@ const getShiftStatus = (availableShiftId: number): string => {
                       {/* Shift Card - Update the existing shift mapping code */}
                       {filteredShifts
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
-                        .map(shift => {
-                          const status = getShiftStatus(shift.id);
-                          const backgroundColor = 
-                            status === 'denied' ? '#f44336' : // Red for denied shifts
-                            status === 'pending' ? '#ff9800' : // Orange for pending shifts
-                            getShiftColor(status); // Default color for other statuses
-
-                          const requestedShift = requestedShifts.find(req => req.availableShiftId === shift.id);
-                          const requester = requestedShift
-                            ? employees.find(emp => emp.id === requestedShift.employeeId)
-                            : null;
-
-                          const showPendingRequestBar = requestedShift && requestedShift.status === 'pending';
-
+                        .map((shift, idx, arr) => {
+                          const pendingRequests = requestedShifts.filter(
+                            req => req.availableShiftId === shift.id && req.status === 'pending'
+                          );
                           return (
-                            <Box
-                              key={shift.id}
-                              sx={{
-                                position: 'relative',
-                                mb: 2,
-                              }}
-                            >
+                            <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
+                              {/* Main shift card - always green */}
                               <Box
                                 sx={{
                                   p: 2,
-                                  borderRadius: requestedShift?.status === 'pending' ? '12px 12px 0 0' : '12px',
-                                  backgroundColor: backgroundColor,
-                                  backgroundImage: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                                  borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
+                                  backgroundColor: '#4caf50',
+                                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
                                   backdropFilter: 'blur(4px)',
-                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                  transition: 'all 0.2s ease',
-                                  '&:hover': {
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.15)',
-                                  }
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  transition: 'all 0.3s ease',
+                                  position: 'relative',
+                                  minHeight: 70,
                                 }}
                               >
-                                <Typography
-                                  variant="body2"
-                                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                                >
+                                <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                   {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                                 </Typography>
-                                {status === 'approved' && (
-                                  <Typography
-                                    variant="caption"
-                                    display="block"
-                                    sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                                  >
-                                    Request Approved
-                                  </Typography>
-                                )}
-                                {status === 'assigned' && (
-                                  <Typography
-                                    variant="caption"
-                                    display="block"
-                                    sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                                  >
-                                    {getAssignedEmployeeName(shift.id)}
-                                  </Typography>
-                                )}
-                                {/* Edit Button */}
                                 <IconButton
                                   size="small"
                                   sx={{
@@ -935,62 +918,79 @@ const getShiftStatus = (availableShiftId: number): string => {
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                               </Box>
-
-                              {/* Add Accept/Deny buttons for pending requests */}
-                              {requestedShift?.status === 'pending' && (
-                                <Box
-                                  sx={{
-                                    width: '100%',
-                                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                                    borderRadius: '0 0 12px 12px',
-                                    p: 1,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 1,
-                                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                                  }}
-                                >
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    color="success"
-                                    onClick={() => handleAcceptRequest(requestedShift)}
-                                    disabled={loading}
+                              {/* Render a separate orange bar for each pending request */}
+                              {pendingRequests.map((pendingRequest, i) => {
+                                const requester = employees.find(emp => emp.id === pendingRequest.employeeId);
+                                return (
+                                  <Box
+                                    key={pendingRequest.id}
                                     sx={{
-                                      minWidth: 0,
-                                      px: 2,
-                                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
-                                      backdropFilter: 'blur(8px)',
-                                      border: '1px solid rgba(0, 194, 140, 0.3)',
-                                      '&:hover': {
-                                        background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.2), rgba(0, 194, 140, 0.3))',
-                                      }
+                                      width: '100%',
+                                      backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                      borderRadius: i === pendingRequests.length - 1 ? '0 0 12px 12px' : 0,
+                                      p: 1,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      gap: 1,
+                                      borderTop: '1px solid rgba(255,255,255,0.1)',
                                     }}
                                   >
-                                    Accept
-                                  </Button>
-                                  <Button
-                                    variant="outlined"
-                                    size="small"
-                                    color="error"
-                                    onClick={() => handleDenyRequestedShift(requestedShift.id)}
-                                    disabled={loading}
-                                    sx={{
-                                      minWidth: 0,
-                                      px: 2,
-                                      borderColor: 'rgba(244, 67, 54, 0.5)',
-                                      color: '#f44336',
-                                      '&:hover': {
-                                        borderColor: '#f44336',
-                                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                                      }
-                                    }}
-                                  >
-                                    Deny
-                                  </Button>
-                                </Box>
-                              )}
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => {
+                                        alert(
+                                          `Requested by: ${requester?.name ?? 'Unknown'}\nEmail: ${requester?.email ?? 'Unknown'}`
+                                        );
+                                      }}
+                                      sx={{
+                                        color: '#ff9800',
+                                        '&:hover': { backgroundColor: 'rgba(255,152,0,0.1)' }
+                                      }}
+                                    >
+                                      <InfoIcon fontSize="small" />
+                                    </IconButton>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                      <Button
+                                        variant="contained"
+                                        size="small"
+                                        color="success"
+                                        onClick={() => handleAcceptRequest(pendingRequest)}
+                                        disabled={loading}
+                                        sx={{
+                                          minWidth: 0,
+                                          px: 1,
+                                          py: 0.5,
+                                          fontSize: '0.9rem',
+                                          background: 'linear-gradient(135deg, rgba(0,194,140,0.1), rgba(0,194,140,0.2))',
+                                          border: '1px solid rgba(0,194,140,0.3)',
+                                          width: '90px',
+                                          height: '30px',
+                                        }}
+                                      >
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        variant="outlined"
+                                        size="small"
+                                        color="error"
+                                        onClick={() => handleOpenDenyDialog(pendingRequest.id)}
+                                        disabled={loading}
+                                        sx={{
+                                          minWidth: 0,
+                                          px: 1,
+                                          py: 0.5,
+                                          fontSize: '0.9rem',
+                                          borderColor: 'rgba(244,67,54,0.5)',
+                                          color: '#f44336',
+                                        }}
+                                      >
+                                        Deny
+                                      </Button>
+                                    </Box>
+                                  </Box>
+                                );
+                              })}
                             </Box>
                           );
                         })}
@@ -1210,6 +1210,27 @@ const getShiftStatus = (availableShiftId: number): string => {
           {/* Request Shift Dialog */}
           
           <RequestShiftDialog/>
+
+          {/* Deny confirmation dialog */}
+          <Dialog open={denyDialogOpen} onClose={handleCancelDeny}>
+            <DialogTitle>Are you sure you want to deny?</DialogTitle>
+            <DialogActions sx={{ flexDirection: 'column', gap: 1, alignItems: 'stretch', px: 3, pb: 2 }}>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={handleConfirmDeny}
+                sx={{ mb: 1 }}
+              >
+                Yes, deny
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleCancelDeny}
+              >
+                Cancel
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           {/* Snackbars for notifications */}
           <Snackbar
