@@ -586,6 +586,7 @@ const getShiftStatus = (availableShiftId: number): string => {
         >
           <Navbar />
 
+          {/* Top section layout matching UserDashboard */}
           <Box sx={{ my: 3 }}>
             <Typography
               variant="h4"
@@ -602,28 +603,44 @@ const getShiftStatus = (availableShiftId: number): string => {
                 fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
                 WebkitTextStroke: '1px #424242',
                 textStroke: '1px #424242',
+                mb: 4
               }}
             >
               Admin Management System
             </Typography>
 
-            {/* Combined Employee selection and Week navigation row */}
+            {/* Filters - Matching User Dashboard position */}
+            <Box sx={{ 
+              mb: 4, 
+              display: 'flex', 
+              justifyContent: 'center'
+            }}>
+              <ShiftFilters filter={filter} setFilter={setFilter} />
+            </Box>
+
+            {/* Frame Box */}
             <Box
               sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 3,
-                mb: 3,
+                border: '2px solid rgba(0, 194, 140, 0.2)',
+                borderRadius: '12px',
+                padding: '24px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                mb: 4,
               }}
             >
-              {/* Left side: Employee selection and Add Shift */}
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 2,
-                width: { xs: '100%', md: 'auto' }
-              }}>
+              {/* Combined top row for employee selection, navigation, and actions */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' },
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 2,
+                  mb: 3,
+                }}
+              >
+                {/* Left side: Employee selection */}
                 <TextField
                   select
                   label="Current Employee"
@@ -634,7 +651,7 @@ const getShiftStatus = (availableShiftId: number): string => {
                     if (employee) setCurrentEmployee(employee);
                   }}
                   sx={{ 
-                    width: { xs: '100%', sm: 200 },
+                    width: { xs: '100%', md: 200 },
                     color: 'white',
                     '& .MuiInputBase-input': { color: 'white' }
                   }}
@@ -645,6 +662,53 @@ const getShiftStatus = (availableShiftId: number): string => {
                     </MenuItem>
                   ))}
                 </TextField>
+
+                {/* Center: Navigation Buttons */}
+                <Box sx={{ 
+                  display: 'flex',
+                  gap: 2,
+                }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={goToPreviousWeek}
+                    sx={{
+                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(0, 194, 140, 0.3)',
+                      borderRadius: '10px',
+                      color: '#00c28c',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                        transform: 'translateY(-1px)',
+                      }
+                    }}
+                  >
+                    Previous Week
+                  </Button>
+                  <WeekPicker
+                    currentWeekStart={currentWeekStart}
+                    onWeekChange={setCurrentWeekStart}
+                  />
+                  <Button 
+                    variant="outlined" 
+                    onClick={goToNextWeek}
+                    sx={{
+                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(0, 194, 140, 0.3)',
+                      borderRadius: '10px',
+                      color: '#00c28c',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                        transform: 'translateY(-1px)',
+                      }
+                    }}
+                  >
+                    Next Week
+                  </Button>
+                </Box>
+
+                {/* Right side: Add Shift Button */}
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
@@ -665,67 +729,6 @@ const getShiftStatus = (availableShiftId: number): string => {
                 </Button>
               </Box>
 
-              {/* Right side: Week navigation */}
-              <Box sx={{ 
-                display: 'flex',
-                gap: 2,
-                width: { xs: '100%', md: 'auto' }
-              }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={goToPreviousWeek}
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(0, 194, 140, 0.3)',
-                    borderRadius: '10px',
-                    color: '#00c28c',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
-                      transform: 'translateY(-1px)',
-                    }
-                  }}
-                >
-                  Previous Week
-                </Button>
-                <WeekPicker
-                  currentWeekStart={currentWeekStart}
-                  onWeekChange={setCurrentWeekStart}
-                />
-                <Button 
-                  variant="outlined" 
-                  onClick={goToNextWeek}
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(0, 194, 140, 0.3)',
-                    borderRadius: '10px',
-                    color: '#00c28c',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
-                      transform: 'translateY(-1px)',
-                    }
-                  }}
-                >
-                  Next Week
-                </Button>
-              </Box>
-            </Box>
-
-            {/* Filters */}
-            <Box sx={{ 
-              mb: 2, 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'center', 
-              gap: 2,
-              alignItems: { xs: 'stretch', sm: 'center' }
-            }}>
-              <ShiftFilters filter={filter} setFilter={setFilter} />
-            </Box>
-
-            {/* Weekly schedule grid with navigation - Moved up */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
               {/* Calendar Grid */}
               <Box
                 sx={{
@@ -1013,55 +1016,55 @@ const getShiftStatus = (availableShiftId: number): string => {
                 </Box>
               </Box>
             </Box>
+          </Box>
 
-            {/* Get Shift by ID Section - Moved below calendar */}
-            <Box
-              sx={{
-                mb: 4,
-                p: { xs: 2, sm: 3 },
-                backgroundColor: '#e0e0e0',
-                borderRadius: 0,
-                border: '2px solid #e0e0e0',
+          {/* Get Shift by ID Section - Moved below calendar */}
+          <Box
+            sx={{
+              mb: 4,
+              p: { xs: 2, sm: 3 },
+              backgroundColor: '#e0e0e0',
+              borderRadius: 0,
+              border: '2px solid #e0e0e0',
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ 
+                color: 'white', 
+                mb: 2,
+                fontSize: { xs: '1rem', sm: '1.25rem' }
               }}
             >
-              <Typography
-                variant="h6"
+              Get Available Shift by ID
+            </Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2, 
+              alignItems: { xs: 'stretch', sm: 'center' }, 
+              mb: 2 
+            }}>
+              <TextField
+                label="Shift ID"
+                type="number"
+                value={shiftIdToFetch}
+                onChange={(e) => setShiftIdToFetch(Number(e.target.value) || '')}
                 sx={{ 
-                  color: 'white', 
-                  mb: 2,
-                  fontSize: { xs: '1rem', sm: '1.25rem' }
+                  width: { xs: '100%', sm: 200 },
+                  backgroundColor: 'white'
+                }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleGetShiftById}
+                disabled={loading}
+                sx={{ 
+                  minWidth: { xs: '100%', sm: 120 }
                 }}
               >
-                Get Available Shift by ID
-              </Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: 2, 
-                alignItems: { xs: 'stretch', sm: 'center' }, 
-                mb: 2 
-              }}>
-                <TextField
-                  label="Shift ID"
-                  type="number"
-                  value={shiftIdToFetch}
-                  onChange={(e) => setShiftIdToFetch(Number(e.target.value) || '')}
-                  sx={{ 
-                    width: { xs: '100%', sm: 200 },
-                    backgroundColor: 'white'
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  onClick={handleGetShiftById}
-                  disabled={loading}
-                  sx={{ 
-                    minWidth: { xs: '100%', sm: 120 }
-                  }}
-                >
-                  {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
-                </Button>
-              </Box>
+                {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
+              </Button>
             </Box>
           </Box>
 
