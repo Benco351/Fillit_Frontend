@@ -25,7 +25,7 @@ interface RequestedShiftResponse {
 export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
   try {
     console.log('Request payload for createRequestedShift:', data); // Log the request payload
-    const response = await instance.post<{ status: string; message: string; data: RequestedShiftResponse }>('/requested-shifts', {
+    const response = await instance.post<{ status: string; message: string; data: RequestedShiftResponse }>('/api/requested-shifts', {
       employeeId: data.employeeId,
       shiftSlotId: data.shiftSlotId,
       notes: data.notes || ''
@@ -55,7 +55,7 @@ export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
 
 export const getRequestedShiftById = async (id: number ) => { //?? 
   try {
-    const response = await instance.get(`/requested-shifts/${id}`);
+    const response = await instance.get(`/api/requested-shifts/${id}`);
 
     if (!response.data.data) {
       throw new Error('No data returned from the server');
@@ -71,7 +71,7 @@ export const getRequestedShiftById = async (id: number ) => { //??
 export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) => {
   try {
     // Ensure the params object is correctly formed before sending
-    const response = await instance.get<{ status: string; message: string; data: RequestedShiftResponse[] }>('/requested-shifts', {
+    const response = await instance.get<{ status: string; message: string; data: RequestedShiftResponse[] }>('/api/requested-shifts', {
       params: {
         request_employee_id: params.request_employee_id,
         request_status: params.request_status
@@ -107,7 +107,7 @@ export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) =>
 
 export const deleteRequestedShiftById = async (id: number) => {
   try {
-    const response = await instance.delete(`/requested-shifts/${id}`);
+    const response = await instance.delete(`/api/requested-shifts/${id}`);
 
     // Only throw if the overall response is malformed, not if data is null
     if (!response.data || response.data.status !== 'ok') {
@@ -125,7 +125,7 @@ export const deleteRequestedShiftById = async (id: number) => {
 ///admin updates requested shift - denies
 export const updateRequestedShiftById = async (id: number, data: UpdateRequestedShiftDTO) => {
   try {
-    const response = await instance.put(`/requested-shifts/${id}`, data);
+    const response = await instance.put(`/api/requested-shifts/${id}`, data);
 
     if (!response.data.data) {
       throw new Error('No data returned from the server');
