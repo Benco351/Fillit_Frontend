@@ -570,7 +570,7 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: 'secondary.main', // Changed to match UserDashboard
+          backgroundColor: '#d9d2d2', // Changed from '#fafafa' to a slightly darker grey
           minHeight: '100vh',
           py: 4,
           px: 2,
@@ -579,9 +579,10 @@ const getShiftStatus = (availableShiftId: number): string => {
         <Container
           maxWidth={false}
           sx={{ 
-            px: { xs: 1, sm: 2, md: 3 }, // Match UserDashboard padding
+            px: { xs: 1, sm: 2, md: 3 },
             width: '100%',
-            maxWidth: '100%' 
+            maxWidth: '100%',
+            // Remove the backgroundColor property from Container to make it transparent
           }}
         >
           <Navbar />
@@ -624,7 +625,7 @@ const getShiftStatus = (availableShiftId: number): string => {
                 border: '2px solid rgba(0, 194, 140, 0.2)',
                 borderRadius: '12px',
                 padding: '24px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: 'secondary.main', // Changed to match UserDashboard's grey
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
                 mb: 4,
               }}
