@@ -553,14 +553,18 @@ const getShiftStatus = (availableShiftId: number): string => {
     switch (filter) {
       case 'requested':
         return availableShifts.filter(shift =>
-          requestedShifts.some(req => req.availableShiftId === shift.id)
+          requestedShifts.some(req => 
+            req.availableShiftId === shift.id && req.status === 'pending'
+          )
         );
       case 'accepted':
         return availableShifts.filter(shift =>
-          assignedShifts.some(assign => assign.availableShiftId === shift.id)
+          requestedShifts.some(req => 
+            req.availableShiftId === shift.id && req.status === 'approved'
+          ) || assignedShifts.some(assign => assign.availableShiftId === shift.id)
         );
       default:
-        return availableShifts; // All shifts
+        return availableShifts;
     }
   };
 
@@ -571,7 +575,7 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: '#b5f5b8', // Changed from '#fafafa' to a slightly darker grey
+          backgroundColor: '#d3ded3', 
           minHeight: '100vh',
           py: 4,
           px: 2,

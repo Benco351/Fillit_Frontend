@@ -215,10 +215,12 @@ const UserDashboard: React.FC = () => {
         return availableShifts.filter(shift =>
           requestedShifts.some(req => req.availableShiftId === shift.id)
         );
-      case 'accepted':
-        return availableShifts.filter(shift =>
-          assignedShifts.some(assign => assign.availableShiftId === shift.id)
-        );
+        case 'accepted':
+          return availableShifts.filter(shift =>
+            requestedShifts.some(req => 
+              req.availableShiftId === shift.id && req.status === 'approved'
+            ) || assignedShifts.some(assign => assign.availableShiftId === shift.id)
+          );
       default:
         return availableShifts; // All shifts
     }
