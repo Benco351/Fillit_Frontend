@@ -607,7 +607,7 @@ const getShiftStatus = (availableShiftId: number): string => {
               Admin Management System
             </Typography>
 
-            {/* New Combined Section */}
+            {/* Combined Employee selection and Week navigation row */}
             <Box
               sx={{
                 display: 'flex',
@@ -618,28 +618,98 @@ const getShiftStatus = (availableShiftId: number): string => {
                 mb: 3,
               }}
             >
-              {/* Employee selection */}
-              <TextField
-                select
-                label="Current Employee"
-                value={currentEmployee.id}
-                onChange={(e) => {
-                  const empId = Number(e.target.value);
-                  const employee = employees.find(emp => emp.id === empId);
-                  if (employee) setCurrentEmployee(employee);
-                }}
-                sx={{ 
-                  width: { xs: '100%', sm: 200 },
-                  color: 'white',
-                  '& .MuiInputBase-input': { color: 'white' }
-                }}
-              >
-                {employees.map((employee) => (
-                  <MenuItem key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </MenuItem>
-                ))}
-              </TextField>
+              {/* Left side: Employee selection and Add Shift */}
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2,
+                width: { xs: '100%', md: 'auto' }
+              }}>
+                <TextField
+                  select
+                  label="Current Employee"
+                  value={currentEmployee.id}
+                  onChange={(e) => {
+                    const empId = Number(e.target.value);
+                    const employee = employees.find(emp => emp.id === empId);
+                    if (employee) setCurrentEmployee(employee);
+                  }}
+                  sx={{ 
+                    width: { xs: '100%', sm: 200 },
+                    color: 'white',
+                    '& .MuiInputBase-input': { color: 'white' }
+                  }}
+                >
+                  {employees.map((employee) => (
+                    <MenuItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setIsAddShiftDialogOpen(true)}
+                  sx={{
+                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(0, 194, 140, 0.3)',
+                    borderRadius: '10px',
+                    color: '#00c28c',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                      transform: 'translateY(-1px)',
+                    }
+                  }}
+                >
+                  Add Available Shift
+                </Button>
+              </Box>
+
+              {/* Right side: Week navigation */}
+              <Box sx={{ 
+                display: 'flex',
+                gap: 2,
+                width: { xs: '100%', md: 'auto' }
+              }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={goToPreviousWeek}
+                  sx={{
+                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(0, 194, 140, 0.3)',
+                    borderRadius: '10px',
+                    color: '#00c28c',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                      transform: 'translateY(-1px)',
+                    }
+                  }}
+                >
+                  Previous Week
+                </Button>
+                <WeekPicker
+                  currentWeekStart={currentWeekStart}
+                  onWeekChange={setCurrentWeekStart}
+                />
+                <Button 
+                  variant="outlined" 
+                  onClick={goToNextWeek}
+                  sx={{
+                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(0, 194, 140, 0.3)',
+                    borderRadius: '10px',
+                    color: '#00c28c',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                      transform: 'translateY(-1px)',
+                    }
+                  }}
+                >
+                  Next Week
+                </Button>
+              </Box>
             </Box>
 
             {/* Filters */}
@@ -654,77 +724,8 @@ const getShiftStatus = (availableShiftId: number): string => {
               <ShiftFilters filter={filter} setFilter={setFilter} />
             </Box>
 
-            {/* Add new shift button */}
-            <Box sx={{ 
-              mb: 2, 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'flex-end',
-              gap: 2
-            }}>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setIsAddShiftDialogOpen(true)}
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Add Available Shift
-              </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={async () => {
-                  try {
-                    const response = await createEmployee({
-                      name: 'John Doe',
-                      email: `john${Math.floor(Math.random() * 10000)}@example.com`,
-                      password: 'SuperSecret123!',
-                      phone: '1234567890'
-                    });
-                    console.log('Employee created successfully:', response);
-                    alert('Employee created successfully!');
-                  } catch (error) {
-                    console.error('Failed to create employee:', error);
-                    alert('Failed to create employee. Check console for details.');
-                  }
-                }}
-                fullWidth={false}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Create Dummy Employee
-              </Button>
-            </Box>
-                    
             {/* Weekly schedule grid with navigation - Moved up */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
-              {/* Week Navigation Buttons above calendar, aligned to right */}
-              <Box sx={{ 
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: 2,
-                mb: 2
-              }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={goToPreviousWeek}
-                  sx={{ border: '1px solid #424242', borderRadius: '20px', color: '#212121' }}
-                >
-                  Previous Week
-                </Button>
-                <WeekPicker
-                  currentWeekStart={currentWeekStart}
-                  onWeekChange={setCurrentWeekStart}
-                />
-                <Button 
-                  variant="outlined" 
-                  onClick={goToNextWeek}
-                  sx={{ border: '1px solid #424242', borderRadius: '20px', color: '#212121' }}
-                >
-                  Next Week
-                </Button>
-              </Box>
-
               {/* Calendar Grid */}
               <Box
                 sx={{
