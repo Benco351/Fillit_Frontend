@@ -1,7 +1,13 @@
 import { Typography } from "@mui/material";
 import { Box } from "@mui/system";
 
-const UserDashboardTitle = () => {
+interface UserDashboardTitleProps {
+  title?: string;
+}
+
+const UserDashboardTitle: React.FC<UserDashboardTitleProps> = ({ 
+  title = "Shift Management System" // Default title
+}) => {
 
       return(
             <Box
@@ -45,7 +51,7 @@ const UserDashboardTitle = () => {
                 },
               }}
             >
-              Shift Management System
+              {title}
             </Typography>
           </Box>
         </Box>

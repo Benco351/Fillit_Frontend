@@ -25,16 +25,12 @@ const UserDashboard: React.FC = () => {
   const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
 
   //These guys are in useUserDashboard
-  const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
-    error, success, filter, setFilter, refreshAvailableShifts, refreshRequestedShifts, setSuccess, 
-    setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, setNewShift,
-    isRequestShiftDialogOpen, setIsRequestShiftDialogOpen, isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, shiftIdToFetch, setShiftIdToFetch,
-    fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
+  const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, setLoading,
+    error, success, filter, setFilter, setSuccess, 
+    setError, setRequestedShifts, assignedShifts, weekDays, goToNextWeek,
     goToPreviousWeek, fetchShiftsForWeek, commonButtonStyle
   } = useUserDashboard(currentEmployee);
 
-  const [editLoading, setEditLoading] = useState(false); // Separate loading state for editing
-  const [requestLoading, setRequestLoading] = useState(false); // Separate loading state for requesting
   const [requestingShifts, setRequestingShifts] = useState<number[]>([]); // Separate loading state for each shift request
   const [cancelingShifts, setCancelingShifts] = useState<number[]>([]); // Separate loading state for each shift cancellation
 

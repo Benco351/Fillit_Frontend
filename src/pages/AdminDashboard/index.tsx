@@ -29,6 +29,7 @@ import RequestShiftDialog from '../../components/ShiftManagment';
 import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 //import AddShift from '../../components/ShiftManagment/AdminSettings';
 //import handleAddShift from '../../components/ShiftManagment/AdminSettings';
+import UserDashboardTitle from '../../components/sections/UserPage';
 
 const AdminDashboard: React.FC = () => {
      
@@ -570,7 +571,7 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: '#d9d2d2', // Changed from '#fafafa' to a slightly darker grey
+          backgroundColor: '#b5f5b8', // Changed from '#fafafa' to a slightly darker grey
           minHeight: '100vh',
           py: 4,
           px: 2,
@@ -589,26 +590,7 @@ const getShiftStatus = (availableShiftId: number): string => {
 
           {/* Top section layout matching UserDashboard */}
           <Box sx={{ my: 3 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              align="center"
-              sx={{
-                color: '#00c28c',
-                fontWeight: 'bold',
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-                fontFamily: 'Roboto, sans-serif',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
-                WebkitTextStroke: '1px #424242',
-                textStroke: '1px #424242',
-                mb: 4
-              }}
-            >
-              Admin Management System
-            </Typography>
+            <UserDashboardTitle title="Admin Management System" />
 
             {/* Filters - Matching User Dashboard position */}
             <Box sx={{ 
