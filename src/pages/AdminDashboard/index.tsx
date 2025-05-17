@@ -663,7 +663,27 @@ const getShiftStatus = (availableShiftId: number): string => {
                   ))}
                 </TextField>
 
-                {/* Center: Navigation Buttons */}
+                {/* Center: Add Shift Button (moved from right) */}
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setIsAddShiftDialogOpen(true)}
+                  sx={{
+                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(0, 194, 140, 0.3)',
+                    borderRadius: '10px',
+                    color: '#00c28c',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                      transform: 'translateY(-1px)',
+                    }
+                  }}
+                >
+                  Add Available Shift
+                </Button>
+
+                {/* Right side: Week navigation (moved from center) */}
                 <Box sx={{ 
                   display: 'flex',
                   gap: 2,
@@ -707,26 +727,6 @@ const getShiftStatus = (availableShiftId: number): string => {
                     Next Week
                   </Button>
                 </Box>
-
-                {/* Right side: Add Shift Button */}
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setIsAddShiftDialogOpen(true)}
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(0, 194, 140, 0.3)',
-                    borderRadius: '10px',
-                    color: '#00c28c',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
-                      transform: 'translateY(-1px)',
-                    }
-                  }}
-                >
-                  Add Available Shift
-                </Button>
               </Box>
 
               {/* Calendar Grid */}
