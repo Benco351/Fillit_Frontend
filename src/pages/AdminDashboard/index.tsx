@@ -575,7 +575,7 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: '#d3ded3', 
+          backgroundColor: '#0a5e0f', 
           minHeight: '100vh',
           py: 4,
           px: 2,
@@ -1010,7 +1010,7 @@ const getShiftStatus = (availableShiftId: number): string => {
             sx={{
               mb: 4,
               p: { xs: 2, sm: 3 },
-              backgroundColor: '#e0e0e0',
+              backgroundColor: '#0a5e0f',
               borderRadius: 0,
               border: '2px solid #e0e0e0',
             }}
