@@ -11,8 +11,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
-// import axios from 'axios';
 
+import { instance } from '../../../utils/apis/apiconfig';
 // Amplify Auth imports (v6)
 import { signIn, fetchAuthSession } from '@aws-amplify/auth';
 import { LoginTheme } from '../../../assets/themes/themes';
@@ -23,11 +23,6 @@ const LogInSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 type LogInForm = z.infer<typeof LogInSchema>;
-
-// // ——— Axios instance for your EB backend —————————————————————————————
-// const api = axios.create({
-//   baseURL: process.env.REACT_APP_API_URL,   // e.g. https://your-eb-env.elasticbeanstalk.com
-// });
 
 export const LoginForm: React.FC = () => {
   const {

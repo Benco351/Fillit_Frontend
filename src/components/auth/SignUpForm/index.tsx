@@ -18,18 +18,12 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
 import { SignUpTheme } from '../../../assets/themes/themes';
-
+import {instance} from '../../../utils/apis/apiconfig'
 import {
   signUp,
   updateUserAttributes,
 } from '@aws-amplify/auth';
 import axios from 'axios';
-
-console.log(process.env.REACT_APP_API_URL); // make sure this is set in your .env file
-// point this at your EB backend
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
-});
 
 // validation schema
 const SignUpSchema = z
@@ -62,7 +56,7 @@ const SignUpForm: React.FC = () => {
 
     try {
       // 1) Persist in RDS via your backend
-      const createRes = await api.post('/api/employees', {
+      const createRes = await instance.post('/api/employees', {
         name:  data.name,
         email: data.email,
         phone: data.phone,
