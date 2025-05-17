@@ -570,17 +570,20 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: '#e0e0e0', // Changed from '#f5f5f5' to a darker gray
+          backgroundColor: 'secondary.main', // Changed to match UserDashboard
           minHeight: '100vh',
           py: 4,
-          px: 2, // Add padding for better spacing
+          px: 2,
         }}
       >
         <Container
-          maxWidth={false} // Remove maxWidth restriction
-          sx={{ px: { xs: 2, sm: 4, md: 6 } }} // Add responsive padding
+          maxWidth={false}
+          sx={{ 
+            px: { xs: 1, sm: 2, md: 3 }, // Match UserDashboard padding
+            width: '100%',
+            maxWidth: '100%' 
+          }}
         >
-
           <Navbar />
 
           <Box sx={{ my: 3 }}>
@@ -597,8 +600,8 @@ const getShiftStatus = (availableShiftId: number): string => {
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
-                WebkitTextStroke: '1px #424242', // Add text outline
-                textStroke: '1px #424242', // For broader browser support
+                WebkitTextStroke: '1px #424242',
+                textStroke: '1px #424242',
               }}
             >
               Admin Management System
@@ -693,12 +696,329 @@ const getShiftStatus = (availableShiftId: number): string => {
               </Button>
             </Box>
                     
-            {/* Get Shift by ID Section */}
+            {/* Weekly schedule grid with navigation - Moved up */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+              {/* Week Navigation Buttons above calendar, aligned to right */}
+              <Box sx={{ 
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 2,
+                mb: 2
+              }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={goToPreviousWeek}
+                  sx={{ border: '1px solid #424242', borderRadius: '20px', color: '#212121' }}
+                >
+                  Previous Week
+                </Button>
+                <WeekPicker
+                  currentWeekStart={currentWeekStart}
+                  onWeekChange={setCurrentWeekStart}
+                />
+                <Button 
+                  variant="outlined" 
+                  onClick={goToNextWeek}
+                  sx={{ border: '1px solid #424242', borderRadius: '20px', color: '#212121' }}
+                >
+                  Next Week
+                </Button>
+              </Box>
+
+              {/* Calendar Grid */}
+              <Box
+                sx={{
+                  border: '2px solid rgba(0, 194, 140, 0.2)',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)', // Match UserDashboard
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                  margin: '24px 0',
+                }}
+              >
+                {/* Existing calendar grid content */}
+                <Box sx={{ display: 'flex', gap: 3, overflowX: 'auto' }}>
+                  {weekDays.map((day, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        flex: '1 1 0',
+                        minWidth: 150,
+                        maxWidth: 'calc(100% / 7)',
+                        height: '600px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        backgroundColor: '#e8f5e9', // Green-tinted background like user
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        border: '1px solid rgba(0,0,0,0.12)',
+                        position: 'relative',
+                        backgroundImage: `
+                          linear-gradient(
+                            rgba(255,255,255, 0.2) 1px,
+                            transparent 1px
+                          )
+                        `,
+                        backgroundSize: '100% 25px',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundImage: `
+                            radial-gradient(
+                              rgba(0,0,0,0.1) 1px,
+                              transparent 1px
+                            )
+                          `,
+                          backgroundSize: '4px 4px',
+                          opacity: 0.2,
+                          pointerEvents: 'none',
+                        },
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          top: '70px',
+                          height: '2px',
+                          background: 'rgba(0,0,0,0.1)',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          mb: 2,
+                          pb: 1,
+                          borderBottom: '1px solid rgba(0,0,0,0.1)',
+                          background: 'linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)',
+                          borderRadius: '4px 4px 0 0',
+                          position: 'relative',
+                          zIndex: 1,
+                          flexShrink: 0, // Prevents header from shrinking
+                        }}
+                      >
+                        <Typography 
+                          variant="subtitle1" 
+                          fontWeight="bold" 
+                          align="center" 
+                          gutterBottom
+                          sx={{ 
+                            fontSize: { xs: '0.875rem', sm: '1rem' },
+                            color: 'rgba(0,0,0,0.87)',
+                          }}
+                        >
+                          {format(day, 'EEE')}
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          align="center" 
+                          sx={{ 
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            color: 'rgba(0,0,0,0.6)',
+                          }}
+                        >
+                          {format(day, 'MMM d')}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Shifts for this day */}
+                      <Box
+                        sx={{
+                          flex: 1, // Takes remaining space
+                          overflowY: 'auto',
+                          p: 1,
+                          '&::-webkit-scrollbar': {
+                            width: '6px',
+                          },
+                          '&::-webkit-scrollbar-track': {
+                            backgroundColor: 'rgba(0,0,0,0.05)',
+                          },
+                          '&::-webkit-scrollbar-thumb': {
+                            backgroundColor: 'rgba(0,0,0,0.1)',
+                            borderRadius: '3px',
+                          },
+                        }}
+                      >
+                        {filteredShifts
+                          .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
+                          .map(shift => {
+                            const status = getShiftStatus(shift.id);
+                            const backgroundColor = 
+                              status === 'denied' ? '#f44336' : // Red for denied shifts
+                              status === 'pending' ? '#ff9800' : // Orange for pending shifts
+                              getShiftColor(status); // Default color for other statuses
+
+                            const requestedShift = requestedShifts.find(req => req.availableShiftId === shift.id);
+                            const requester = requestedShift
+                              ? employees.find(emp => emp.id === requestedShift.employeeId)
+                              : null;
+
+                            const showPendingRequestBar = requestedShift && requestedShift.status === 'pending';
+
+                            return (
+                              <Box key={shift.id} sx={{ mb: 1, position: 'relative' }}>
+                                {/* Shift slot - match user dashboard size and round style */}
+                                <Box
+                                  sx={{
+                                    p: 1,
+                                    borderRadius: '10px', // Rounded corners
+                                    backgroundColor,
+                                    color: 'white',
+                                    position: 'relative',
+                                    minHeight: 48, // Minimum height to match user dashboard
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                  >
+                                    {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                                  </Typography>
+                                  {status === 'approved' && (
+                                    <Typography
+                                      variant="caption"
+                                      display="block"
+                                      sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                    >
+                                      Request Approved
+                                    </Typography>
+                                  )}
+                                  {status === 'assigned' && (
+                                    <Typography
+                                      variant="caption"
+                                      display="block"
+                                      sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                    >
+                                      {getAssignedEmployeeName(shift.id)}
+                                    </Typography>
+                                  )}
+                                  {/* Edit Button */}
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      position: 'absolute',
+                                      top: 2,
+                                      right: 2,
+                                      color: 'white',
+                                      padding: { xs: 0.5, sm: 1 }
+                                    }}
+                                    onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                                {/* Orange rectangle for pending request directly under the slot, no space */}
+                                {showPendingRequestBar && (
+                                  <Box
+                                    sx={{
+                                      width: '100%',
+                                      minHeight: 60,
+                                      backgroundColor: '#ff9800',
+                                      borderRadius: '0 0 4px 4px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      gap: 0.5,
+                                      zIndex: 2,
+                                      boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                                      mt: 0 // No space between slot and rectangle
+                                    }}
+                                  >
+                                    <IconButton
+                                      size="small"
+                                      sx={{
+                                        color: 'white',
+                                        backgroundColor: '#ff9800',
+                                        '&:hover': { backgroundColor: '#f57c00' },
+                                        fontSize: '1rem'
+                                      }}
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        if (requester) {
+                                          alert(`User Info:\nName: ${requester.name}\nEmail: ${requester.email}`);
+                                        } else {
+                                          alert('User Info not found');
+                                        }
+                                      }}
+                                    >
+                                      i
+                                    </IconButton>
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      sx={{
+                                        background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                                        backdropFilter: 'blur(8px)',
+                                        border: '1px solid rgba(0, 194, 140, 0.3)',
+                                        borderRadius: '10px',
+                                        color: '#00c28c',
+                                        '&:hover': {
+                                          background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                                          transform: 'translateY(-1px)',
+                                        }
+                                      }}
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleAcceptShift(requestedShift.id);
+                                      }}
+                                    >
+                                      Accept
+                                    </Button>
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      sx={{
+                                        borderColor: '#fff',
+                                        color: '#fff',
+                                        minWidth: 60,
+                                        mx: 0.5,
+                                        '&:hover': { borderColor: '#fff', backgroundColor: '#e57373', color: '#fff' }
+                                      }}
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleDenyRequestedShift(requestedShift.id);
+                                      }}
+                                    >
+                                      Deny
+                                    </Button>
+                                  </Box>
+                                )}
+                                {status === 'denied' && currentEmployee.id !== 1 && (
+                                  <Chip
+                                    label="Denied"
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
+                                      height: { xs: 14, sm: 16 }, 
+                                      backgroundColor: '#d32f2f',
+                                      mt: 0.5 
+                                    }}
+                                  />
+                                )}
+                                {/* Admin controls */}
+                              </Box>
+                            );
+                          })}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Get Shift by ID Section - Moved below calendar */}
             <Box
               sx={{
                 mb: 4,
                 p: { xs: 2, sm: 3 },
-                backgroundColor: '#e0e0e0', // Changed from '#fafafa' to dark gray
+                backgroundColor: '#e0e0e0',
                 borderRadius: 0,
                 border: '2px solid #e0e0e0',
               }}
@@ -740,318 +1060,6 @@ const getShiftStatus = (availableShiftId: number): string => {
                 >
                   {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
                 </Button>
-              </Box>
-              
-              {/* Weekly schedule grid with navigation */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {/* Week Navigation Buttons above calendar, aligned to right */}
-                <Box sx={{ 
-                  display: 'flex',
-                  justifyContent: 'flex-end', // Changed from 'center' to 'flex-end'
-                  gap: 2,
-                  mb: 2
-                }}>
-                  <Button 
-                    variant="outlined" 
-                    onClick={goToPreviousWeek}
-                    sx={{ border: '1px solid #424242', borderRadius: '20px', color: '#212121' }}
-                  >
-                    Previous Week
-                  </Button>
-                  <WeekPicker
-                    currentWeekStart={currentWeekStart}
-                    onWeekChange={setCurrentWeekStart}
-                  />
-                  <Button 
-                    variant="outlined" 
-                    onClick={goToNextWeek}
-                    sx={{ border: '1px solid #424242', borderRadius: '20px', color: '#212121' }}
-                  >
-                    Next Week
-                  </Button>
-                </Box>
-
-                {/* Calendar Grid */}
-                <Box
-                  sx={{
-                    border: '2px solid rgba(0, 194, 140, 0.2)',
-                    borderRadius: '12px',
-                    padding: '24px',
-                    backgroundColor: '#e0e0e0',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                  }}
-                >
-                  {/* Existing calendar grid content */}
-                  <Box sx={{ display: 'flex', gap: 3, overflowX: 'auto' }}>
-                    {weekDays.map((day, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          flex: '1 1 0',
-                          minWidth: 150,
-                          maxWidth: 'calc(100% / 7)',
-                          height: '600px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          backgroundColor: '#e8f5e9', // Green-tinted background like user
-                          borderRadius: '8px',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          border: '1px solid rgba(0,0,0,0.12)',
-                          position: 'relative',
-                          backgroundImage: `
-                            linear-gradient(
-                              rgba(255,255,255, 0.2) 1px,
-                              transparent 1px
-                            )
-                          `,
-                          backgroundSize: '100% 25px',
-                          '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundImage: `
-                              radial-gradient(
-                                rgba(0,0,0,0.1) 1px,
-                                transparent 1px
-                              )
-                            `,
-                            backgroundSize: '4px 4px',
-                            opacity: 0.2,
-                            pointerEvents: 'none',
-                          },
-                          '&::after': {
-                            content: '""',
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            top: '70px',
-                            height: '2px',
-                            background: 'rgba(0,0,0,0.1)',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                          }
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            mb: 2,
-                            pb: 1,
-                            borderBottom: '1px solid rgba(0,0,0,0.1)',
-                            background: 'linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)',
-                            borderRadius: '4px 4px 0 0',
-                            position: 'relative',
-                            zIndex: 1,
-                            flexShrink: 0, // Prevents header from shrinking
-                          }}
-                        >
-                          <Typography 
-                            variant="subtitle1" 
-                            fontWeight="bold" 
-                            align="center" 
-                            gutterBottom
-                            sx={{ 
-                              fontSize: { xs: '0.875rem', sm: '1rem' },
-                              color: 'rgba(0,0,0,0.87)',
-                            }}
-                          >
-                            {format(day, 'EEE')}
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            align="center" 
-                            sx={{ 
-                              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                              color: 'rgba(0,0,0,0.6)',
-                            }}
-                          >
-                            {format(day, 'MMM d')}
-                          </Typography>
-                        </Box>
-                        
-                        {/* Shifts for this day */}
-                        <Box
-                          sx={{
-                            flex: 1, // Takes remaining space
-                            overflowY: 'auto',
-                            p: 1,
-                            '&::-webkit-scrollbar': {
-                              width: '6px',
-                            },
-                            '&::-webkit-scrollbar-track': {
-                              backgroundColor: 'rgba(0,0,0,0.05)',
-                            },
-                            '&::-webkit-scrollbar-thumb': {
-                              backgroundColor: 'rgba(0,0,0,0.1)',
-                              borderRadius: '3px',
-                            },
-                          }}
-                        >
-                          {filteredShifts
-                            .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
-                            .map(shift => {
-                              const status = getShiftStatus(shift.id);
-                              const backgroundColor = 
-                                status === 'denied' ? '#f44336' : // Red for denied shifts
-                                status === 'pending' ? '#ff9800' : // Orange for pending shifts
-                                getShiftColor(status); // Default color for other statuses
-
-                              const requestedShift = requestedShifts.find(req => req.availableShiftId === shift.id);
-                              const requester = requestedShift
-                                ? employees.find(emp => emp.id === requestedShift.employeeId)
-                                : null;
-
-                              const showPendingRequestBar = requestedShift && requestedShift.status === 'pending';
-
-                              return (
-                                <Box key={shift.id} sx={{ mb: 1, position: 'relative' }}>
-                                  {/* Shift slot - match user dashboard size and round style */}
-                                  <Box
-                                    sx={{
-                                      p: 1,
-                                      borderRadius: '10px', // Rounded corners
-                                      backgroundColor,
-                                      color: 'white',
-                                      position: 'relative',
-                                      minHeight: 48, // Minimum height to match user dashboard
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      justifyContent: 'center',
-                                    }}
-                                  >
-                                    <Typography
-                                      variant="body2"
-                                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                                    >
-                                      {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                                    </Typography>
-                                    {status === 'approved' && (
-                                      <Typography
-                                        variant="caption"
-                                        display="block"
-                                        sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                                      >
-                                        Request Approved
-                                      </Typography>
-                                    )}
-                                    {status === 'assigned' && (
-                                      <Typography
-                                        variant="caption"
-                                        display="block"
-                                        sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                                      >
-                                        {getAssignedEmployeeName(shift.id)}
-                                      </Typography>
-                                    )}
-                                    {/* Edit Button */}
-                                    <IconButton
-                                      size="small"
-                                      sx={{
-                                        position: 'absolute',
-                                        top: 2,
-                                        right: 2,
-                                        color: 'white',
-                                        padding: { xs: 0.5, sm: 1 }
-                                      }}
-                                      onClick={() => handleOpenEditDialogFromCalendar(shift)}
-                                    >
-                                      <EditIcon fontSize="small" />
-                                    </IconButton>
-                                  </Box>
-                                  {/* Orange rectangle for pending request directly under the slot, no space */}
-                                  {showPendingRequestBar && (
-                                    <Box
-                                      sx={{
-                                        width: '100%',
-                                        minHeight: 60,
-                                        backgroundColor: '#ff9800',
-                                        borderRadius: '0 0 4px 4px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: 0.5,
-                                        zIndex: 2,
-                                        boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
-                                        mt: 0 // No space between slot and rectangle
-                                      }}
-                                    >
-                                      <IconButton
-                                        size="small"
-                                        sx={{
-                                          color: 'white',
-                                          backgroundColor: '#ff9800',
-                                          '&:hover': { backgroundColor: '#f57c00' },
-                                          fontSize: '1rem'
-                                        }}
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          if (requester) {
-                                            alert(`User Info:\nName: ${requester.name}\nEmail: ${requester.email}`);
-                                          } else {
-                                            alert('User Info not found');
-                                          }
-                                        }}
-                                      >
-                                        i
-                                      </IconButton>
-                                      <Button
-                                        variant="contained"
-                                        size="small"
-                                        sx={{
-                                          backgroundColor: '#00c28c',
-                                          color: 'white',
-                                          minWidth: 60,
-                                          mx: 0.1,
-                                          '&:hover': { backgroundColor: '#009e74' }
-                                        }}
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          handleAcceptShift(requestedShift.id);
-                                        }}
-                                      >
-                                        Accept
-                                      </Button>
-                                      <Button
-                                        variant="outlined"
-                                        size="small"
-                                        sx={{
-                                          borderColor: '#fff',
-                                          color: '#fff',
-                                          minWidth: 60,
-                                          mx: 0.5,
-                                          '&:hover': { borderColor: '#fff', backgroundColor: '#e57373', color: '#fff' }
-                                        }}
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          handleDenyRequestedShift(requestedShift.id);
-                                        }}
-                                      >
-                                        Deny
-                                      </Button>
-                                    </Box>
-                                  )}
-                                  {status === 'denied' && currentEmployee.id !== 1 && (
-                                    <Chip
-                                      label="Denied"
-                                      size="small"
-                                      sx={{ 
-                                        fontSize: { xs: '0.5rem', sm: '0.6rem' }, 
-                                        height: { xs: 14, sm: 16 }, 
-                                        backgroundColor: '#d32f2f',
-                                        mt: 0.5 
-                                      }}
-                                    />
-                                  )}
-                                  {/* Admin controls */}
-                                </Box>
-                              );
-                            })}
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
               </Box>
             </Box>
           </Box>
