@@ -10,9 +10,8 @@
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^5.0.1",
     "@mui/icons-material": "^7.0.1",
-    "@mui/material": "^7.0.2",
+    "@mui/material": "^7.0.1",
     "@mui/system": "^7.0.1",
-    "@mui/x-date-pickers": "^8.0.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
@@ -22,7 +21,6 @@
     "@types/react-dom": "^18.2.0",
     "aws-amplify": "^6.14.2",
     "axios": "^1.8.4",
-    "date-fns": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.55.0",
@@ -37,13 +35,24 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "npx eslint \"src/**/*.{ts,js}\" --max-warnings=0"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "settings": {
+      "react": {
+        "version": "detect"
+      },
+      "import/resolver": {
+        "typescript": {
+          "alwaysTryTypes": true
+        }
+      }
+    }
   },
   "browserslist": {
     "production": [
@@ -60,7 +69,12 @@
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-router-dom": "^5.3.3",
-    "@types/styled-components": "^5.1.34"
+    "@types/styled-components": "^5.1.34",
+    "eslint-import-resolver-typescript": "^4.3.4",
+    "eslint-plugin-import": "^2.31.0",
+    "jsdom": "^23.2.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
- 
 }

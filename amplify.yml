@@ -1,21 +1,20 @@
 version: 1
 applications:
-  - appRoot: my-app
+  - appRoot: .
     frontend:
       phases:
         preBuild:
           commands:
-            - nvm install 20
-            - nvm use 20
-            - node -v
+            - echo "20" > .nvmrc
+            - nvm use
             - npm ci
         build:
           commands:
             - npm run build
       artifacts:
-        baseDirectory: my-app/build
+        baseDirectory: build 
         files:
           - '**/*'
       cache:
         paths:
-          - my-app/node_modules/**/*
+          - node_modules/**/*
