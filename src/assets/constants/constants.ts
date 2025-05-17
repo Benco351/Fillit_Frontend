@@ -1,1 +1,0 @@
-export const BASE_URL = process.env.REACT_APP_OPEN_AI_URL; // Replace with your default URL

@@ -14,7 +14,6 @@ import {
   Close as CloseIcon, 
   Send as SendIcon 
 } from '@mui/icons-material';
-import { BASE_URL } from '@/assets/constants/constants';
 
 // Define types for our messages
 interface Message {
@@ -52,7 +51,7 @@ export default function MTAChatPopup(): JSX.Element {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${BASE_URL}`, {
+      const response = await fetch(`${process.env.REACT_APP_OPEN_AI_URL}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
