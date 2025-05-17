@@ -56,7 +56,7 @@ const SignUpForm: React.FC = () => {
 
     try {
       // 1) Persist in RDS via your backend
-      const createRes = await instance.post('/api/employees', {
+      const createRes = await instance.post('/employees', {
         name:  data.name,
         email: data.email,
         phone: data.phone,
