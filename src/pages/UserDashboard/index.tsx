@@ -265,6 +265,8 @@ const UserDashboard: React.FC = () => {
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
                 margin: '24px 0',
+                transform: 'translateZ(0)',
+                willChange: 'transform',
               }}
             >
               {/* Employee selection and Week navigation in one row */}
@@ -369,50 +371,46 @@ const UserDashboard: React.FC = () => {
                 </Box>
               </Box>
 
-              {/* Calendar Grid with increased spacing */}
+              {/* Calendar Grid */}
               <Box
                 sx={{
-                  display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  gap: 3,
+                  display: 'flex', 
+                  gap: 2, 
                   overflowX: 'auto',
                   pb: 2,
-                  minHeight: '600px', // Set minimum height for the container
                   '&::-webkit-scrollbar': {
                     height: '8px',
+                    borderRadius: '4px',
                   },
                   '&::-webkit-scrollbar-track': {
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     borderRadius: '4px',
                   },
                   '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    backgroundColor: 'rgba(0, 194, 140, 0.3)',
                     borderRadius: '4px',
-                  },
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 194, 140, 0.5)',
+                    }
+                  }
                 }}
               >
                 {weekDays.map((day, index) => (
                   <Box
                     key={index}
                     sx={{
-                      flex: '1 1 0', // This ensures equal width columns
-                      minWidth: 150,
-                      maxWidth: 'calc(100% / 7)', // Ensures columns don't grow too wide
-                      height: '600px', // Fixed height for all columns
+                      flex: '1 1 0',
+                      minWidth: 180,
+                      maxWidth: 'calc(100% / 7)',
+                      height: '600px',
                       display: 'flex',
                       flexDirection: 'column',
-                      backgroundColor: '#e8f5e9',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      border: '1px solid rgba(0,0,0,0.12)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '16px',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                       position: 'relative',
-                      backgroundImage: `
-                        linear-gradient(
-                          rgba(255,255,255, 0.2) 1px,
-                          transparent 1px
-                        )
-                      `,
-                      backgroundSize: '100% 25px', // Creates paper lines effect
+                      overflow: 'hidden',
                       '&::before': {
                         content: '""',
                         position: 'absolute',
@@ -420,85 +418,70 @@ const UserDashboard: React.FC = () => {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundImage: `
-                          radial-gradient(
-                            rgba(0,0,0,0.1) 1px,
-                            transparent 1px
-                          )
-                        `,
-                        backgroundSize: '4px 4px',
-                        opacity: 0.2,
+                        backgroundImage: 'linear-gradient(180deg, rgba(0,194,140,0.03) 0%, rgba(255,255,255,0.01) 100%)',
                         pointerEvents: 'none',
                       },
-                      '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        top: '70px',
-                        height: '2px',
-                        background: 'rgba(0,0,0,0.1)',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                      }
+                      transform: 'translateZ(0)',
+                      willChange: 'transform',
                     }}
                   >
+                    {/* Day Header */}
                     <Box
                       sx={{
-                        mb: 2,
-                        pb: 1,
-                        borderBottom: '1px solid rgba(0,0,0,0.1)',
-                        background: 'linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)',
-                        borderRadius: '4px 4px 0 0',
-                        position: 'relative',
-                        zIndex: 1,
-                        flexShrink: 0, // Prevents header from shrinking
+                        p: 2,
+                        background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1) 0%, rgba(0, 194, 140, 0.05) 100%)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(4px)',
                       }}
                     >
                       <Typography 
-                        variant="subtitle1" 
-                        fontWeight="bold" 
+                        variant="h6" 
                         align="center" 
-                        gutterBottom
                         sx={{ 
-                          fontSize: { xs: '0.875rem', sm: '1rem' },
-                          color: 'rgba(0,0,0,0.87)',
+                          fontSize: '1.1rem',
+                          fontWeight: 600,
+                          color: '#00c28c',
+                          mb: 0.5
                         }}
                       >
                         {format(day, 'EEE')}
                       </Typography>
                       <Typography 
                         variant="body2" 
-                        align="center" 
+                        align="center"
                         sx={{ 
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                          color: 'rgba(0,0,0,0.6)',
+                          fontSize: '0.9rem',
+                          color: 'rgba(255, 255, 255, 0.7)'
                         }}
                       >
                         {format(day, 'MMM d')}
                       </Typography>
                     </Box>
 
-                    {/* Shifts container */}
+                    {/* Shifts Container */}
                     <Box
                       sx={{
-                        flex: 1, // Takes remaining space
+                        flex: 1,
                         overflowY: 'auto',
-                        p: 1,
+                        p: 2,
+                        gap: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
                         '&::-webkit-scrollbar': {
-                          width: '6px',
+                          width: '4px',
                         },
                         '&::-webkit-scrollbar-track': {
-                          backgroundColor: 'rgba(0,0,0,0.05)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
                         },
                         '&::-webkit-scrollbar-thumb': {
-                          backgroundColor: 'rgba(0,0,0,0.1)',
-                          borderRadius: '3px',
-                        },
+                          backgroundColor: 'rgba(0, 194, 140, 0.2)',
+                          borderRadius: '2px',
+                        }
                       }}
                     >
                       {filteredShifts
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
-                        .map(shift => {
+                        .map((shift, idx, arr) => {
                           const status = getShiftStatus(shift.id);
                           const backgroundColor = 
                             status === 'denied' ? '#f44336' : // Red for denied shifts
@@ -509,67 +492,94 @@ const UserDashboard: React.FC = () => {
                             <Box
                               key={shift.id}
                               sx={{
-                                mb: 1,
-                                p: 1,
-                                borderRadius: 1,
-                                backgroundColor, // Use the determined color
-                                color: 'white',
-                                position: 'relative',
+                                width: '100%',
+                                pb: idx === arr.length - 1 ? 0 : 2, // Use padding instead of margin
+                                height: 'auto', // Allow natural height
                               }}
                             >
-                              <Typography 
-                                variant="body2"
-                                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                              <Box
+                                sx={{
+                                  p: 2,
+                                  borderRadius: '12px',
+                                  backgroundColor: backgroundColor,
+                                  backgroundImage: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                                  backdropFilter: 'blur(4px)',
+                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                  transition: 'all 0.3s ease, background-color 0.3s ease', // Add specific transition for backgroundColor
+                                  height: '100%',
+                                  minHeight: 100, // Increased minimum height
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'space-between', // Better spacing
+                                  position: 'relative',
+                                  transformStyle: 'preserve-3d', // Better 3D handling
+                                  perspective: 1000, // Better 3D handling
+                                  backfaceVisibility: 'hidden',
+                                  '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.15)',
+                                  },
+                                  '& > *': { // Ensure all children maintain position
+                                    position: 'relative',
+                                    zIndex: 1
+                                  }
+                                }}
                               >
-                                {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                              </Typography>
-                              
-                              {status === 'approved' && (
                                 <Typography 
-                                  variant="caption" 
-                                  display="block"
-                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                  variant="body2"
+                                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                                 >
-                                  Request Approved
+                                  {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                                 </Typography>
-                              )}
-                              
-                              {status === 'assigned' && (
-                                <Typography 
-                                  variant="caption" 
-                                  display="block"
-                                  sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
-                                >
-                                  {getAssignedEmployeeName(shift.id)}
-                                </Typography>
-                              )}
-                              
-                              {status === 'denied' && (
-                                <Chip
-                                  label="Shift Denied"
-                                  size="small"
-                                  sx={{ 
-                                    fontSize: '0.6rem', 
-                                    height: 16, 
-                                    backgroundColor: '#d32f2f',
-                                    mt: 0.5 
-                                  }}
-                                />
-                              )}
-                              
-                              {/* Action Buttons */}
-                              <ActionButtons
-                                shift={shift}
-                                status={status}
-                                requesting={requestingShifts.includes(shift.id)}
-                                canceling={cancelingShifts.includes(
-                                  requestedShifts.find(req => req.availableShiftId === shift.id)?.id || -1
+                                
+                                {status === 'approved' && (
+                                  <Typography 
+                                    variant="caption" 
+                                    display="block"
+                                    sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                  >
+                                    Request Approved
+                                  </Typography>
                                 )}
-                                requestedShifts={requestedShifts}
-                                onRequestShift={handleRequestShift}
-                                handleDeleteRequestedShift={(requestId) => handleCancelRequest(requestId, shift.id)}
-                                buttonStyle={commonButtonStyle}
-                              />
+                                
+                                {status === 'assigned' && (
+                                  <Typography 
+                                    variant="caption" 
+                                    display="block"
+                                    sx={{ fontSize: { xs: '0.625rem', sm: '0.75rem' } }}
+                                  >
+                                    {getAssignedEmployeeName(shift.id)}
+                                  </Typography>
+                                )}
+                                
+                                {status === 'denied' && (
+                                  <Chip
+                                    label="Shift Denied"
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: '0.6rem', 
+                                      height: 16, 
+                                      backgroundColor: '#d32f2f',
+                                      mt: 0.5 
+                                    }}
+                                  />
+                                )}
+                                
+                                {/* Action Buttons */}
+                                <ActionButtons
+                                  shift={shift}
+                                  status={status}
+                                  requesting={requestingShifts.includes(shift.id)}
+                                  canceling={cancelingShifts.includes(
+                                    requestedShifts.find(req => req.availableShiftId === shift.id)?.id || -1
+                                  )}
+                                  requestedShifts={requestedShifts}
+                                  onRequestShift={handleRequestShift}
+                                  handleDeleteRequestedShift={(requestId) => handleCancelRequest(requestId, shift.id)}
+                                  buttonStyle={commonButtonStyle}
+                                />
+                              </Box>
                             </Box>
                           );
                         })}

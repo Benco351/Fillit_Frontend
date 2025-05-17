@@ -1,5 +1,10 @@
 import { instance } from './apiconfig'; // Adjust the import path as necessary
-import { CreateAssignedShiftDTO, AssignedShiftQueryDTO, SwapAssignedShiftsDTO } from './types'; // Import types
+import { AssignedShiftQueryDTO, SwapAssignedShiftsDTO } from './types'; // Import types
+
+export interface CreateAssignedShiftDTO {
+  employeeId: number;     // Changed back to camelCase
+  shiftSlotId: number;   // Changed back to camelCase
+}
 
 //ADMINNNNN - assign shift to myself for admin
 // information button - mail and employee - done
@@ -8,13 +13,21 @@ import { CreateAssignedShiftDTO, AssignedShiftQueryDTO, SwapAssignedShiftsDTO } 
 
 export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // done
     try {
-        const response = await instance.post('/assigned-shifts', data);
+        // Use camelCase keys as required by backend
+        const payload = {
+            employeeId: data.employeeId,
+            shiftSlotId: data.shiftSlotId
+        };
 
-        if (!response.data.data) {
+        console.log('Creating assigned shift with payload:', payload);
+
+        const response = await instance.post('/assigned-shifts', payload);
+
+        if (!response.data) {
             throw new Error('No data returned from the server');
         }
 
-        console.log('Shift assinged SUCCESS', response.data);
+        console.log('Shift assigned SUCCESS', response.data);
         return response.data; // Return the response data
     } 
     
