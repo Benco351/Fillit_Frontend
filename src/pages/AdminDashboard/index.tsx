@@ -467,25 +467,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleDeleteRequestedShift = async (requestedShiftId: number) => {
-    setLoading(true);
-    try {
-      console.log('Deleting requested shift with ID:', requestedShiftId);
 
-      // Call the API to delete the requested shift
-      await deleteRequestedShiftById(requestedShiftId);
-
-      // Update the local state to remove the deleted shift
-      setRequestedShifts(prev => prev.filter(shift => shift.id !== requestedShiftId));
-
-      setSuccess('Requested shift deleted successfully');
-    } catch (err) {
-      console.error('Failed to delete requested shift:', err);
-      setError('Failed to delete requested shift. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
     setEditShift(shift); // Set the selected shift for editing
@@ -590,14 +572,6 @@ const getShiftStatus = (availableShiftId: number): string => {
   return isAssigned ? 'assigned' : 'available';
 };
 
-  // Utility function to get assigned employee name
-  const getAssignedEmployeeName = (availableShiftId: number): string => {
-    const assignedShift = assignedShifts.find(s => s.availableShiftId === availableShiftId);
-    if (!assignedShift) return '';
-    
-    const employee = employees.find(e => e.id === assignedShift.employeeId);
-    return employee ? employee.name : 'Unknown Employee';
-  };
 
   // Filtered shifts based on the selected filter
   const getFilteredShifts = () => {
@@ -619,6 +593,9 @@ const getShiftStatus = (availableShiftId: number): string => {
     }
   };
 
+  // #093039 - color for user
+  //sidescroll
+
   const filteredShifts = getFilteredShifts();
 
   return (
@@ -626,7 +603,7 @@ const getShiftStatus = (availableShiftId: number): string => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: '#0a5e0f', 
+          backgroundColor: '#18191cf5', 
           minHeight: '100vh',
           py: 4,
           px: 2,
