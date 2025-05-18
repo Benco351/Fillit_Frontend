@@ -63,7 +63,6 @@ const SignUpForm: React.FC = () => {
         options: {
           userAttributes: {
             email: data.email,
-            name:  data.name,
             ...(data.phone ? { phone_number: data.phone } : {}),
           },
         },
