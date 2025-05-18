@@ -55,7 +55,7 @@ export default function MTAChatPopup(): JSX.Element {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "https://fillitshifits.com"
+          "Access-Control-Allow-Origin": "*"
         },
         body: JSON.stringify({ user_prompt: userMessage.text })
       });
