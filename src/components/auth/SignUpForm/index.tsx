@@ -55,7 +55,20 @@ const SignUpForm: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1) Persist in RDS via your backend
+
+      // 1) Cognito sign-up
+      const { nextStep } = await signUp({
+        username: data.email,
+        password: data.password,
+        options: {
+          userAttributes: {
+            email: data.email,
+            name:  data.name,
+            ...(data.phone ? { phone_number: data.phone } : {}),
+          },
+        },
+      });
+      // 2) Persist in RDS via your backend
       const createRes = await instance.post('/auth/sign-up', {
         name:  data.name,
         email: data.email,
@@ -65,18 +78,6 @@ const SignUpForm: React.FC = () => {
       console.log('RDS create response:', createRes.data);
       const employeeId = createRes.data.data.employee_id;
 
-      
-      // 2) Cognito sign-up
-      const { nextStep } = await signUp({
-        username: data.email,
-        password: data.password,
-        options: {
-          userAttributes: {
-            email: data.email,
-            ...(data.phone ? { phone_number: data.phone } : {}),
-          },
-        },
-      });
       if (nextStep.signUpStep !== 'DONE') {
         console.warn('Unexpected signUp step:', nextStep);
         throw new Error(`signUp step: ${nextStep.signUpStep}`);
