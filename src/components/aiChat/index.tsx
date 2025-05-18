@@ -54,7 +54,8 @@ export default function MTAChatPopup(): JSX.Element {
       const response = await fetch(`${process.env.REACT_APP_OPEN_AI_URL}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "https://fillitshifits.com"
         },
         body: JSON.stringify({ user_prompt: userMessage.text })
       });
