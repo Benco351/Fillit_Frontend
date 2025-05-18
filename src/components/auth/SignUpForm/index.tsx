@@ -65,6 +65,7 @@ const SignUpForm: React.FC = () => {
       console.log('RDS create response:', createRes.data);
       const employeeId = createRes.data.data.employee_id;
 
+      
       // 2) Cognito sign-up
       const { nextStep } = await signUp({
         username: data.email,
