@@ -3,7 +3,7 @@ import type { InternalAxiosRequestConfig } from 'axios';
 import { fetchAuthSession } from '@aws-amplify/auth';
 
 export const instance = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: '/', // Ensure this matches your backend's base URL
   headers: {
     'Content-Type': 'application/json',
   },

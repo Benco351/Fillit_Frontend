@@ -13,15 +13,7 @@ export interface CreateAssignedShiftDTO {
 
 export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // done
     try {
-        // Use camelCase keys as required by backend
-        const payload = {
-            employeeId: data.employeeId,
-            shiftSlotId: data.shiftSlotId
-        };
-
-        console.log('Creating assigned shift with payload:', payload);
-
-        const response = await instance.post('/assigned-shifts', payload);
+        const response = await instance.post('/api/assigned-shifts', data);
 
         if (!response.data) {
             throw new Error('No data returned from the server');
@@ -39,7 +31,7 @@ export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // 
 
 export const deleteAssignedShiftById = async (id: number) => {
     try {
-        const response = await instance.delete(`/assigned-shifts/${id}`);
+        const response = await instance.delete(`/api/assigned-shifts/${id}`);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
@@ -54,7 +46,7 @@ export const deleteAssignedShiftById = async (id: number) => {
 
 export const getAssignedShiftById = async (id: number) => { //done
     try {
-        const response = await instance.get(`/assigned-shifts/${id}`);
+        const response = await instance.get(`/api/assigned-shifts/${id}`);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
@@ -69,7 +61,7 @@ export const getAssignedShiftById = async (id: number) => { //done
 
 export const getAssignedShifts = async (params: AssignedShiftQueryDTO = {}) => {
     try {
-        const response = await instance.get('/assigned-shifts', { params });
+        const response = await instance.get('/api/assigned-shifts', { params });
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
@@ -84,7 +76,7 @@ export const getAssignedShifts = async (params: AssignedShiftQueryDTO = {}) => {
 
 export const swapAssignedShift = async (data: SwapAssignedShiftsDTO) => { // done
     try {
-        const response = await instance.post('/assigned-shifts/swap', data);
+        const response = await instance.post('/api/assigned-shifts/swap', data);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
