@@ -14,6 +14,7 @@ import {
   Close as CloseIcon, 
   Send as SendIcon 
 } from '@mui/icons-material';
+import { fetchAuthSession } from '@aws-amplify/auth';
 
 // Define types for our messages
 interface Message {
@@ -51,13 +52,20 @@ export default function MTAChatPopup(): JSX.Element {
     setIsLoading(true);
     
     try {
+      // Fetch the ID token
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
       const response = await fetch(`${process.env.REACT_APP_OPEN_AI_URL}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*"
         },
-        body: JSON.stringify({ user_prompt: userMessage.text })
+        body: JSON.stringify({ 
+          user_prompt: userMessage.text,
+          jwt_token: idToken // Add the token to the request body
+        })
       });
       
       if (!response.ok) {
