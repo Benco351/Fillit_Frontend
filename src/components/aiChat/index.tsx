@@ -71,9 +71,16 @@ export default function MTAChatPopup(): JSX.Element {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
-      const data: ApiResponse = await response.json();
-      
+
+      // Parse the Lambda proxy integration response
+      const lambdaResult = await response.json();
+      let data: ApiResponse;
+      if (typeof lambdaResult.body === 'string') {
+        data = JSON.parse(lambdaResult.body);
+      } else {
+        data = lambdaResult.body;
+      }
+
       // Add AI response
       setMessages(prev => [...prev, { sender: 'AI', text: data.ai_reply }]);
     } catch (error) {
