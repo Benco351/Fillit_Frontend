@@ -133,7 +133,7 @@ const AdminDashboard: React.FC = () => {
           setRequestedShifts(mappedRequestedShifts);
         }
       } catch (err) {
-        console.error('Error fetching requested shifts:', err);
+        //console.error('Error fetching requested shifts:', err);
         setError('Failed to fetch requested shifts. Please try again later.');
       } finally {
         setLoading(false);
@@ -166,8 +166,8 @@ const AdminDashboard: React.FC = () => {
 
       setAssignedShifts(assignedShiftsResponse);
     } catch (err) {
-      setError('Failed to fetch shifts. Please try again later.');
-      console.error(err);
+      //setError('Failed to fetch shifts. Please try again later.');
+      //console.error(err);
     } finally {
       setLoading(false);
     }

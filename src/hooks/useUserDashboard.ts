@@ -180,7 +180,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         setAvailableShifts([]);
       }
     } catch (err) {
-      setError('Failed to fetch shifts. Please try again later.');
+      //setError('Failed to fetch shifts. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -214,7 +214,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         });
       }
     } catch (err) {
-      setError('Failed to fetch requested shifts');
+      //setError('Failed to fetch requested shifts');
     } finally {
       setLoadingRequested(false);
     }
