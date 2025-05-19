@@ -30,6 +30,7 @@ import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 //import AddShift from '../../components/ShiftManagment/AdminSettings';
 //import handleAddShift from '../../components/ShiftManagment/AdminSettings';
 import UserDashboardTitle from '../../components/sections/UserPage';
+import AIChatPopup from '../../components/aiChat';
 
 const AdminDashboard: React.FC = () => {
      
@@ -600,7 +601,9 @@ const getShiftStatus = (availableShiftId: number): string => {
 
   return (
     <ThemeProvider theme={MainTheme}>
+      
       <CssBaseline />
+      <AIChatPopup /> {/* Ensure Chat Popup is outside the main content Box */}
       <Box
         sx={{
           backgroundColor: '#18191cf5', 

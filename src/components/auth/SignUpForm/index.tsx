@@ -120,6 +120,9 @@ const SignUpForm: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          minHeight: '100vh', // Ensure it covers the full viewport height
+          margin: 0,
+          padding: 0,
         }}
       >
         <Button
@@ -133,8 +136,30 @@ const SignUpForm: React.FC = () => {
           Home
         </Button>
 
-        <Container maxWidth="sm">
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white' }}>
+        <Container
+          maxWidth="sm"
+          sx={{
+            '@media (max-width: 600px)': {
+              bgcolor: 'transparent', // Transparent on mobile
+              border: 'none', // No border on mobile
+              p: 0, // Remove padding on mobile
+            },
+          }}
+        >
+          <Paper
+            elevation={0} // Remove shadow
+            sx={{
+              p: 4,
+              borderRadius: 8,
+              bgcolor: 'background.paper',
+              color: 'white',
+              '@media (max-width: 600px)': {
+                bgcolor: 'transparent', // Transparent on mobile
+                border: 'none', // No border on mobile
+                boxShadow: 'none', // Remove shadow on mobile
+              },
+            }}
+          >
             <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 700, color: 'primary.main' }}>
               Create Account
             </Typography>

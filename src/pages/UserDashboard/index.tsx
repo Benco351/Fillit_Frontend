@@ -18,6 +18,7 @@ import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 import ActionButtons from '../../components/sections/UserPage/ActionButtons';
 import UserDashboardTitle from '../../components/sections/UserPage';
 import Filter from '../../components/CalendarFeatures/Filter';
+import AIChatPopup from '../../components/aiChat';
 
 const UserDashboard: React.FC = () => {
 
@@ -230,6 +231,7 @@ const UserDashboard: React.FC = () => {
 
   return (
     <ThemeProvider theme={MainTheme}>
+      <AIChatPopup /> {/* Ensure Chat Popup is outside the main content Box */}
       <CssBaseline />
       <Box
         sx={{

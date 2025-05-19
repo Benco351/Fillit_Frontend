@@ -35,7 +35,7 @@ const Main: React.FC = () => {
           {/* Footer */}
           <Footer />
         </Box>
-        <AIChatPopup /> {/* Ensure Chat Popup is outside the main content Box */}
+        
       </ThemeProvider>
     </>
   );

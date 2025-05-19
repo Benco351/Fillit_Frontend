@@ -87,7 +87,9 @@ export const LoginForm: React.FC = () => {
       <Box sx={{
         position: 'absolute', inset: 0,
         bgcolor: 'background.default',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
+        display: 'flex',
+        alignItems: 'center', 
+        justifyContent: 'center'
       }}>
         <Button
           component={RouterLink} to="/"
@@ -96,15 +98,38 @@ export const LoginForm: React.FC = () => {
           sx={{ position: 'absolute', top: 24, left: 24, textTransform: 'none' }}
         >Home</Button>
 
-        <Container maxWidth="sm">
-          <Paper elevation={3} sx={{
-            p: 4, borderRadius: 8,
-            bgcolor: 'background.paper', color: 'white'
-          }}>
+        <Container
+          maxWidth="sm"
+          sx={{
+            '@media (max-width: 600px)': {
+              bgcolor: 'transparent', // Transparent on mobile
+              border: 'none', // No border on mobile
+              p: 0, // Remove padding on mobile
+            },
+          }}
+        >
+          <Paper
+            elevation={0} // Remove shadow
+            sx={{
+              p: 4,
+              borderRadius: 8,
+              bgcolor: 'background.paper',
+              color: 'white',
+              '@media (max-width: 600px)': {
+                bgcolor: 'transparent', // Transparent on mobile
+                border: 'none', // No border on mobile
+                boxShadow: 'none', // Remove shadow on mobile
+              },
+            }}
+          >
             <Typography
-              variant="h4" align="center" gutterBottom
+              variant="h4"
+              align="center"
+              gutterBottom
               sx={{ fontWeight: 700, color: 'primary.main' }}
-            >Login</Typography>
+            >
+              Login
+            </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <Stack spacing={3}>
@@ -147,7 +172,7 @@ export const LoginForm: React.FC = () => {
               sx={{ mt: 2, textTransform: 'none' }}
               component={RouterLink} to="/signup"
             >
-              Still dont have an account? Sign Up
+              Still don't have an account? Sign Up
             </Button>
           </Paper>
         </Container>
