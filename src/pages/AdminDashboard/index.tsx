@@ -31,6 +31,8 @@ import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 //import handleAddShift from '../../components/ShiftManagment/AdminSettings';
 import UserDashboardTitle from '../../components/sections/UserPage';
 
+import { GlobalStyles } from '@mui/material';
+
 const AdminDashboard: React.FC = () => {
      
 
@@ -601,12 +603,22 @@ const getShiftStatus = (availableShiftId: number): string => {
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
+      <GlobalStyles styles={{
+        body: {
+          backgroundColor: '#18191c !important',
+          backgroundImage: 'none !important',
+        },
+        '#root': {
+          backgroundColor: '#18191c !important',
+        }
+      }} />
       <Box
         sx={{
-          backgroundColor: '#18191cf5', 
+          backgroundColor: '#18191c !important',
           minHeight: '100vh',
           py: 4,
           px: 2,
+          overflowX: 'hidden' // prevents horizontal scroll
         }}
       >
         <Container
@@ -614,8 +626,7 @@ const getShiftStatus = (availableShiftId: number): string => {
           sx={{ 
             px: { xs: 1, sm: 2, md: 3 },
             width: '100%',
-            maxWidth: '100%',
-            // Remove the backgroundColor property from Container to make it transparent
+            maxWidth: '100vw', // Prevent container from exceeding viewport width
           }}
         >
           <Navbar />
