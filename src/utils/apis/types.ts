@@ -24,22 +24,26 @@ export const CreateAvailableShiftSchema = z.object({
     date: z.coerce.date(),
     start: z.string().time(), 
     end: z.string().time(),
+    shift_slots_amount: z.coerce.number().int().min(1).optional(), // Added field
 }).strict();
 
 export const UpdateAvailableShiftSchema = z.object({
     date: z.coerce.date().optional(), 
     start: z.string().time().optional(), 
-    end: z.string().time().optional()
+    end: z.string().time().optional(),
+    shift_slots_amount: z.coerce.number().int().min(1).optional(), // Added field
 }).strict();
 
 export const AvailableShiftQuerySchema = z.object({
     shift_date: z.coerce.date().optional(), 
+    shift_start_date: z.coerce.date().optional(),
+    shift_end_date: z.coerce.date().optional(),
     shift_start_before: z.string().time().optional(), 
     shift_start_after: z.string().time().optional(), 
     shift_end_before: z.string().time().optional(), 
     shift_end_after: z.string().time().optional(),
-    shift_start_date: z.coerce.date().optional(), //edit
-    shift_end_date: z.coerce.date().optional(), //edit
+    shift_slots_amount: z.coerce.number().int().optional(), // Added field
+    shift_slots_taken: z.coerce.number().int().optional() // Added field
 }).strict();
 
 export type CreateAvailableShiftDTO = z.infer<typeof CreateAvailableShiftSchema>;

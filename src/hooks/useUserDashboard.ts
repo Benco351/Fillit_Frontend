@@ -87,6 +87,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
       date: format(new Date(), 'yyyy-MM-dd'),
       start: '09:00:00',
       end: '17:00:00',
+      shift_slots_amount: 1,
     });
 
   

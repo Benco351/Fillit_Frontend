@@ -8,6 +8,8 @@ interface Shift {
   date: string;
   start: string;
   end: string;
+  shift_slots_amount: number;
+  shift_slots_taken: number;
 }
 
 interface WeeklyScheduleGridProps {

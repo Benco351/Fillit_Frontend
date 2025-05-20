@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Container, Paper, Typography, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  MenuItem, IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, Menu, MenuItem as DropdownMenuItem,
+import {Box, Container, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+IconButton, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, MenuItem as DropdownMenuItem,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
@@ -11,17 +11,14 @@ import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/layout/Footer';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
-import { createRequestedShift, getRequestedShifts, updateRequestedShiftById, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
-import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
-
+import { createRequestedShift, getRequestedShifts, updateRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
+import { getAvailableShifts} from '../../utils/apis/availableShiftApis'; // Import the API functions
 import { createAssignedShift } from '../../utils/apis/assignedShiftApis';
-
 //Types
-import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
-import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
+import {AvailableShift, RequestedShift} from '../../components/CalendarFeatures/ShiftUtils';
+import {Employee, availableShiftsResponse, assignedShiftsResponse} from '../../components/CalendarFeatures/calendarStates';
 import {employees} from '../../components/CalendarFeatures/calendarStates';
-
-import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
+//import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import Navbar from '../../components/layout/userNavbar';
@@ -30,8 +27,8 @@ import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 //import AddShift from '../../components/ShiftManagment/AdminSettings';
 //import handleAddShift from '../../components/ShiftManagment/AdminSettings';
 import UserDashboardTitle from '../../components/sections/UserPage';
-
 import { GlobalStyles } from '@mui/material';
+
 
 const AdminDashboard: React.FC = () => {
      
@@ -41,12 +38,9 @@ const AdminDashboard: React.FC = () => {
   
     //These guys are in useUserDashboard
     const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
-      error, success, filter, setFilter, refreshAvailableShifts, refreshRequestedShifts, setSuccess, 
-      setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, setNewShift,
-      isAddShiftDialogOpen, setIsAddShiftDialogOpen, isRequestShiftDialogOpen, setIsRequestShiftDialogOpen,
-      isEditShiftDialogOpen, setIsEditShiftDialogOpen, selectedShift, setSelectedShift, newRequest, setNewRequest, editShift, setEditShift, shiftIdToFetch, setShiftIdToFetch,
-      fetchedShift, setFetchedShift, weekDays, loadingAvailable, loadingRequested, setLoadingAvailable, setLoadingRequested, goToNextWeek,
-      goToPreviousWeek
+      error, success, filter, setFilter, setSuccess, setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, 
+      setNewShift, isAddShiftDialogOpen, setIsAddShiftDialogOpen, isEditShiftDialogOpen, setIsEditShiftDialogOpen, 
+      editShift, setEditShift, shiftIdToFetch, setFetchedShift, weekDays, goToNextWeek, goToPreviousWeek
     } = useUserDashboard(currentEmployee);
 
   const navigate = useNavigate();
@@ -86,6 +80,8 @@ const AdminDashboard: React.FC = () => {
             date: shift.shift_date || shift.date,
             start: shift.shift_time_start || shift.start,
             end: shift.shift_time_end || shift.end,
+            shift_slots_amount: shift.shift_slots_amount || 0, // Add this line
+            shift_slots_taken: shift.shift_slots_taken, // Add this line
           }));
           setAvailableShifts(mappedAvailableShifts);
         }
@@ -105,8 +101,8 @@ const AdminDashboard: React.FC = () => {
         }
 
       } catch (err) {
-        console.error('Error fetching shifts:', err);
-        setError('Failed to fetch shifts. Please try again later.');
+        //console.error('Error fetching shifts:', err);
+        //setError('Failed to fetch shifts. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -136,7 +132,7 @@ const AdminDashboard: React.FC = () => {
         }
       } catch (err) {
         //console.error('Error fetching requested shifts:', err);
-        setError('Failed to fetch requested shifts. Please try again later.');
+        //setError('Failed to fetch requested shifts. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -188,11 +184,13 @@ const AdminDashboard: React.FC = () => {
 
       // Update available shifts
       if (availableResponse?.data) {
-        const mappedAvailableShifts = availableResponse.data.map((shift: { shift_id: any; id: any; shift_date: any; date: any; shift_time_start: any; start: any; shift_time_end: any; end: any; }) => ({
+        const mappedAvailableShifts = availableResponse.data.map((shift: { shift_id: any; id: any; shift_date: any; date: any; shift_time_start: any; start: any; shift_time_end: any; end: any; shift_slots_amount: any; shift_slots_taken:any; }) => ({
           id: shift.shift_id || shift.id,
           date: shift.shift_date || shift.date,
           start: shift.shift_time_start || shift.start,
           end: shift.shift_time_end || shift.end,
+          shift_slots_amount: shift.shift_slots_amount || 0, 
+          shift_slots_taken: shift.shift_slots_taken, 
         }));
         setAvailableShifts(mappedAvailableShifts);
       }
@@ -285,6 +283,7 @@ const AdminDashboard: React.FC = () => {
         date: new Date(newShift.date),
         start: newShift.start,
         end: newShift.end,
+        shift_slots_amount: newShift.shift_slots_amount // Add this line
       });
 
       console.log('API response:', apiResponse);
@@ -468,8 +467,6 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
-
-
 
   const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
     setEditShift(shift); // Set the selected shift for editing
@@ -668,28 +665,6 @@ const getShiftStatus = (availableShiftId: number): string => {
                   mb: 3,
                 }}
               >
-                {/* Left side: Employee selection */}
-                <TextField
-                  select
-                  label="Current Employee"
-                  value={currentEmployee.id}
-                  onChange={(e) => {
-                    const empId = Number(e.target.value);
-                    const employee = employees.find(emp => emp.id === empId);
-                    if (employee) setCurrentEmployee(employee);
-                  }}
-                  sx={{ 
-                    width: { xs: '100%', md: 200 },
-                    color: 'white',
-                    '& .MuiInputBase-input': { color: 'white' }
-                  }}
-                >
-                  {employees.map((employee) => (
-                    <MenuItem key={employee.id} value={employee.id}>
-                      {employee.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
 
                 {/* Center: Add Shift Button (moved from right) */}
                 <Button
@@ -892,19 +867,32 @@ const getShiftStatus = (availableShiftId: number): string => {
                                 <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                   {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                                 </Typography>
-                                <IconButton
-                                  size="small"
-                                  sx={{
-                                    position: 'absolute',
-                                    top: 2,
-                                    right: 2,
-                                    color: 'white',
-                                    padding: { xs: 0.5, sm: 1 }
-                                  }}
-                                  onClick={() => handleOpenEditDialogFromCalendar(shift)}
-                                >
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
+                                <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', gap: 1 }}>
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      color: 'white',
+                                      padding: { xs: 0.5, sm: 1 }
+                                    }}
+                                    onClick={() => {
+                                      alert(
+                                        `Slots taken: ${shift.shift_slots_taken}/${shift.shift_slots_amount}`
+                                      );
+                                    }}
+                                  >
+                                    <InfoIcon fontSize="small" />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      color: 'white',
+                                      padding: { xs: 0.5, sm: 1 }
+                                    }}
+                                    onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
                               </Box>
                               {/* Render a separate orange bar for each pending request */}
                               {pendingRequests.map((pendingRequest, i) => {
@@ -989,56 +977,7 @@ const getShiftStatus = (availableShiftId: number): string => {
             </Box>
           </Box>
 
-          {/* Get Shift by ID Section - Moved below calendar */}
-          <Box
-            sx={{
-              mb: 4,
-              p: { xs: 2, sm: 3 },
-              backgroundColor: '#0a5e0f',
-              borderRadius: 0,
-              border: '2px solid #e0e0e0',
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ 
-                color: 'white', 
-                mb: 2,
-                fontSize: { xs: '1rem', sm: '1.25rem' }
-              }}
-            >
-              Get Available Shift by ID
-            </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 2, 
-              alignItems: { xs: 'stretch', sm: 'center' }, 
-              mb: 2 
-            }}>
-              <TextField
-                label="Shift ID"
-                type="number"
-                value={shiftIdToFetch}
-                onChange={(e) => setShiftIdToFetch(Number(e.target.value) || '')}
-                sx={{ 
-                  width: { xs: '100%', sm: 200 },
-                  backgroundColor: 'white'
-                }}
-              />
-              <Button
-                variant="contained"
-                onClick={handleGetShiftById}
-                disabled={loading}
-                sx={{ 
-                  minWidth: { xs: '100%', sm: 120 }
-                }}
-              >
-                {loading ? <CircularProgress size={24} /> : 'Fetch Shift'}
-              </Button>
-            </Box>
-          </Box>
-
+        
           {/* Add Shift Dialog */}
           <Dialog open={isAddShiftDialogOpen} onClose={() => setIsAddShiftDialogOpen(false)} maxWidth="sm" fullWidth>
             <DialogTitle>Add Available Shift</DialogTitle>
@@ -1060,7 +999,7 @@ const getShiftStatus = (availableShiftId: number): string => {
                   />
                 </LocalizationProvider>
                 
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                   <Box sx={{ flex: 1 }}>
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
                       <TimePicker
@@ -1096,6 +1035,23 @@ const getShiftStatus = (availableShiftId: number): string => {
                     </LocalizationProvider>
                   </Box>
                 </Box>
+
+                {/* Add this new TextField for shift slots */}
+                <TextField
+                  fullWidth
+                  label="Number of Slots"
+                  type="number"
+                  inputProps={{ min: 1 }}
+                  value={newShift.shift_slots_amount || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNewShift(prev => ({
+                      ...prev,
+                      shift_slots_amount: parseInt(value, 10)
+                    }));
+                  }}
+                  sx={{ mt: 2 }}
+                />
               </Box>
             </DialogContent>
             <DialogActions>
