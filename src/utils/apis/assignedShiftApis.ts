@@ -39,16 +39,22 @@ export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // 
 
 export const deleteAssignedShiftById = async (id: number) => {
     try {
-        const response = await instance.delete(`/assigned-shifts/${id}`);
+        console.log('Attempting to delete assigned shift with ID:', id);
 
-        if (!response.data.data) {
-            throw new Error('No data returned from the server');
+        if (!id || isNaN(id)) {
+            throw new Error('Invalid shift ID provided');
         }
 
-        return response.data; // Return the response data
-    } catch (error) {
-        console.error('Error deleting assigned shift by ID:', error);
-        throw error; // Re-throw the error for further handling
+        // Use the route that matches your backend (likely this one)
+        const response = await instance.delete(`/assigned-shifts/${id}`);
+
+        if (response.status === 200 || response.status === 204) {
+            return true;
+        }
+        throw new Error('Failed to delete assigned shift');
+    } catch (error: any) {
+        console.error('Error in deleteAssignedShiftById:', error.response || error);
+        throw new Error(error.response?.data?.message || error.message || 'Failed to delete assigned shift');
     }
 };
 

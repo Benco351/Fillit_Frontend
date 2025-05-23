@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/layout/Footer';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift, getRequestedShifts, updateRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
-import { getAvailableShifts} from '../../utils/apis/availableShiftApis'; // Import the API functions
+import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
 import { createAssignedShift, deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 //Types
 import {AvailableShift, RequestedShift} from '../../components/CalendarFeatures/ShiftUtils';
@@ -45,6 +45,10 @@ const AdminDashboard: React.FC = () => {
   const [denyDialogOpen, setDenyDialogOpen] = useState(false);
   const [denyRequestId, setDenyRequestId] = useState<number | null>(null);
 
+  // Add these state variables at the top with other states
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [selectedShiftInfo, setSelectedShiftInfo] = useState<any>(null);
+
   // open deny dialog
   const handleOpenDenyDialog = (requestId: number) => {
     setDenyRequestId(requestId);
@@ -62,6 +66,12 @@ const AdminDashboard: React.FC = () => {
   const handleCancelDeny = () => {
     setDenyDialogOpen(false);
     setDenyRequestId(null);
+  };
+
+  // Add this function before the return statement
+  const handleOpenInfoDialog = (shift: any) => {
+    setSelectedShiftInfo(shift);
+    setInfoDialogOpen(true);
   };
 
   // Fetch all shifts (available, requested, and assigned) on component mount
@@ -95,6 +105,20 @@ const AdminDashboard: React.FC = () => {
             status: shift.status || 'pending',
           }));
           setRequestedShifts(mappedRequestedShifts);
+        }
+
+        // Fetch assigned shifts
+        const assignedShiftsResponse = await getAssignedShifts();
+        if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
+          const mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
+            id: shift.assigned_id, // Use assigned_id from backend
+            employeeId: shift.assigned_employee_id,
+            availableShiftId: shift.assigned_shift_id,
+            // Optionally, include more fields if needed
+            availableShift: shift.availableShift,
+            employee: shift.employee,
+          }));
+          setAssignedShifts(mappedAssignedShifts);
         }
 
       } catch (err) {
@@ -174,9 +198,10 @@ const AdminDashboard: React.FC = () => {
   // Update the refreshDashboard function to ensure proper merging of requested shifts
   const refreshDashboard = async () => {
     try {
-      const [availableResponse, requestedResponse] = await Promise.all([
+      const [availableResponse, requestedResponse, assignedResponse] = await Promise.all([
         getAvailableShifts(),
-        getRequestedShifts()
+        getRequestedShifts(),
+        getAssignedShifts()
       ]);
 
       // Update available shifts
@@ -210,6 +235,19 @@ const AdminDashboard: React.FC = () => {
           });
           return Array.from(existingShiftsMap.values());
         });
+      }
+
+      // Update assigned shifts
+      if (assignedResponse?.data) {
+        const mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
+          id: shift.assigned_id, // Use assigned_id from backend
+          employeeId: shift.assigned_employee_id,
+          availableShiftId: shift.assigned_shift_id,
+          // Optionally, include more fields if needed
+          availableShift: shift.availableShift,
+          employee: shift.employee,
+        }));
+        setAssignedShifts(mappedAssignedShifts);
       }
     } catch (err) {
       console.error('Error refreshing dashboard:', err);
@@ -365,22 +403,38 @@ const AdminDashboard: React.FC = () => {
   };
 
 
+  // Function that calls delete assigned shift by ID
   const handleDeleteAssignedShift = async (assignedShiftId: number) => {
     setLoading(true);
     try {
-      await deleteAssignedShiftById(assignedShiftId);
-  
-      
-      setAssignedShifts(prev =>
-        prev.filter(shift => shift.id !== assignedShiftId)
-      );
-  
-      setSuccess('Assigned shift deleted successfully');
-    } catch (err) {
-      console.error('Error deleting assigned shift:', err);
-      setError('Failed to delete assigned shift. Please try again.');
+        console.log('Attempting to delete assigned shift:', assignedShiftId);
+        
+        if (!assignedShiftId) {
+            throw new Error('No shift ID provided');
+        }
+
+        // Add validation to check if shift exists in local state
+        const shiftExists = assignedShifts.some(shift => shift.id === assignedShiftId);
+        if (!shiftExists) {
+            throw new Error(`Assigned shift with ID ${assignedShiftId} not found in local state`);
+        }
+
+        await deleteAssignedShiftById(assignedShiftId);
+        
+        // Update local state
+        setAssignedShifts(prev => prev.filter(shift => shift.id !== assignedShiftId));
+        
+        // Close dialog and refresh data
+        setInfoDialogOpen(false);
+        await refreshDashboard();
+
+        setSuccess('Assigned shift deleted successfully');
+    } catch (err: any) {
+        console.error('Error deleting assigned shift:', err);
+        setError(err.message || 'Failed to delete assigned shift. Please try again.');
+        // Keep the dialog open if there's an error
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
   
@@ -437,6 +491,15 @@ const AdminDashboard: React.FC = () => {
         employeeId: requestedShift.employeeId,
         shiftSlotId: requestedShift.availableShiftId
       });
+
+      // Increment shift_slots_taken for the assigned shift
+      setAvailableShifts(prev =>
+        prev.map(shift =>
+          shift.id === requestedShift.availableShiftId
+            ? { ...shift, shift_slots_taken: (shift.shift_slots_taken || 0) + 1 }
+            : shift
+        )
+      );
 
       // Call the API to update the requested shift status to "approved"
       await updateRequestedShiftById(requestedShiftId, { status: 'approved' });
@@ -498,6 +561,15 @@ const AdminDashboard: React.FC = () => {
         shiftSlotId: requestedShift.availableShiftId
       });
 
+      // Increment shift_slots_taken for the assigned shift
+      setAvailableShifts(prev =>
+        prev.map(shift =>
+          shift.id === requestedShift.availableShiftId
+            ? { ...shift, shift_slots_taken: (shift.shift_slots_taken || 0) + 1 }
+            : shift
+        )
+      );
+
       // Then update the request status to approved
       await updateRequestedShiftById(requestedShift.id, { status: 'approved' });
 
@@ -518,6 +590,45 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+
+  const handleRevokeAssignedShift = async (requestedShift: RequestedShift) => {
+    setLoading(true);
+    try {
+      const assignedShift = assignedShifts.find(
+        s => s.employeeId === requestedShift.employeeId &&
+             s.availableShiftId === requestedShift.availableShiftId
+      );
+  
+      if (!assignedShift) {
+        throw new Error('Assigned shift not found');
+      }
+  
+      await deleteAssignedShiftById(assignedShift.id);
+  
+      setAssignedShifts(prev =>
+        prev.filter(s => s.id !== assignedShift.id)
+      );
+  
+      await updateRequestedShiftById(requestedShift.id, { status: 'pending' });
+  
+      setRequestedShifts(prev =>
+        prev.map(s =>
+          s.id === requestedShift.id ? { ...s, status: 'pending' } : s
+        )
+      );
+  
+      setSuccess('Shift assignment revoked');
+    } catch (err) {
+      console.error('Failed to revoke assigned shift:', err);
+      setError('Failed to revoke shift. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+    
+
+
 
 // Enhanced handleGetShiftById function with better debugging
 const handleGetShiftById = async () => {
@@ -589,25 +700,22 @@ const getShiftStatus = (availableShiftId: number): string => {
 };
 
 
-  // Filtered shifts based on the selected filter
-  const getFilteredShifts = () => {
-    switch (filter) {
-      case 'requested':
-        return availableShifts.filter(shift =>
-          requestedShifts.some(req => 
-            req.availableShiftId === shift.id && req.status === 'pending'
-          )
-        );
-      case 'accepted':
-        return availableShifts.filter(shift =>
-          requestedShifts.some(req => 
-            req.availableShiftId === shift.id && req.status === 'approved'
-          ) || assignedShifts.some(assign => assign.availableShiftId === shift.id)
-        );
-      default:
-        return availableShifts;
+// Updated getFilteredShifts function
+const getFilteredShifts = () => {
+  return availableShifts.filter(shift => {
+    // If shift_slots_amount is defined and shift is full, hide it
+    if (
+      typeof shift.shift_slots_amount === 'number' &&
+      typeof shift.shift_slots_taken === 'number' &&
+      shift.shift_slots_taken >= shift.shift_slots_amount
+    ) {
+      return false;
     }
-  };
+    // Otherwise, always show the shift
+    return true;
+  });
+};
+
 
   // #093039 - color for user
   //sidescroll
@@ -891,11 +999,7 @@ const getShiftStatus = (availableShiftId: number): string => {
                                       color: 'white',
                                       padding: { xs: 0.5, sm: 1 }
                                     }}
-                                    onClick={() => {
-                                      alert(
-                                        `Slots taken: ${shift.shift_slots_taken}/${shift.shift_slots_amount}`
-                                      );
-                                    }}
+                                    onClick={() => handleOpenInfoDialog(shift)}
                                   >
                                     <InfoIcon fontSize="small" />
                                   </IconButton>
@@ -1193,6 +1297,65 @@ const getShiftStatus = (availableShiftId: number): string => {
             </DialogActions>
           </Dialog>
 
+          {/* Shift Info Dialog */}
+          <Dialog 
+            open={infoDialogOpen} 
+            onClose={() => setInfoDialogOpen(false)}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle>Shift Information</DialogTitle>
+            <DialogContent>
+              {selectedShiftInfo && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body1" gutterBottom>
+                    Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount || 'unlimited'}
+                  </Typography>
+                  <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                    Assigned Users:
+                  </Typography>
+                  {assignedShifts
+                    .filter(assign => assign.availableShiftId === selectedShiftInfo.id)
+                    .map(assign => {
+                      const user = employees.find(emp => emp.id === assign.employeeId);
+                      return (
+                        <Box 
+                          key={assign.id} 
+                          sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            mb: 1,
+                            p: 1,
+                            borderRadius: 1,
+                            backgroundColor: 'rgba(0, 194, 140, 0.1)'
+                          }}
+                        >
+                          <Typography variant="body2">
+                            {user?.name || 'Unknown User'}
+                          </Typography>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              handleDeleteAssignedShift(assign.id);
+                              setInfoDialogOpen(false);
+                            }}
+                            sx={{ minWidth: 0 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </Button>
+                        </Box>
+                      );
+                    })}
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setInfoDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+
           {/* Snackbars for notifications */}
           <Snackbar
             open={!!error}
@@ -1217,6 +1380,7 @@ const getShiftStatus = (availableShiftId: number): string => {
           </Snackbar>
         </Container>
       </Box>
+      
       <Footer /> {/* Add Footer at the bottom */}
     </ThemeProvider>
   );
