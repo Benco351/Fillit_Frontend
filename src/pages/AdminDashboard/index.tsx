@@ -4,16 +4,15 @@ IconButton, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, MenuI
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
-import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
+import { format, addDays, parseISO, isWithinInterval } from 'date-fns';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon, Info as InfoIcon } from '@mui/icons-material';
 import { MainTheme } from '../../assets/themes/themes';
-import LogoOnly from '../../components/common/Logo';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/layout/Footer';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift, getRequestedShifts, updateRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { getAvailableShifts} from '../../utils/apis/availableShiftApis'; // Import the API functions
-import { createAssignedShift } from '../../utils/apis/assignedShiftApis';
+import { createAssignedShift, deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 //Types
 import {AvailableShift, RequestedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, assignedShiftsResponse} from '../../components/CalendarFeatures/calendarStates';
@@ -32,7 +31,6 @@ import { GlobalStyles } from '@mui/material';
 
 const AdminDashboard: React.FC = () => {
      
-
       // Current user 
     const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
   
@@ -43,12 +41,11 @@ const AdminDashboard: React.FC = () => {
       editShift, setEditShift, shiftIdToFetch, setFetchedShift, weekDays, goToNextWeek, goToPreviousWeek
     } = useUserDashboard(currentEmployee);
 
-  const navigate = useNavigate();
-
   // State for deny confirmation dialog
   const [denyDialogOpen, setDenyDialogOpen] = useState(false);
   const [denyRequestId, setDenyRequestId] = useState<number | null>(null);
 
+  // open deny dialog
   const handleOpenDenyDialog = (requestId: number) => {
     setDenyRequestId(requestId);
     setDenyDialogOpen(true);
@@ -326,7 +323,6 @@ const AdminDashboard: React.FC = () => {
   };
 
 
-
   const handleEditShift = async () => {
     if (!editShift) return;
 
@@ -367,6 +363,27 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+
+  const handleDeleteAssignedShift = async (assignedShiftId: number) => {
+    setLoading(true);
+    try {
+      await deleteAssignedShiftById(assignedShiftId);
+  
+      // Update the local state
+      setAssignedShifts(prev =>
+        prev.filter(shift => shift.id !== assignedShiftId)
+      );
+  
+      setSuccess('Assigned shift deleted successfully');
+    } catch (err) {
+      console.error('Error deleting assigned shift:', err);
+      setError('Failed to delete assigned shift. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   const handleRequestShiftFromEditDialog = async () => {
     if (!editShift) return;
