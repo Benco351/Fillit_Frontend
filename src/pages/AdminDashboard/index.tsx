@@ -370,7 +370,7 @@ const AdminDashboard: React.FC = () => {
     try {
       await deleteAssignedShiftById(assignedShiftId);
   
-      // Update the local state
+      
       setAssignedShifts(prev =>
         prev.filter(shift => shift.id !== assignedShiftId)
       );
