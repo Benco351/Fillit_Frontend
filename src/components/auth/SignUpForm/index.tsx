@@ -81,6 +81,9 @@ const SignUpForm: React.FC = () => {
           },
         });
 
+        // Sleep for 3 seconds
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
         /* persist in RDS */
         await instance.post('/auth/sign-up', {
           name:  data.name,
@@ -89,6 +92,18 @@ const SignUpForm: React.FC = () => {
           password: data.password,
         });
 
+        // Add user to "Users" group via backend
+        try {
+          await instance.post('/auth/add-to-group', {
+            email: data.email,
+            group: 'Users',
+          });
+        } catch (groupErr) {
+          // Optionally handle group assignment error
+          setAuthError('Sign up succeeded, but failed to assign group.');
+          console.error('Group assignment error', groupErr);
+        }
+ 
         setPendingEmail(data.email);
 
         if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
