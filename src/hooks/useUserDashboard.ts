@@ -7,6 +7,8 @@ import { format, addDays, startOfWeek } from 'date-fns';
 import { request } from 'http';
 import { se } from 'date-fns/locale';
 
+const POLLING_INTERVAL = 7000; // Poll every 7 seconds
+
 export const useUserDashboard = (currentEmployee: Employee) => {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
     startOfWeek(new Date(), { weekStartsOn: 1 })
@@ -189,6 +191,14 @@ export const useUserDashboard = (currentEmployee: Employee) => {
 
   useEffect(() => {
     fetchShiftsForWeek();
+  }, [fetchShiftsForWeek]);
+
+  useEffect(() => {
+    // Set up polling for available shifts
+    const interval = setInterval(fetchShiftsForWeek, POLLING_INTERVAL);
+
+    // Cleanup on unmount
+    return () => clearInterval(interval);
   }, [fetchShiftsForWeek]);
 
   

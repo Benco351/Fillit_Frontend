@@ -193,7 +193,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Update the polling interval to 15 seconds
-  const POLLING_INTERVAL = 15000; // Poll every 15 seconds instead of 10
+  const POLLING_INTERVAL = 7000; // Poll every 15 seconds instead of 10
 
   // Update the refreshDashboard function to ensure proper merging of requested shifts
   const refreshDashboard = async () => {
