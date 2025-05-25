@@ -3,7 +3,7 @@ import { CreateEmployeeDTO, UpdateEmployeeDTO, EmployeeQueryDTO } from './types'
 
 export const updateEmployeeById = async (id: number, data: UpdateEmployeeDTO) => {
     try {
-        const response = await instance.put(`/employees/${id}`, data);
+        const response = await instance.put(`/api/employees/${id}`, data);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
@@ -18,7 +18,7 @@ export const updateEmployeeById = async (id: number, data: UpdateEmployeeDTO) =>
 
 export const getEmployees = async (params: EmployeeQueryDTO = {}) => {
     try {
-        const response = await instance.get('/employees', { params });
+        const response = await instance.get('/api/employees', { params });
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
@@ -33,7 +33,7 @@ export const getEmployees = async (params: EmployeeQueryDTO = {}) => {
 
 export const getEmployeeById = async (id: number) => {
     try {
-        const response = await instance.get(`/employees/${id}`);
+        const response = await instance.get(`/api/employees/${id}`);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
@@ -48,7 +48,7 @@ export const getEmployeeById = async (id: number) => {
 
 export const createEmployee = async (data: CreateEmployeeDTO) => {
     try {
-        const response = await instance.post('/employees', data);
+        const response = await instance.post('/api/employees', data);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');
@@ -63,7 +63,7 @@ export const createEmployee = async (data: CreateEmployeeDTO) => {
 
 export const deleteEmployeeById = async (id: number) => {
     try {
-        const response = await instance.delete(`/employees/${id}`);
+        const response = await instance.delete(`/api/employees/${id}`);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');

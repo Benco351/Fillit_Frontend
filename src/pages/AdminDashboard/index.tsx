@@ -26,6 +26,7 @@ import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 //import AddShift from '../../components/ShiftManagment/AdminSettings';
 //import handleAddShift from '../../components/ShiftManagment/AdminSettings';
 import UserDashboardTitle from '../../components/sections/UserPage';
+import AIChatPopup from '../../components/aiChat';
 import { GlobalStyles } from '@mui/material';
 
 
@@ -724,16 +725,8 @@ const getFilteredShifts = () => {
 
   return (
     <ThemeProvider theme={MainTheme}>
+      
       <CssBaseline />
-      <GlobalStyles styles={{
-        body: {
-          backgroundColor: '#18191c !important',
-          backgroundImage: 'none !important',
-        },
-        '#root': {
-          backgroundColor: '#18191c !important',
-        }
-      }} />
       <Box
         sx={{
           backgroundColor: '#18191c !important',

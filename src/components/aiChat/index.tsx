@@ -14,6 +14,7 @@ import {
   Close as CloseIcon, 
   Send as SendIcon 
 } from '@mui/icons-material';
+import { fetchAuthSession } from '@aws-amplify/auth';
 
 // Define types for our messages
 interface Message {
@@ -51,20 +52,35 @@ export default function MTAChatPopup(): JSX.Element {
     setIsLoading(true);
     
     try {
-      const response = await fetch("http://localhost:5000/api/chat", {
+      // Fetch the ID token
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      const response = await fetch(`${process.env.REACT_APP_OPEN_AI_URL}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
         },
-        body: JSON.stringify({ user_prompt: userMessage.text })
+        body: JSON.stringify({ 
+          user_prompt: userMessage.text,
+          jwt_token: idToken // Add the token to the request body
+        })
       });
       
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
-      const data: ApiResponse = await response.json();
-      
+
+      // Parse the Lambda proxy integration response
+      const lambdaResult = await response.json();
+      let data: ApiResponse;
+      if (typeof lambdaResult.body === 'string') {
+        data = JSON.parse(lambdaResult.body);
+      } else {
+        data = lambdaResult.body;
+      }
+
       // Add AI response
       setMessages(prev => [...prev, { sender: 'AI', text: data.ai_reply }]);
     } catch (error) {

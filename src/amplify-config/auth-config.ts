@@ -22,13 +22,5 @@ Amplify.configure({
       userPoolClientId:     getEnv('REACT_APP_CLIENT_ID'),
       authenticationFlowType: 'USER_PASSWORD_AUTH',
     },
-  },
-  API: {
-    endpoints: [
-      {
-        name:     'FillitAPI',
-        endpoint: getEnv('REACT_APP_API_URL'),
-      },
-    ],
-  },
+  }
 }as any);
