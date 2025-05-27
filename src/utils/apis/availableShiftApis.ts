@@ -1,4 +1,4 @@
-import { instance } from './apiconfig'; // Adjust the import path as necessary
+import { api } from './apiconfig'; // Adjust the import path as necessary
 import {
   CreateAvailableShiftDTO,
   UpdateAvailableShiftDTO,
@@ -7,7 +7,7 @@ import {
 
 export const createAvailableShift = async (data: CreateAvailableShiftDTO): Promise<any> => {
   try {
-    const response = await instance.post('/api/available-shifts', data);
+    const response = await api.post('/api/available-shifts', data);
     
     if (!response.data) {
       throw new Error('No data returned from the server');
@@ -25,7 +25,7 @@ export const createAvailableShift = async (data: CreateAvailableShiftDTO): Promi
 
 export const getAvailableShiftById = async (id: number) => {
   try {
-    const response = await instance.get(`/api/available-shifts/${id}`);
+    const response = await api.get(`/api/available-shifts/${id}`);
     
     if (!response.data.data) {
       throw new Error('No data returned from the server');
@@ -40,7 +40,7 @@ export const getAvailableShiftById = async (id: number) => {
 
 export const getAvailableShifts = async (params: AvailableShiftQueryDTO = {}) => {
   try {
-    const response = await instance.get('/api/available-shifts', { params });
+    const response = await api.get('/api/available-shifts', { params });
   
     if (!response.data.data) {
       throw new Error('No data returned from the server');
@@ -55,7 +55,7 @@ export const getAvailableShifts = async (params: AvailableShiftQueryDTO = {}) =>
 
 export const deleteAvailableShiftById = async (id: number) => {
   try {
-    const response = await instance.delete(`/api/available-shifts/${id}`);
+    const response = await api.delete(`/api/available-shifts/${id}`);
     console.log('Delete response:', response.data);
     return response.data; 
   } catch (error) {
@@ -66,7 +66,7 @@ export const deleteAvailableShiftById = async (id: number) => {
 
 export const updateAvailableShiftById = async (id: number, data: UpdateAvailableShiftDTO) => {
   try {
-    const response = await instance.put(`/api/available-shifts/${id}`, data);
+    const response = await api.put(`/api/available-shifts/${id}`, data);
   
     if (!response.data.data) {
       throw new Error('No data returned from the server');
@@ -85,7 +85,7 @@ interface GetAssignedShiftsParams {
 
 export const getAssignedShifts = async (params: GetAssignedShiftsParams = {}) => {
     try {
-        const response = await instance.get('/api/assigned-shifts', { params });
+        const response = await api.get('/api/assigned-shifts', { params });
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');

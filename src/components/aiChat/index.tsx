@@ -1,332 +1,188 @@
-import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
-import { 
-  Box, 
-  Button, 
-  IconButton, 
-  InputBase, 
-  Paper, 
-  Typography, 
-  Fade,
-  CircularProgress
+// src/components/ai/ChatPopup.tsx
+// -----------------------------------------------------------------------------
+// Brand-green AI chat popup.  Uses the primary palette for FAB, header bar,
+// and user-message bubble.  Requires: MUI v5, @mui/icons-material, aiLambda.
+// -----------------------------------------------------------------------------
+
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Box,
+  Fab,
+  Paper,
+  IconButton,
+  Typography,
+  TextField,
+  CircularProgress,
+  Divider,
+  useTheme,
 } from '@mui/material';
-import { 
-  Chat as ChatIcon, 
-  Close as CloseIcon, 
-  Send as SendIcon 
-} from '@mui/icons-material';
-import { fetchAuthSession } from '@aws-amplify/auth';
+import ChatIcon from '@mui/icons-material/Chat';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
+import { aiLambda } from '../../utils/apis/apiconfig';
 
-// Define types for our messages
-interface Message {
-  sender: string;
-  text: string;
-  isError?: boolean;
-}
+type Message = { from: 'user' | 'ai'; text: string };
 
-// Define type for API response
-interface ApiResponse {
-  ai_reply: string;
-}
+export default function ChatPopup() {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [msgs, setMsgs] = useState<Message[]>([]);
+  const listRef = useRef<HTMLDivElement>(null);
 
-export default function MTAChatPopup(): JSX.Element {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const chatBoxRef = useRef<HTMLDivElement | null>(null);
-  
-  // Auto-scroll to bottom when new messages come in
+  /* auto-scroll */
   useEffect(() => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    }
-  }, [messages]);
+    listRef.current?.scrollTo({
+      top: listRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
+  }, [msgs]);
 
-  const handleSendMessage = async (): Promise<void> => {
-    if (!inputValue.trim()) return;
-    
-    // Add user message
-    const userMessage: Message = { sender: 'You', text: inputValue.trim() };
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsLoading(true);
-    
+  /* close on Esc */
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
+
+  /* send prompt */
+  const send = async () => {
+    if (!input.trim()) return;
+    const prompt = input;
+    setInput('');
+    setMsgs(m => [...m, { from: 'user', text: prompt }]);
+    setLoading(true);
     try {
-      // Fetch the ID token
-      const session = await fetchAuthSession();
-      const idToken = session.tokens?.idToken?.toString();
-
-      const response = await fetch(`${process.env.REACT_APP_OPEN_AI_URL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        },
-        body: JSON.stringify({ 
-          user_prompt: userMessage.text,
-          jwt_token: idToken // Add the token to the request body
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      // Parse the Lambda proxy integration response
-      const lambdaResult = await response.json();
-      let data: ApiResponse;
-      if (typeof lambdaResult.body === 'string') {
-        data = JSON.parse(lambdaResult.body);
-      } else {
-        data = lambdaResult.body;
-      }
-
-      // Add AI response
-      setMessages(prev => [...prev, { sender: 'AI', text: data.ai_reply }]);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      setMessages(prev => [...prev, { 
-        sender: 'Error', 
-        text: error instanceof Error ? error.message : 'Unknown error occurred', 
-        isError: true 
-      }]);
+      const { data } = await aiLambda.post('/', { user_prompt: prompt });
+      setMsgs(m => [...m, { from: 'ai', text: data.reply }]);
+    } catch {
+      setMsgs(m => [...m, { from: 'ai', text: 'Sorry, something went wrong 🤖' }]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
-  };
-
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    setInputValue(e.target.value);
-  };
-
-  const handleCloseChat = (): void => {
-    // Only close when the user explicitly clicks the close button
-    setIsOpen(false);
-  };
-
-  const handleFormSubmit = (e: React.FormEvent): void => {
-    e.preventDefault(); // Prevent form submission
-    handleSendMessage();
-  };
-
+  /* UI ------------------------------------------------------------------- */
   return (
     <>
-      {/* Chat button that shows in bottom-right corner */}
-      <Box 
-        sx={{ 
-          position: 'fixed', 
-          bottom: 16, 
-          right: 16, 
-          zIndex: 1050,
-          display: isOpen ? 'none' : 'block'
-        }}
-      >
-        <Button
-          variant="contained"
+      {!open && (
+        <Fab
           color="primary"
-          onClick={() => setIsOpen(true)}
-          sx={{ 
-            borderRadius: '50%', 
-            minWidth: 56, 
-            height: 56, 
-            p: 0,
-            boxShadow: 3
-          }}
-          aria-label="Open chat"
+          onClick={() => setOpen(true)}
+          sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1500 }}
         >
           <ChatIcon />
-        </Button>
-      </Box>
+        </Fab>
+      )}
 
-      {/* Chat popup window */}
-      <Fade in={isOpen} >
+      {open && (
         <Paper
-        
-          elevation={6}
+          elevation={10}
           sx={{
-            
             position: 'fixed',
-            bottom: 16,
-            right: 16,
-            width: { xs: 'calc(100% - 32px)', sm: 320 },
-            maxWidth: 400,
-            zIndex: 1050,
-            overflow: 'hidden',
-            display: isOpen ? 'flex' : 'none',
+            bottom: 24,
+            right: 24,
+            width: { xs: 320, sm: 380 },
+            height: 480,
+            display: 'flex',
             flexDirection: 'column',
-            borderRadius: 2
+            borderRadius: 3,
+            overflow: 'hidden',
+            zIndex: 2000,
           }}
         >
-          {/* Chat header */}
+          {/* header bar in primary color */}
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
               bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              p: 2
+              color: 'common.white',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.5,
+              py: 1,
             }}
           >
-            <Typography variant="h6" fontWeight="medium">
-              AI Assistant
+            <ChatIcon />
+            <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
+              FillIt AI Assistant
             </Typography>
-            <IconButton
-              onClick={handleCloseChat}
-              size="small"
-              color="inherit"
-              aria-label="Close chat"
-            >
-              <CloseIcon fontSize="small" />
+            <IconButton size="small" onClick={() => setOpen(false)} sx={{ color: 'inherit' }}>
+              <CloseIcon />
             </IconButton>
           </Box>
+          <Divider />
 
-          {/* Messages area */}
+          {/* messages list */}
           <Box
-            ref={chatBoxRef}
+            ref={listRef}
             sx={{
-              height: { xs: 256, md: 320 },
-              p: 2,
+              flex: 1,
+              px: 2,
+              py: 1,
               overflowY: 'auto',
-              bgcolor: 'grey.50',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1.5
+              '&::-webkit-scrollbar': { width: 4 },
+              '&::-webkit-scrollbar-thumb': {
+                bgcolor: theme.palette.primary.main,
+                borderRadius: 2,
+              },
             }}
           >
-            {messages.length === 0 ? (
-              <Box sx={{ 
-                textAlign: 'center', 
-                color: 'text.secondary',
-                py: 6
-              }}>
-                Start a conversation
-              </Box>
-            ) : (
-              messages.map((msg, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    maxWidth: '80%',
-                    p: 1.5,
-                    borderRadius: 2,
-                    wordBreak: 'break-word',
-                    ...(msg.sender === 'You' 
-                      ? { 
-                          ml: 'auto', 
-                          bgcolor: 'primary.main', 
-                          color: 'primary.contrastText' 
-                        } 
-                      : msg.isError 
-                        ? { 
-                            bgcolor: 'error.light', 
-                            color: 'error.dark' 
-                          } 
-                        : { 
-                            bgcolor: 'grey.200', 
-                            color: 'text.primary' 
-                          }
-                    )
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    component="div"
-                    sx={{
-                      fontWeight: 'bold',
-                      mb: 0.5,
-                      ...(msg.sender === 'You'
-                        ? { color: 'primary.contrastText' }
-                        : msg.isError
-                          ? { color: 'error.dark' }
-                          : { color: 'text.secondary' }
-                      )
-                    }}
-                  >
-                    {msg.sender}
-                  </Typography>
-                  <Typography variant="body2">
-                    {msg.text}
-                  </Typography>
-                </Box>
-              ))
-            )}
-            {isLoading && (
+            {msgs.map((m, i) => (
               <Box
+                key={i}
                 sx={{
-                  maxWidth: '80%',
-                  p: 1.5,
-                  borderRadius: 2,
-                  wordBreak: 'break-word',
-                  bgcolor: 'grey.200',
-                  color: 'text.primary',
+                  my: 1,
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
+                  justifyContent: m.from === 'user' ? 'flex-end' : 'flex-start',
                 }}
               >
-                <Typography variant="subtitle2" component="div">
-                  AI
-                </Typography>
-                <CircularProgress size={16} color="inherit" />
+                <Box
+                  sx={{
+                    px: 1.5,
+                    py: 1,
+                    maxWidth: '75%',
+                    bgcolor: m.from === 'user' ? 'primary.main' : 'grey.800',
+                    color: 'common.white',
+                    borderRadius: 2,
+                    fontSize: '0.875rem',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {m.text}
+                </Box>
+              </Box>
+            ))}
+
+            {loading && (
+              <Box sx={{ display: 'flex', mt: 1 }}>
+                <CircularProgress size={20} color="inherit" />
               </Box>
             )}
           </Box>
 
-          {/* Input area */}
-          <Box 
-            sx={{ 
-              p: 2, 
-              borderTop: 1, 
-              borderColor: 'divider',
-              display: 'flex',
-              gap: 1
-            }}
-          >
-            <Paper
-              component="form"
-              variant="outlined"
-              onSubmit={handleFormSubmit} // Add onSubmit handler
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                flex: 1,
-                pl: 2,
-                pr: 1,
-                py: 0.5
-              }}
-            >
-              <InputBase
-                sx={{ flex: 1 }}
-                placeholder="Type your message..."
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-                autoFocus
-                inputProps={{ 'aria-label': 'message input' }}
-              />
-            </Paper>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputValue.trim()}
-              endIcon={<SendIcon />}
+          {/* input row */}
+          <Divider />
+          <Box sx={{ p: 1.5, display: 'flex', gap: 1 }}>
+            <TextField
+              fullWidth
               size="small"
-              sx={{ px: 2 }}
+              placeholder="Type a message…"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && send()}
+            />
+            <IconButton
+              sx={{ bgcolor: 'primary.main', color: 'common.white', '&:hover': { bgcolor: 'primary.dark' } }}
+              onClick={send}
+              disabled={!input.trim()}
             >
-              Send
-            </Button>
+              <SendIcon />
+            </IconButton>
           </Box>
         </Paper>
-      </Fade>
+      )}
     </>
   );
 }

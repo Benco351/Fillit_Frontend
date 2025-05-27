@@ -1,8 +1,9 @@
-import { instance } from './apiconfig'; // Adjust the import path as necessary
+import { api } from './apiconfig'; // Adjust the import path as necessary
 import { 
   CreateRequestedShiftDTO, 
   UpdateRequestedShiftDTO, 
-  RequestedShiftQueryDTO 
+  RequestedShiftQueryDTO, 
+  RequestedShiftMapped
 } from './types'; // Import types from types.ts
 
 interface RequestedShiftResponse {
@@ -25,7 +26,7 @@ interface RequestedShiftResponse {
 export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
   try {
     console.log('Request payload for createRequestedShift:', data); // Log the request payload
-    const response = await instance.post<{ status: string; message: string; data: RequestedShiftResponse }>('/api/requested-shifts', {
+    const response = await api.post<{ status: string; message: string; data: RequestedShiftResponse }>('/api/requested-shifts', {
       employeeId: data.employeeId,
       shiftSlotId: data.shiftSlotId,
       notes: data.notes || ''
@@ -55,7 +56,7 @@ export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
 
 export const getRequestedShiftById = async (id: number ) => { //?? 
   try {
-    const response = await instance.get(`/api/requested-shifts/${id}`);
+    const response = await api.get(`/api/requested-shifts/${id}`);
 
     if (!response.data.data) {
       throw new Error('No data returned from the server');
@@ -71,7 +72,7 @@ export const getRequestedShiftById = async (id: number ) => { //??
 export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) => {
   try {
     // Ensure the params object is correctly formed before sending
-    const response = await instance.get<{ status: string; message: string; data: RequestedShiftResponse[] }>('/api/requested-shifts', {
+    const response = await api.get<{ status: string; message: string; data: RequestedShiftResponse[] }>('/api/requested-shifts', {
       params: {
         request_employee_id: params.request_employee_id,
         request_status: params.request_status
@@ -83,14 +84,14 @@ export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) =>
     }
 
     return {
-      data: response.data.data.map(shift => ({
-        id: shift.request_id, // <-- This should match the backend's primary key
-        employeeId: shift.request_employee_id,
-        availableShiftId: shift.request_shift_id,
-        notes: shift.request_notes || '',
-        status: shift.request_status,
-        availableShift: shift.availableShift,
-        employee: shift.employee
+      data: response.data.data.map((shift: RequestedShiftResponse): RequestedShiftMapped => ({
+      id: shift.request_id,
+      employeeId: shift.request_employee_id,
+      availableShiftId: shift.request_shift_id,
+      notes: shift.request_notes || '',
+      status: shift.request_status,
+      availableShift: shift.availableShift,
+      employee: shift.employee
       }))
     };
   } catch (error) {
@@ -107,7 +108,7 @@ export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) =>
 
 export const deleteRequestedShiftById = async (id: number) => {
   try {
-    const response = await instance.delete(`/api/requested-shifts/${id}`);
+    const response = await api.delete(`/api/requested-shifts/${id}`);
 
     // Only throw if the overall response is malformed, not if data is null
     if (!response.data || response.data.status !== 'ok') {
@@ -125,7 +126,7 @@ export const deleteRequestedShiftById = async (id: number) => {
 ///admin updates requested shift - denies
 export const updateRequestedShiftById = async (id: number, data: UpdateRequestedShiftDTO) => {
   try {
-    const response = await instance.put(`/api/requested-shifts/${id}`, data);
+    const response = await api.put(`/api/requested-shifts/${id}`, data);
 
     if (!response.data.data) {
       throw new Error('No data returned from the server');

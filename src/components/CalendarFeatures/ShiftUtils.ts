@@ -1,3 +1,13 @@
+/* --------------------------------------------------------------------------
+   Canonical shift-related models used across the dashboard and APIs.
+   -------------------------------------------------------------------------- */
+
+export interface Employee {
+  id: number;
+  name: string;
+  email?: string;          // optional for cases where it is not returned
+}
+
 export interface AvailableShift {
   id: number;
   date: string;
@@ -8,11 +18,9 @@ export interface AvailableShift {
 
 }
 
-// arrange in a better way OR USE DTO
-
 export interface RequestedShift {
-  request_shift_id: number;
-  id: number;
+  request_shift_id: number;      // server PK
+  id: number;                    // client PK (mirrors request_shift_id)
   employeeId: number;
   availableShiftId: number;
   notes: string;
@@ -24,5 +32,3 @@ export interface AssignedShift {
   employeeId: number;
   availableShiftId: number;
 }
-
-
