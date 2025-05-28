@@ -69,9 +69,9 @@ const UserDashboard: React.FC = () => {
         if (err instanceof Error && (err as any).response) {
           console.error('Error response from API:', (err as any).response);
         } else {
-          console.error('Error fetching requested shifts:', err);
+          //console.error('Error fetching requested shifts:', err);
         }
-        setError('Failed to fetch requested shifts. Please try again later.');
+        //setError('Failed to fetch requested shifts. Please try again later.');
       } finally {
         setLoading(false);
       }

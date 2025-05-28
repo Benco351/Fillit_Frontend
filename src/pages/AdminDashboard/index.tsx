@@ -33,7 +33,7 @@ import { GlobalStyles } from '@mui/material';
 const AdminDashboard: React.FC = () => {
      
       // Current user 
-    const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
+    const [currentEmployee] = useState<Employee>(employees[0]);
   
     //These guys are in useUserDashboard
     const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
@@ -46,16 +46,17 @@ const AdminDashboard: React.FC = () => {
   const [denyDialogOpen, setDenyDialogOpen] = useState(false);
   const [denyRequestId, setDenyRequestId] = useState<number | null>(null);
 
-  // Add these state variables at the top with other states
+  // Add these state variables at the top with other states   
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [selectedShiftInfo, setSelectedShiftInfo] = useState<any>(null);
 
-  // open deny dialog
+  // Open deny dialog
   const handleOpenDenyDialog = (requestId: number) => {
     setDenyRequestId(requestId);
     setDenyDialogOpen(true);
   };
 
+  // Confirm deny action
   const handleConfirmDeny = async () => {
     if (denyRequestId !== null) {
       await handleDenyRequestedShift(denyRequestId);
@@ -64,12 +65,14 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+
+  // Close deny dialog without action
   const handleCancelDeny = () => {
     setDenyDialogOpen(false);
     setDenyRequestId(null);
   };
 
-  // Add this function before the return statement
+  // Open info dialog to see shift details
   const handleOpenInfoDialog = (shift: any) => {
     setSelectedShiftInfo(shift);
     setInfoDialogOpen(true);
@@ -98,11 +101,11 @@ const AdminDashboard: React.FC = () => {
         const requestedShiftsResponse = await getRequestedShifts();
         if (requestedShiftsResponse?.data && Array.isArray(requestedShiftsResponse.data)) {
           const mappedRequestedShifts = requestedShiftsResponse.data.map((shift: any) => ({
-            request_shift_id: shift.id,
-            id: shift.id,
-            employeeId: shift.employee_id,
+            request_shift_id: shift.id, // Request id
+            id: shift.id, // Shift Slot id
+            employeeId: shift.employee_id, // Emplpoyee id
             availableShiftId: shift.availableShiftId,
-            notes: shift.notes || '',
+            notes: shift.notes || '', // Notes added by user when requesting
             status: shift.status || 'pending',
           }));
           setRequestedShifts(mappedRequestedShifts);
@@ -115,7 +118,6 @@ const AdminDashboard: React.FC = () => {
             id: shift.assigned_id, // Use assigned_id from backend
             employeeId: shift.assigned_employee_id,
             availableShiftId: shift.assigned_shift_id,
-            // Optionally, include more fields if needed
             availableShift: shift.availableShift,
             employee: shift.employee,
           }));
@@ -165,9 +167,10 @@ const AdminDashboard: React.FC = () => {
 
   // Fetch shifts for the current week
   useEffect(() => {
-    fetchShiftsForWeek();
+    fetchShiftsForWeek(); // Using function below
   }, [currentWeekStart]);
 
+  // Function to fetch shifts for the current week
   const fetchShiftsForWeek = async () => {
     setLoading(true);
     try {
@@ -193,8 +196,8 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Update the polling interval to 15 seconds
-  const POLLING_INTERVAL = 7000; // Poll every 15 seconds instead of 10
+  // Update the polling interval to 7 seconds
+  const POLLING_INTERVAL = 7000; // Poll every 7 seconds
 
   // Update the refreshDashboard function to ensure proper merging of requested shifts
   const refreshDashboard = async () => {
@@ -255,7 +258,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Add a more robust polling effect for requested shifts
+ 
   useEffect(() => {
     const pollShifts = async () => {
       try {
@@ -284,7 +287,8 @@ const AdminDashboard: React.FC = () => {
     };
 
     pollShifts();
-    const interval = setInterval(pollShifts, POLLING_INTERVAL); // Use the 15 second interval
+
+    const interval = setInterval(pollShifts, POLLING_INTERVAL); // Use the 7 second interval
     return () => clearInterval(interval);
   }, []);
 
@@ -475,52 +479,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Handle accepting a shift
-  const handleAcceptShift = async (requestedShiftId: number) => {
-    setLoading(true);
-    try {
-      console.log('Accepting shift with ID:', requestedShiftId);
-
-      // Find the requested shift details
-      const requestedShift = requestedShifts.find(shift => shift.id === requestedShiftId);
-      if (!requestedShift) {
-        throw new Error('Requested shift not found');
-      }
-
-      // Call the API to create an assigned shift
-      await createAssignedShift({
-        employeeId: requestedShift.employeeId,
-        shiftSlotId: requestedShift.availableShiftId
-      });
-
-      // Increment shift_slots_taken for the assigned shift
-      setAvailableShifts(prev =>
-        prev.map(shift =>
-          shift.id === requestedShift.availableShiftId
-            ? { ...shift, shift_slots_taken: (shift.shift_slots_taken || 0) + 1 }
-            : shift
-        )
-      );
-
-      // Call the API to update the requested shift status to "approved"
-      await updateRequestedShiftById(requestedShiftId, { status: 'approved' });
-
-      // Update the local state to reflect the change
-      setRequestedShifts(prev =>
-        prev.map(shift =>
-          shift.id === requestedShiftId ? { ...shift, status: 'approved' } : shift
-        )
-      );
-
-      setSuccess('Shift accepted successfully');
-    } catch (err) {
-      console.error('Failed to accept shift:', err);
-      setError('Failed to accept shift. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDenyRequestedShift = async (requestedShiftId: number) => {
     setLoading(true);
     try {
@@ -591,114 +549,6 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
-
-
-  const handleRevokeAssignedShift = async (requestedShift: RequestedShift) => {
-    setLoading(true);
-    try {
-      const assignedShift = assignedShifts.find(
-        s => s.employeeId === requestedShift.employeeId &&
-             s.availableShiftId === requestedShift.availableShiftId
-      );
-  
-      if (!assignedShift) {
-        throw new Error('Assigned shift not found');
-      }
-  
-      await deleteAssignedShiftById(assignedShift.id);
-  
-      setAssignedShifts(prev =>
-        prev.filter(s => s.id !== assignedShift.id)
-      );
-  
-      await updateRequestedShiftById(requestedShift.id, { status: 'pending' });
-  
-      setRequestedShifts(prev =>
-        prev.map(s =>
-          s.id === requestedShift.id ? { ...s, status: 'pending' } : s
-        )
-      );
-  
-      setSuccess('Shift assignment revoked');
-    } catch (err) {
-      console.error('Failed to revoke assigned shift:', err);
-      setError('Failed to revoke shift. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-    
-
-
-
-// Enhanced handleGetShiftById function with better debugging
-const handleGetShiftById = async () => {
-  if (!shiftIdToFetch) {
-    setError('Please enter a valid shift ID.');
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const response = await getAvailableShiftById(Number(shiftIdToFetch));
-    
-    // Log the entire response to see its structure
-    console.log('Complete API response:', response);
-    
-    // Check where the data might be located in the response
-    let shiftData;
-    if (response.data && response.data.data) {
-      // If the data is nested (common in API responses with metadata)
-      shiftData = response.data.data;
-      console.log('Found nested data:', shiftData);
-    } else if (response.data) {
-      // If data is directly in the response
-      shiftData = response.data;
-      console.log('Found direct data:', shiftData);
-    } else {
-      // No data found
-      console.log('No data found in response');
-      setError('No shift data found in the response.');
-      setFetchedShift(null);
-      setLoading(false);
-      return;
-    }
-    
-    // Transform the data regardless of where it was found
-    const transformedShift: AvailableShift = {
-      id: shiftData.shift_id || shiftData.id || Number(shiftIdToFetch),
-      date: shiftData.date || shiftData.shift_date || '',
-      start: shiftData.start || shiftData.shift_start || '',
-      end: shiftData.end || shiftData.shift_end || ''
-    };
-    
-    console.log('Transformed shift data:', transformedShift);
-    setFetchedShift(transformedShift);
-    setSuccess(`Shift with ID ${shiftIdToFetch} fetched successfully.`);
-  } catch (err) {
-    console.error('Error fetching shift:', err);
-    setError('Failed to fetch shift. Please try again.');
-    setFetchedShift(null);
-  } finally {
-    setLoading(false);
-  }
-};
-
-// Update the getShiftStatus function to show denied shifts as "available" for the admin
-const getShiftStatus = (availableShiftId: number): string => {
-  const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
-
-  if (requestedShift) {
-    // If the shift is denied, show it as "available" for the admin
-    if (requestedShift.status === 'denied' && currentEmployee.id === 1) {
-      return 'available';
-    }
-    return requestedShift.status;
-  }
-
-  const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
-  return isAssigned ? 'assigned' : 'available';
-};
 
 
 // Updated getFilteredShifts function
