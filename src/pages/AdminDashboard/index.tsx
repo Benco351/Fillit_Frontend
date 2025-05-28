@@ -33,7 +33,16 @@ import { GlobalStyles } from '@mui/material';
 const AdminDashboard: React.FC = () => {
      
       // Current user 
-    const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
+      const customEmployeeId = Number(sessionStorage.getItem('customEmployeeId'));
+      const name = sessionStorage.getItem('name') || '';
+      const email = sessionStorage.getItem('email') || '';
+    
+    // Create Employee object
+      const currentEmployee: Employee = {
+        id: customEmployeeId,
+        name,
+        email
+      };
   
     //These guys are in useUserDashboard
     const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,

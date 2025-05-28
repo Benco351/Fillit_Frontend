@@ -27,6 +27,7 @@ import {
 import { LoginTheme } from '../../../assets/themes/themes';
 import axios from 'axios';
 import { api } from '../../../utils/apis/apiconfig';
+import { se } from 'date-fns/locale';
 
 /* ────────────────────────────────────────────────────────────
    Zod validation schemas
@@ -123,9 +124,18 @@ const LoginForm: React.FC = () => {
           throw new Error('Unable to retrieve custom employee ID');
         }
 
+        // Print the logged in customEmployeeId
+        console.log('Logged in customEmployeeId:', customEmployeeId);
+
         // Retrieve if admin from back
         const response = await api.get(`/api/employees/${customEmployeeId}`);
         const isAdmin = response.data.employee_admin;
+
+        // Save customEmployeeId and isAdmin in sessionStorage
+        sessionStorage.setItem('customEmployeeId', customEmployeeId);
+        sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
+        sessionStorage.setItem('name', response.data.employee_name);
+        sessionStorage.setItem('email', response.data.email);
 
         if (isAdmin) {
           navigate('/admin-dashboard', { replace: true });

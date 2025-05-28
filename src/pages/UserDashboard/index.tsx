@@ -23,7 +23,21 @@ import AIChatPopup from '../../components/aiChat';
 const UserDashboard: React.FC = () => {
 
     // Current user 
-  const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
+  // //const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
+  // const currentEmployee_id = parseInt(sessionStorage.getItem('customEmployeeId'))
+
+  // Parse values from sessionStorage
+  const customEmployeeId = Number(sessionStorage.getItem('customEmployeeId'));
+  const name = sessionStorage.getItem('name') || '';
+  const email = sessionStorage.getItem('email') || '';
+
+// Create Employee object
+  const currentEmployee: Employee = {
+    id: customEmployeeId,
+    name,
+    email
+  };
+
 
   //These guys are in useUserDashboard
   const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, setLoading,
@@ -282,7 +296,7 @@ const UserDashboard: React.FC = () => {
                   mb: 3,
                 }}
               >
-                {/* Employee selection */}
+                {/* Employee selection
                 <Box sx={{ 
                   display: 'flex', 
                   gap: 2,
@@ -336,7 +350,7 @@ const UserDashboard: React.FC = () => {
                   >
                     Create Dummy Employee
                   </Button>
-                </Box>
+                </Box> */}
 
                 {/* Week navigation */}
                 <Box sx={{ 
