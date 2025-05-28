@@ -18,9 +18,10 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
 import { SignUpTheme } from '../../../assets/themes/themes';
-import { instance } from '../../../utils/apis/apiconfig';
-import { signUp, confirmSignUp } from '@aws-amplify/auth';
+import { api } from '../../../utils/apis/apiconfig';
+import { signUp, confirmSignUp, signOut, fetchAuthSession} from '@aws-amplify/auth';
 import axios from 'axios';
+import { Api } from '@mui/icons-material';
 
 /* ──────────────────────────────────────────────
    Validation
@@ -52,6 +53,8 @@ const SignUpForm: React.FC = () => {
   const [loading,      setLoading]      = useState(false);
   const [awaitingCode, setAwaitingCode] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const [pendingSignUpData, setPendingSignUpData]       = useState<SignUpFormType|null>(null);
+  const [pendingEmployeeId, setPendingEmployeeId] = useState<number|undefined>(undefined);
 
   const {
     register,
@@ -60,82 +63,103 @@ const SignUpForm: React.FC = () => {
     getValues,
   } = useForm<SignUpFormType>({ resolver: zodResolver(SignUpSchema) });
 
+
+  /** 
+ * Signs out **only if** there's currently a user signed in.
+ */
+async function clearSessionIfNeeded() {
+  try {
+    await fetchAuthSession();
+    await signOut();
+  } catch {
+    // no user was signed in, nothing to do
+  }
+}
+
   /* ──────────────────────────────────────────
      Submit handler
      ────────────────────────────────────────── */
-  const onSubmit = async (data: SignUpFormType): Promise<void> => {
-    setAuthError(null);
-    setLoading(true);
+const onSubmit = async (data: SignUpFormType): Promise<void> => {
+  setAuthError(null);
+  setLoading(true);
 
-    try {
-      /* STEP 1 — registration */
-      if (!awaitingCode) {
-        const { nextStep } = await signUp({
-          username: data.email,
-          password: data.password,
-          options: {
-            userAttributes: {
-              email: data.email,
-              ...(data.phone ? { phone_number: data.phone } : {}),
-            },
+  try {
+    /* STEP 1 — persist user to your DB and grab the new employeeId */
+    if (!awaitingCode) {
+      const createRes = await api.post('/auth/sign-up', {
+        name:     data.name,
+        email:    data.email,
+        phone:    data.phone,
+        password: data.password,
+      });
+      const id = createRes.data.data.employee_id;
+
+      /* STORE it for the confirm step (if needed) */
+      setPendingEmployeeId(id);
+      setPendingEmail(data.email);
+      setPendingSignUpData(data);
+
+      /* STEP 2 — sign up in Cognito, embedding the custom:employeeId */
+      const { nextStep } = await signUp({
+        username: data.email,
+        password: data.password,
+        options: {
+          userAttributes: {
+            email:              data.email,
+            'custom:employeeId': String(id),
+            ...(data.phone ? { phone_number: data.phone } : {}),
           },
-        });
+        },
+      });
 
-        // Sleep for 3 seconds
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        /* persist in RDS */
-        await instance.post('/auth/sign-up', {
-          name:  data.name,
-          email: data.email,
-          phone: data.phone,
-          password: data.password,
-        });
-
-        // Add user to "Users" group via backend
-        try {
-          await instance.post('/auth/add-to-group', {
-            email: data.email,
-            group: 'Users',
-          });
-        } catch (groupErr) {
-          // Optionally handle group assignment error
-          setAuthError('Sign up succeeded, but failed to assign group.');
-          console.error('Group assignment error', groupErr);
-        }
- 
-        setPendingEmail(data.email);
-
-        if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
-          setAwaitingCode(true);
-        } else {
-          setSnackOpen(true);
-          setTimeout(() => navigate('/login'), 2000);
-        }
+      if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+        setAwaitingCode(true);
+        return;
       }
-      /* STEP 2 — confirm e-mail */
-      else {
-        const code = getValues('code')?.trim();
-        if (!code) throw new Error('Please enter the verification code.');
-
-        await confirmSignUp({ username: pendingEmail, confirmationCode: code });
-
-        setSnackOpen(true);
-        setTimeout(() => navigate('/login'), 2000);
-      }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 409) {
-        setAuthError('This email is already registered');
-      } else if (err instanceof Error) {
-        setAuthError(err.message);
-      } else {
-        setAuthError('Registration failed');
-      }
-      console.error('Sign-up flow error', err);
-    } finally {
-      setLoading(false);
+      /* no confirmation required */
+      setSnackOpen(true);
+      
+      await api.post('/auth/add-to-group', {
+        email: data.email,
+        group: 'Users',
+      });
+      setTimeout(() => navigate('/login'), 2000);
+      return;
     }
-  };
+
+    /* STEP 3 — confirm code (nothing else to push) */
+    const code = getValues('code')?.trim();
+    if (!code) throw new Error('Please enter the verification code.');
+
+    await confirmSignUp({
+      username:         pendingEmail!,
+      confirmationCode: code,
+    });
+
+    await clearSessionIfNeeded();
+    setSnackOpen(true);
+
+    await api.post('/auth/add-to-group', {
+      email: data.email,
+      group: 'Users',
+    });
+    setTimeout(() => navigate('/login'), 2000);
+  }
+  catch (err: unknown) {
+    if (axios.isAxiosError(err) && err.response?.status === 409) {
+      setAuthError('This email is already registered');
+    } else if (err instanceof Error) {
+      setAuthError(err.message);
+    } else {
+      setAuthError('Registration failed');
+    }
+    console.error('Sign-up flow error', err);
+  }
+  finally {
+    setLoading(false);
+  }
+};
+
 
   /* dark-theme field styling */
   const textFieldStyles = {

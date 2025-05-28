@@ -4,8 +4,8 @@ import { getRequestedShifts } from '../utils/apis/requestedShiftsApis';
 import { AvailableShift, RequestedShift, AssignedShift } from '../components/CalendarFeatures/ShiftUtils';
 import { availableShiftsResponse, Employee } from '../components/CalendarFeatures/calendarStates';
 import { format, addDays, startOfWeek } from 'date-fns';
-import { request } from 'http';
-import { se } from 'date-fns/locale';
+// import { request } from 'http';
+// import { se } from 'date-fns/locale';
 
 const POLLING_INTERVAL = 7000; // Poll every 7 seconds
 

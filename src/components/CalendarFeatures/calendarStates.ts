@@ -8,7 +8,7 @@ export const calculateDuration = (startTime: string, endTime: string): string =>
     const [endHours, endMinutes] = endTime.split(':').map(Number);
     
     // Convert to minutes
-    let startTotalMinutes = startHours * 60 + startMinutes;
+    const startTotalMinutes = startHours * 60 + startMinutes;
     let endTotalMinutes = endHours * 60 + endMinutes;
     
     // Handle case where end time is on the next day
