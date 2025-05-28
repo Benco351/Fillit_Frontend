@@ -23,6 +23,7 @@ import {
   resetPassword,
   confirmResetPassword,
   fetchUserAttributes,
+  signOut, // add this import
 } from '@aws-amplify/auth';
 import { LoginTheme } from '../../../assets/themes/themes';
 import axios from 'axios';
@@ -96,6 +97,11 @@ const LoginForm: React.FC = () => {
     try {
       /* 1 ► sign-in */
       if (mode === 'login') {
+        // Ensure any existing session is cleared before sign-in
+        await signOut({ global: true }).catch((err) => {
+          console.warn('Sign out before login failed:', err);
+        });
+
         const data = form as LoginFormData;
         const result = await signIn({
           username: data.email,
@@ -129,13 +135,21 @@ const LoginForm: React.FC = () => {
 
         // Retrieve if admin from back
         const response = await api.get(`/api/employees/${customEmployeeId}`);
-        const isAdmin = response.data.employee_admin;
+        console.log('Employee data:', response.data);
+        const isAdmin = response.data.data.employee_admin;
 
         // Save customEmployeeId and isAdmin in sessionStorage
         sessionStorage.setItem('customEmployeeId', customEmployeeId);
         sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
-        sessionStorage.setItem('name', response.data.employee_name);
-        sessionStorage.setItem('email', response.data.email);
+        sessionStorage.setItem('name', response.data.data.employee_name);
+        sessionStorage.setItem('email', response.data.data.email);
+
+        console.log('Session storage updated:', {
+          customEmployeeId,
+          isAdmin,
+          name: response.data.employee_name,
+          email: response.data.email,
+        });
 
         if (isAdmin) {
           navigate('/admin-dashboard', { replace: true });

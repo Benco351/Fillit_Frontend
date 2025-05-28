@@ -25,7 +25,8 @@ export const ProtectedRoute = ({ children, redirectTo, requireGroup }: Props) =>
         } else if (typeof rawGroups === 'string') {
           groups = [rawGroups];
         }
-        setAllowed(groups.includes(requireGroup));
+        //setAllowed(groups.includes(requireGroup));
+        setAllowed(groups.includes("Admins"));
       })
       .catch(() => setAllowed(false));
   }, [requireGroup]);
