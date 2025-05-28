@@ -1,3 +1,5 @@
+import { date } from "zod";
+
 // Helper function to calculate duration between two time strings (HH:MM:SS format)
 export const calculateDuration = (startTime: string, endTime: string): string => {
   try {
@@ -43,15 +45,16 @@ export const employees: Employee[] = [
   { id: 2, name: 'Jane Smith', email: 'jane@gmail.com'  },
   { id: 3, name: 'Bob Johnson', email: 'bob@gmail.com' },
 ];
-
+export interface available_shifts_response {
+  id: number,
+  date  : string,
+  start: string,
+  end: string,
+  shift_slots_amount?: number,
+  shift_slots_taken?: number
+}
       // Simulated API response
-export const availableShiftsResponse = [
-        { id: 1, date: '2023-10-02', start: '09:00:00', end: '13:00:00' },
-        { id: 2, date: '2023-10-02', start: '13:00:00', end: '17:00:00' },
-        { id: 3, date: '2023-10-03', start: '09:00:00', end: '17:00:00' },
-        { id: 4, date: '2023-10-04', start: '10:00:00', end: '14:00:00' },
-        { id: 5, date: '2023-10-05', start: '12:00:00', end: '16:00:00' },
-      ];
+export const availableShiftsResponse: available_shifts_response[] = [];
       
 export const requestedShiftsResponse = [
         { id: 1, employeeId: 1, availableShiftId: 1, notes: 'I can work this shift', status: 'pending' },

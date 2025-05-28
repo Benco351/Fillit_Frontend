@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,TextField, MenuItem,
   IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
-import { format, startOfWeek, addDays, parseISO, isWithinInterval } from 'date-fns';
+import { format} from 'date-fns';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
 import Navbar from '../../components/layout/userNavbar';
@@ -235,7 +235,7 @@ const UserDashboard: React.FC = () => {
       <CssBaseline />
       <Box
         sx={{
-          backgroundColor: 'secondary.main',
+          backgroundColor: '#093039',
           minHeight: '100vh',
           py: 4,
           px: 2, // Add padding for better spacing

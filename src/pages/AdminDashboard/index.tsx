@@ -31,6 +31,7 @@ import { GlobalStyles } from '@mui/material';
 
 
 const AdminDashboard: React.FC = () => {
+
      
       // Current user 
     const [currentEmployee] = useState<Employee>(employees[0]);
@@ -85,14 +86,15 @@ const AdminDashboard: React.FC = () => {
       try {
         // Fetch available shifts
         const availableShiftsResponse = await getAvailableShifts();
+        
         if (availableShiftsResponse?.data && Array.isArray(availableShiftsResponse.data)) {
           const mappedAvailableShifts = availableShiftsResponse.data.map((shift: any) => ({
             id: shift.shift_id || shift.id,
             date: shift.shift_date || shift.date,
             start: shift.shift_time_start || shift.start,
             end: shift.shift_time_end || shift.end,
-            shift_slots_amount: shift.shift_slots_amount || 0, // Add this line
-            shift_slots_taken: shift.shift_slots_taken, // Add this line
+            shift_slots_amount: shift.shift_slots_amount || 0, 
+            shift_slots_taken: shift.shift_slots_taken, 
           }));
           setAvailableShifts(mappedAvailableShifts);
         }
