@@ -97,11 +97,6 @@ const LoginForm: React.FC = () => {
     try {
       /* 1 ► sign-in */
       if (mode === 'login') {
-        // Ensure any existing session is cleared before sign-in
-        await signOut({ global: true }).catch((err) => {
-          console.warn('Sign out before login failed:', err);
-        });
-
         const data = form as LoginFormData;
         const result = await signIn({
           username: data.email,

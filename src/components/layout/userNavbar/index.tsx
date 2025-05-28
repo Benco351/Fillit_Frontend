@@ -7,14 +7,16 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../routes/config/routes';
 import { NavBarTheme } from '../../../assets/themes/themes';
 import MobileDrawer from './MobileDrawer';
+import { signOut } from '@aws-amplify/auth';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const isMobile = useMediaQuery(NavBarTheme.breakpoints.down('md'));
 
-  const handleNavigateHome = () => {
-    navigate(ROUTES.HOME);
+  const handleLogout = () => {
+    signOut();
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   const handleOpenSettings = () => {
@@ -91,7 +93,7 @@ const Navbar = () => {
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="contained"
-            onClick={handleNavigateHome}
+            onClick={handleLogout}
             sx={glassButtonStyle}
           >
             Home
@@ -105,7 +107,7 @@ const Navbar = () => {
           </Button>
           <Button
             variant="contained"
-            onClick={handleNavigateHome}
+            onClick={handleLogout}
             sx={logoutButtonStyle}
           >
             Logout

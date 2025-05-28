@@ -54,7 +54,15 @@ export default function ChatPopup() {
     setMsgs(m => [...m, { from: 'user', text: prompt }]);
     setLoading(true);
     try {
-      const { data } = await aiLambda.post('/', { user_prompt: prompt });
+      const { data } = await aiLambda.post(
+        '/',
+        { user_prompt: prompt },
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
       setMsgs(m => [...m, { from: 'ai', text: data.reply }]);
     } catch {
       setMsgs(m => [...m, { from: 'ai', text: 'Sorry, something went wrong 🤖' }]);
