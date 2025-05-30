@@ -2,15 +2,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { getAvailableShifts, updateAvailableShiftById } from '../utils/apis/availableShiftApis';
 import { getRequestedShifts } from '../utils/apis/requestedShiftsApis';
 import { getAssignedShifts } from '../utils/apis/assignedShiftApis';
-import { AvailableShift, RequestedShift, AssignedShift } from '../components/CalendarFeatures/ShiftUtils';
+import { AvailableShift, RequestedShift, AssignedShift, SelectedShift } from '../components/CalendarFeatures/ShiftUtils';
 import { availableShiftsResponse, Employee } from '../components/CalendarFeatures/calendarStates';
 import { format, addDays, startOfWeek } from 'date-fns';
+
 // import { request } from 'http';
 // import { se } from 'date-fns/locale';
 
 const POLLING_INTERVAL = 7000; // Poll every 7 seconds
 
 export const useUserDashboard = (currentEmployee: Employee) => {
+
+    // State for deny confirmation dialog
+  const [denyDialogOpen, setDenyDialogOpen] = useState(false);
+  const [denyRequestId, setDenyRequestId] = useState<number | null>(null);
+
+        // Add these state variables at the top with other states   
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [selectedShiftInfo, setSelectedShiftInfo] = useState<SelectedShift>();
+
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
@@ -359,6 +369,10 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     fetchedShift, setFetchedShift,
     weekDays,
     loadingAvailable,
-    loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek, handleEditShift, fetchShiftsForWeek
+    loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek, handleEditShift, fetchShiftsForWeek,
+    denyDialogOpen, setDenyDialogOpen,
+    denyRequestId, setDenyRequestId,
+    infoDialogOpen, setInfoDialogOpen, selectedShiftInfo, setSelectedShiftInfo
+
   };
 };

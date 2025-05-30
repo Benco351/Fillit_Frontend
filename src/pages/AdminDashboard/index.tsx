@@ -49,16 +49,11 @@ const AdminDashboard: React.FC = () => {
     const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
       error, success, filter, setFilter, setSuccess, setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, 
       setNewShift, isAddShiftDialogOpen, setIsAddShiftDialogOpen, isEditShiftDialogOpen, setIsEditShiftDialogOpen, 
-      editShift, setEditShift, shiftIdToFetch, setFetchedShift, weekDays, goToNextWeek, goToPreviousWeek
+      editShift, setEditShift, shiftIdToFetch, setFetchedShift, weekDays, goToNextWeek, goToPreviousWeek, denyDialogOpen, setDenyDialogOpen, 
+      setDenyRequestId, denyRequestId, infoDialogOpen, setInfoDialogOpen, selectedShiftInfo, setSelectedShiftInfo
+      
     } = useUserDashboard(currentEmployee);
 
-  // State for deny confirmation dialog
-  const [denyDialogOpen, setDenyDialogOpen] = useState(false);
-  const [denyRequestId, setDenyRequestId] = useState<number | null>(null);
-
-  // Add these state variables at the top with other states   
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
-  const [selectedShiftInfo, setSelectedShiftInfo] = useState<SelectedShift>();
 
   // Employees state
   const [employees, setEmployees] = useState<Employee[]>([]);
