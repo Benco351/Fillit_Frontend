@@ -69,32 +69,34 @@ export const getRequestedShiftById = async (id: number ) => { //??
   }
 };
 
-export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}) => {
+export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}, isAdmin?: boolean) => {
   try {
-    // Ensure the params object is correctly formed before sending
-    const response = await api.get<{ status: string; message: string; data: RequestedShiftResponse[] }>('/api/requested-shifts', {
-      params: {
-        request_employee_id: params.request_employee_id,
-        request_status: params.request_status
-      }
-    });
+    // If admin, fetch all requested shifts (ignore params)
+    const apiParams = isAdmin ? {} : {
+      request_employee_id: params.request_employee_id,
+      request_status: params.request_status
+    };
+    const response = await api.get<{ status: string; message: string; data: RequestedShiftResponse[] }>(
+      '/api/requested-shifts',
+      { params: apiParams }
+    );
 
     if (!response.data?.data) {
       throw new Error('No data returned from the server');
     }
 
     return {
-      data: response.data.data.map((shift: RequestedShiftResponse): RequestedShiftMapped => ({
-      id: shift.request_id,
-      employeeId: shift.request_employee_id,
-      availableShiftId: shift.request_shift_id,
-      notes: shift.request_notes || '',
-      status: shift.request_status,
-      availableShift: shift.availableShift,
-      employee: shift.employee
+      data: response.data.data.map((shift: any): RequestedShiftMapped => ({
+        id: shift.id ?? shift.request_id,
+        employeeId: shift.employeeId ?? shift.request_employee_id,
+        availableShiftId: shift.availableShiftId ?? shift.request_shift_id,
+        notes: shift.notes ?? shift.request_notes ?? '',
+        status: shift.status ?? shift.request_status,
+        availableShift: shift.availableShift,
+        employee: shift.employee
       }))
     };
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       console.error('Error fetching requested shifts:', error.message);
     } else {

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,TextField, MenuItem,
   IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
 import { format} from 'date-fns';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
 import Navbar from '../../components/layout/userNavbar';
-import { createRequestedShift, getRequestedShifts, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
+import { createRequestedShift, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
 import {employees} from '../../components/CalendarFeatures/calendarStates';
@@ -55,46 +55,6 @@ const UserDashboard: React.FC = () => {
     fetchShiftsForWeek();
   }, [currentWeekStart]);
 
-  // Fetch requested shifts on component mount
-  useEffect(() => {
-    const fetchRequestedShifts = async () => {
-      setLoading(true);
-      try {
-        const params = { request_employee_id: currentEmployee.id }; // Ensure this matches the expected structure of GetRequestedShiftsParams
-        console.log('Fetching requested shifts with params:', params); // Log the parameters
-  
-        const response = await getRequestedShifts(params);
-  
-        console.log('Fetched requested shifts:', response); // Log the response
-  
-        if (response?.data && Array.isArray(response.data)) {
-          const mappedRequestedShifts = response.data.map((shift: any) => ({
-            request_shift_id: shift.id,
-            id: shift.request_id || shift.id,
-            employeeId: shift.employee_id,
-            availableShiftId: shift.shift_slot_id,
-            notes: shift.notes || '',
-            status: shift.status || 'pending', // Ensure status is 'pending' if not provided
-          }));
-  
-          setRequestedShifts(mappedRequestedShifts); // Update the state with fetched shifts
-        }
-      } catch (err) {
-        if (err instanceof Error && (err as any).response) {
-          console.error('Error response from API:', (err as any).response);
-        } else {
-          //console.error('Error fetching requested shifts:', err);
-        }
-        //setError('Failed to fetch requested shifts. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    // Call fetch function
-    fetchRequestedShifts();
-  }, [currentEmployee.id]); // This will trigger on employee ID change or on refresh
-  
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleRequestShift = async (shift: AvailableShift) => {
@@ -105,20 +65,17 @@ const UserDashboard: React.FC = () => {
         shiftSlotId: shift.id,
         notes: '',
       };
-  
+
       const response = await createRequestedShift(payload);
-      
-      // Create new request with pending status
+
       const newRequestedShift: RequestedShift = {
         id: response.id,
-        request_shift_id: response.id,
         employeeId: currentEmployee.id,
         availableShiftId: shift.id,
         notes: '',
         status: 'pending'
       };
 
-      // Update local state immediately and ensure it persists
       setRequestedShifts(prev => {
         const existingIndex = prev.findIndex(
           req => req.availableShiftId === shift.id
@@ -159,45 +116,6 @@ const UserDashboard: React.FC = () => {
     }
   };
 
-  // Modify the polling effect to preserve pending status
-  useEffect(() => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await getRequestedShifts({ request_employee_id: currentEmployee.id });
-        if (response?.data) {
-          setRequestedShifts(prevRequests => {
-            const newRequests = response.data.map(shift => ({
-              id: shift.id,
-              request_shift_id: shift.id,
-              employeeId: shift.employeeId,
-              availableShiftId: shift.availableShiftId,
-              notes: shift.notes || '',
-              status: shift.status || 'pending'
-            }));
-
-            // Merge new requests with existing ones, preserving pending status
-            const mergedRequests = [...prevRequests];
-            newRequests.forEach(newReq => {
-              const existingIndex = mergedRequests.findIndex(existing => 
-                existing.availableShiftId === newReq.availableShiftId
-              );
-              if (existingIndex === -1) {
-                mergedRequests.push(newReq);
-              } else if (mergedRequests[existingIndex].status !== 'pending') {
-                mergedRequests[existingIndex] = newReq;
-              }
-            });
-            return mergedRequests;
-          });
-        }
-      } catch (error) {
-        console.error('Error polling shifts:', error);
-      }
-    }, 5000); // Poll every 5 seconds
-
-    return () => clearInterval(pollInterval);
-  }, [currentEmployee.id]);
-
   // Update the getShiftStatus function to ensure users see denied shifts as "denied"
   const getShiftStatus = (availableShiftId: number): string => {
     const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
@@ -210,59 +128,49 @@ const UserDashboard: React.FC = () => {
       return requestedShift.status;
     }
 
-    const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
+    const isAssigned = assignedShifts.some(s => s.assigned_shift_id === availableShiftId);
     return isAssigned ? 'assigned' : 'available';
   };
 
   // Utility function to get assigned employee name
   const getAssignedEmployeeName = (availableShiftId: number): string => {
-    const assignedShift = assignedShifts.find(s => s.availableShiftId === availableShiftId);
+    const assignedShift = assignedShifts.find(s => s.assigned_shift_id === availableShiftId);
     if (!assignedShift) return '';
     
-    const employee = employees.find(e => e.id === assignedShift.employeeId);
+    const employee = employees.find(e => e.id === assignedShift.assigned_employee_id);
     return employee ? employee.name : 'Unknown Employee';
   };
 
   // Filtered shifts based on the selected filter
-  const getFilteredShifts = () => {
+  const filteredShifts = useMemo(() => {
+    // Always start with all available shifts
+    if (!availableShifts) return [];
     switch (filter) {
       case 'requested':
+        // Show all shifts that have been requested by the user
         return availableShifts.filter(shift =>
           requestedShifts.some(req => req.availableShiftId === shift.id)
         );
-        case 'accepted':
-          return availableShifts.filter(shift =>
-            requestedShifts.some(req => 
-              req.availableShiftId === shift.id && req.status === 'approved'
-            ) || assignedShifts.some(assign => assign.availableShiftId === shift.id)
-          );
+      case 'accepted':
+        // Show all shifts that have been approved or assigned to the user
+        return availableShifts.filter(shift =>
+          requestedShifts.some(req =>
+            req.availableShiftId === shift.id && req.status === 'approved'
+          ) ||
+          assignedShifts.some(assign => assign.assigned_shift_id === shift.id)
+        );
       default:
-        return availableShifts; // All shifts
+        // Always show all available shifts (live)
+        return availableShifts;
     }
-  };
-
-  const filteredShifts = getFilteredShifts();
+  }, [availableShifts, requestedShifts, assignedShifts, filter]);
 
   return (
     <ThemeProvider theme={MainTheme}>
-      <AIChatPopup /> {/* Ensure Chat Popup is outside the main content Box */}
+      <AIChatPopup />
       <CssBaseline />
-      <Box
-        sx={{
-          backgroundColor: '#093039',
-          minHeight: '100vh',
-          py: 4,
-          px: 2, // Add padding for better spacing
-        }}
-      >
-        <Container
-          maxWidth={false} // Remove maxWidth restriction
-          sx={{ 
-            px: { xs: 1, sm: 2, md: 3 }, // Reduce padding to maximize width
-            width: '100%',
-            maxWidth: '100%' 
-          }}
-        >
+      <Box sx={{ backgroundColor: '#093039', minHeight: '100vh', py: 4, px: 2 }}>
+        <Container maxWidth={false} sx={{ px: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
           <Navbar />
 
           <Box sx={{ my: 3 }}>

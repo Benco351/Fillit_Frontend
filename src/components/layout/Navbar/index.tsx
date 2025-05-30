@@ -106,15 +106,6 @@ const Navbar = () => {
                   >
                     SignUp
                   </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ ml: 2 }}
-                    component={RouterLink}
-                    to={ROUTES.DASHBOARD}
-                  >
-                    Calendar
-                  </Button>
                 </Box>
               )}
             </Toolbar>

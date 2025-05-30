@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAvailableShifts, updateAvailableShiftById } from '../utils/apis/availableShiftApis';
 import { getRequestedShifts } from '../utils/apis/requestedShiftsApis';
+import { getAssignedShifts } from '../utils/apis/assignedShiftApis';
 import { AvailableShift, RequestedShift, AssignedShift } from '../components/CalendarFeatures/ShiftUtils';
 import { availableShiftsResponse, Employee } from '../components/CalendarFeatures/calendarStates';
 import { format, addDays, startOfWeek } from 'date-fns';
@@ -153,9 +154,6 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     // Dialog states
   const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState<boolean>(false);
   const [isRequestShiftDialogOpen, setIsRequestShiftDialogOpen] = useState<boolean>(false);
-  const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false); // State for edit dialog
-  const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);  
-
   // Fetch shifts for the current week
   const fetchShiftsForWeek = useCallback(async () => {
     setLoading(true);
@@ -202,91 +200,122 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   }, [fetchShiftsForWeek]);
 
   
+  // Use sessionStorage for admin mode
+  const adminMode = typeof window !== 'undefined' ? sessionStorage.getItem('isAdmin') : null;
+  const isAdmin = adminMode === 'true';
+
+  // Centralized fetch for available shifts
+  const fetchAvailableShifts = useCallback(async () => {
+    setLoadingAvailable(true);
+    try {
+      let response;
+      if (isAdmin) {
+        response = await getAvailableShifts();
+      } else {
+        // Optionally filter by week or user if needed
+        response = await getAvailableShifts();
+      }
+      if (response?.data && Array.isArray(response.data)) {
+        setAvailableShifts(response.data.map((shift: any) => ({
+          id: shift.shift_id || shift.id,
+          date: shift.shift_date || shift.date,
+          start: shift.shift_time_start || shift.start,
+          end: shift.shift_time_end || shift.end,
+          shift_slots_amount: shift.shift_slots_amount,
+          shift_slots_taken: shift.shift_slots_taken,
+        })));
+      }
+    } catch (err) {
+      //setError('Failed to fetch available shifts');
+    } finally {
+      setLoadingAvailable(false);
+    }
+  }, [isAdmin]);
+
+  // Centralized fetch for assigned shifts
+  const fetchAssignedShifts = useCallback(async () => {
+    setLoading(true);
+    try {
+      let response;
+      if (isAdmin) {
+        response = await getAssignedShifts();
+      } else {
+          response = await getRequestedShifts({ request_employee_id: currentEmployee.id });
+      }
+      if (response?.data && Array.isArray(response.data)) {
+        setAssignedShifts(response.data.map((shift: any) => ({
+          id: shift.assigned_id,
+          assigned_id: shift.assigned_id,
+          employeeId: shift.assigned_employee_id,
+          assigned_employee_id: shift.assigned_employee_id,
+          availableShiftId: shift.assigned_shift_id,
+          assigned_shift_id: shift.assigned_shift_id,
+          availableShift: shift.availableShift,
+          employee: shift.employee,
+        })));
+      }
+    } catch (err) {
+      //setError('Failed to fetch assigned shifts');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAdmin, currentEmployee.id]);
+
+  // Centralized fetch for requested shifts (already present)
   const fetchRequestedShifts = useCallback(async () => {
     setLoadingRequested(true);
     try {
-      const response = await getRequestedShifts({ request_employee_id: currentEmployee.id });
+      let response;
+      if (isAdmin) {
+        response = await getRequestedShifts({}, true);
+      } else {
+        response = await getRequestedShifts({ request_employee_id: currentEmployee.id }, false);
+      }
       if (response?.data) {
-        setRequestedShifts(prevRequests => {
-          const newRequests = response.data.map(shift => ({
-            id: shift.id,
-            request_shift_id: shift.id,
-            employeeId: shift.employeeId,
-            availableShiftId: shift.availableShiftId,
-            notes: shift.notes || '',
-            status: shift.status || 'pending'
-          }));
-
-          // Preserve existing pending requests
-          return prevRequests.map(prev => {
-            const newReq = newRequests.find(nr => nr.availableShiftId === prev.availableShiftId);
-            return (prev.status === 'pending' && !newReq) ? prev : (newReq || prev);
-          });
-        });
+        setRequestedShifts(response.data.map(shift => ({
+          id: shift.id,
+          employeeId: shift.employeeId,
+          availableShiftId: shift.availableShiftId,
+          notes: shift.notes || '',
+          status: shift.status || 'pending',
+          availableShift: shift.availableShift,
+          employee: shift.employee
+        })));
+        console.log('Requested shifts fetched:', response.data);
       }
     } catch (err) {
       //setError('Failed to fetch requested shifts');
     } finally {
       setLoadingRequested(false);
     }
-  }, [currentEmployee.id]);
+  }, [currentEmployee.id, isAdmin]);
 
+  // Initial fetch and polling for all shifts
   useEffect(() => {
+    fetchAvailableShifts();
+    fetchAssignedShifts();
     fetchRequestedShifts();
-  }, [fetchRequestedShifts]);
+    const pollInterval = setInterval(() => {
+      fetchAvailableShifts();
+      fetchAssignedShifts();
+      fetchRequestedShifts();
+    }, POLLING_INTERVAL);
+    return () => clearInterval(pollInterval);
+  }, [fetchAvailableShifts, fetchAssignedShifts, fetchRequestedShifts]);
+  
+  // State for edit dialog
+  const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false);
+  const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);  
 
-  // Update the polling effect to better preserve pending status
-  useEffect(() => {
-    let ignoreStaleRequest = false;
-    const pollInterval = setInterval(async () => {
-      try {
-        const params = { request_employee_id: currentEmployee.id };
-        const response = await getRequestedShifts(params);
-        
-        if (!ignoreStaleRequest && response?.data) {
-          setRequestedShifts(prevRequests => {
-            const newRequests = response.data.map(shift => ({
-              id: shift.id,
-              request_shift_id: shift.id,
-              employeeId: shift.employeeId,
-              availableShiftId: shift.availableShiftId,
-              notes: shift.notes || '',
-              status: shift.status || 'pending'
-            }));
-
-            // Keep existing pending requests and merge with new data
-            return prevRequests.map(existingReq => {
-              const newReq = newRequests.find(
-                req => req.availableShiftId === existingReq.availableShiftId
-              );
-              // Preserve pending status unless server explicitly changes it
-              if (existingReq.status === 'pending' && (!newReq || newReq.status === 'pending')) {
-                return existingReq;
-              }
-              return newReq || existingReq;
-            });
-          });
-        }
-      } catch (error) {
-        console.error('Error polling shifts:', error);
-      }
-    }, 10000); // Increased to 10 seconds to reduce update frequency
-
-    return () => {
-      ignoreStaleRequest = true;
-      clearInterval(pollInterval);
-    };
-  }, [currentEmployee.id]);
-
-    const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
-      setEditShift(shift); // Set the selected shift for editing
-      setIsEditShiftDialogOpen(true); // Open the edit dialog
-    };
+  const handleOpenEditDialogFromCalendar = (shift: AvailableShift) => {
+    setEditShift(shift); // Set the selected shift for editing
+    setIsEditShiftDialogOpen(true); // Open the edit dialog
+  };
   
   
     // Utility function to get shift status for display
     const getShiftStatus = (availableShiftId: number): string => {
-      const isAssigned = assignedShifts.some(s => s.availableShiftId === availableShiftId);
+      const isAssigned = assignedShifts.some(s => s.assigned_shift_id === availableShiftId);
       if (isAssigned) return 'assigned';
       
       const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);

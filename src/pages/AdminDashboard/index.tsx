@@ -10,13 +10,13 @@ import { MainTheme } from '../../assets/themes/themes';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/layout/Footer';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
-import { createRequestedShift, getRequestedShifts, updateRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
+import { createRequestedShift, deleteRequestedShiftById, getRequestedShifts, updateRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
 import { createAssignedShift, deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 //Types
-import {AvailableShift, RequestedShift} from '../../components/CalendarFeatures/ShiftUtils';
+import {AvailableShift, RequestedShift, SelectedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, assignedShiftsResponse} from '../../components/CalendarFeatures/calendarStates';
-import {employees} from '../../components/CalendarFeatures/calendarStates';
+import { getEmployees } from '../../utils/apis/employeeShiftApis';
 //import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
@@ -58,7 +58,10 @@ const AdminDashboard: React.FC = () => {
 
   // Add these state variables at the top with other states   
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
-  const [selectedShiftInfo, setSelectedShiftInfo] = useState<any>(null);
+  const [selectedShiftInfo, setSelectedShiftInfo] = useState<SelectedShift>();
+
+  // Employees state
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   // Open deny dialog
   const handleOpenDenyDialog = (requestId: number) => {
@@ -83,19 +86,40 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Open info dialog to see shift details
-  const handleOpenInfoDialog = (shift: any) => {
+  const handleOpenInfoDialog = (shift: AvailableShift) => {
+    // Map the shift to SelectedShift type
+    //fetch the shift details by ID if needed
     setSelectedShiftInfo(shift);
     setInfoDialogOpen(true);
   };
 
-  // Fetch all shifts (available, requested, and assigned) on component mount
+  // Fetch all shifts and employees on mount
   useEffect(() => {
-    const fetchAllShifts = async () => {
+    const fetchAllData = async () => {
       setLoading(true);
       try {
+        // Fetch employees
+        const employeesResponse = await getEmployees();
+        // Accept both array and {data: array} for compatibility
+        let employeesArr = [];
+        if (Array.isArray(employeesResponse)) {
+          employeesArr = employeesResponse;
+        } else if (employeesResponse?.data && Array.isArray(employeesResponse.data)) {
+          employeesArr = employeesResponse.data;
+        }
+        setEmployees(
+          employeesArr.map((emp: any) => ({
+            id: emp.employee_id ?? emp.id,
+            name: emp.employee_name ?? emp.name,
+            email: emp.employee_email ?? emp.email,
+            admin: emp.employee_admin ?? emp.admin,
+            phone: emp.employee_phone ?? emp.phone,
+          }))
+        );
+
+        console.log(employees)
         // Fetch available shifts
         const availableShiftsResponse = await getAvailableShifts();
-        
         if (availableShiftsResponse?.data && Array.isArray(availableShiftsResponse.data)) {
           const mappedAvailableShifts = availableShiftsResponse.data.map((shift: any) => ({
             id: shift.shift_id || shift.id,
@@ -108,104 +132,27 @@ const AdminDashboard: React.FC = () => {
           setAvailableShifts(mappedAvailableShifts);
         }
 
-        // Fetch requested shifts
-        const requestedShiftsResponse = await getRequestedShifts();
-        if (requestedShiftsResponse?.data && Array.isArray(requestedShiftsResponse.data)) {
-          const mappedRequestedShifts = requestedShiftsResponse.data.map((shift: any) => ({
-            request_shift_id: shift.id, // Request id
-            id: shift.id, // Shift Slot id
-            employeeId: shift.employee_id, // Emplpoyee id
-            availableShiftId: shift.availableShiftId,
-            notes: shift.notes || '', // Notes added by user when requesting
-            status: shift.status || 'pending',
-          }));
-          setRequestedShifts(mappedRequestedShifts);
-        }
-
         // Fetch assigned shifts
         const assignedShiftsResponse = await getAssignedShifts();
         if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
           const mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
-            id: shift.assigned_id, // Use assigned_id from backend
-            employeeId: shift.assigned_employee_id,
-            availableShiftId: shift.assigned_shift_id,
+            assigned_id: shift.assigned_id,
+            assigned_employee_id: shift.assigned_employee_id,
+            assigned_shift_id: shift.assigned_shift_id,
             availableShift: shift.availableShift,
             employee: shift.employee,
           }));
           setAssignedShifts(mappedAssignedShifts);
         }
-
       } catch (err) {
-        //console.error('Error fetching shifts:', err);
-        //setError('Failed to fetch shifts. Please try again later.');
+        // Handle error
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllShifts();
+    fetchAllData();
   }, []);
-
-  // Fetch requested shifts on component mount
-  useEffect(() => {
-    const fetchRequestedShifts = async () => {
-      setLoading(true);
-      try {
-        const response = await getRequestedShifts();
-        console.log('Fetched requested shifts:', response);
-
-        if (response?.data && Array.isArray(response.data)) {
-          const mappedRequestedShifts = response.data.map((shift: any) => ({
-            request_shift_id: shift.id,
-            id: shift.id,
-            employeeId: shift.employee_id,
-            availableShiftId: shift.availableShiftId,
-            notes: shift.notes || '',
-            status: shift.status || 'pending',
-          }));
-          setRequestedShifts(mappedRequestedShifts);
-        }
-      } catch (err) {
-        //console.error('Error fetching requested shifts:', err);
-        //setError('Failed to fetch requested shifts. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRequestedShifts();
-  }, []);
-
-  // Fetch shifts for the current week
-  useEffect(() => {
-    fetchShiftsForWeek(); // Using function below
-  }, [currentWeekStart]);
-
-  // Function to fetch shifts for the current week
-  const fetchShiftsForWeek = async () => {
-    setLoading(true);
-    try {
-      const startDate = format(currentWeekStart, 'yyyy-MM-dd');
-      const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
-
-      // Filter the simulated API response based on the current week's date range
-      const filteredAvailableShifts = availableShiftsResponse.filter(shift =>
-        isWithinInterval(new Date(shift.date), {
-          start: new Date(startDate),
-          end: new Date(endDate),
-        })
-      );
-
-      setAvailableShifts(filteredAvailableShifts);
-
-      setAssignedShifts(assignedShiftsResponse);
-    } catch (err) {
-      //setError('Failed to fetch shifts. Please try again later.');
-      //console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Update the polling interval to 7 seconds
   const POLLING_INTERVAL = 7000; // Poll every 7 seconds
@@ -213,15 +160,33 @@ const AdminDashboard: React.FC = () => {
   // Update the refreshDashboard function to ensure proper merging of requested shifts
   const refreshDashboard = async () => {
     try {
-      const [availableResponse, requestedResponse, assignedResponse] = await Promise.all([
+      const [employeesResponse, availableResponse, requestedResponse, assignedResponse] = await Promise.all([
+        getEmployees(),
         getAvailableShifts(),
         getRequestedShifts(),
         getAssignedShifts()
       ]);
 
+      // Update employees
+      let employeesArr = [];
+      if (Array.isArray(employeesResponse)) {
+        employeesArr = employeesResponse;
+      } else if (employeesResponse?.data && Array.isArray(employeesResponse.data)) {
+        employeesArr = employeesResponse.data;
+      }
+      setEmployees(
+        employeesArr.map((emp: any) => ({
+          id: emp.employee_id ?? emp.id,
+          name: emp.employee_name ?? emp.name,
+          email: emp.employee_email ?? emp.email,
+          admin: emp.employee_admin ?? emp.admin,
+          phone: emp.employee_phone ?? emp.phone,
+        }))
+      );
+
       // Update available shifts
       if (availableResponse?.data) {
-        const mappedAvailableShifts = availableResponse.data.map((shift: { shift_id: any; id: any; shift_date: any; date: any; shift_time_start: any; start: any; shift_time_end: any; end: any; shift_slots_amount: any; shift_slots_taken:any; }) => ({
+        const mappedAvailableShifts = availableResponse.data.map((shift: any) => ({
           id: shift.shift_id || shift.id,
           date: shift.shift_date || shift.date,
           start: shift.shift_time_start || shift.start,
@@ -234,9 +199,8 @@ const AdminDashboard: React.FC = () => {
 
       // Update requested shifts
       if (requestedResponse?.data) {
-        const mappedRequestedShifts = requestedResponse.data.map(shift => ({
+        const mappedRequestedShifts = requestedResponse.data.map((shift: any) => ({
           id: shift.id,
-          request_shift_id: shift.id,
           employeeId: shift.employeeId,
           availableShiftId: shift.availableShiftId,
           notes: shift.notes || '',
@@ -255,10 +219,9 @@ const AdminDashboard: React.FC = () => {
       // Update assigned shifts
       if (assignedResponse?.data) {
         const mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
-          id: shift.assigned_id, // Use assigned_id from backend
+          id: shift.assigned_id,
           employeeId: shift.assigned_employee_id,
           availableShiftId: shift.assigned_shift_id,
-          // Optionally, include more fields if needed
           availableShift: shift.availableShift,
           employee: shift.employee,
         }));
@@ -277,7 +240,6 @@ const AdminDashboard: React.FC = () => {
         if (response?.data && Array.isArray(response.data)) {
           const mappedShifts = response.data.map(shift => ({
             id: shift.id,
-            request_shift_id: shift.id,
             employeeId: shift.employeeId,
             availableShiftId: shift.availableShiftId,
             notes: shift.notes || '',
@@ -303,26 +265,84 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Add automatic refresh after actions
+  // Remove the separate polling useEffect for requested shifts
+  // Add a single polling effect for all dashboard data
   useEffect(() => {
-    const refreshAllData = async () => {
+    let isMounted = true;
+    const fetchAndUpdateAll = async () => {
+      setLoading(true);
       try {
-        await refreshDashboard(); // This refreshes both available and requested shifts
+        const [employeesResponse, availableResponse, requestedResponse, assignedResponse] = await Promise.all([
+          getEmployees(),
+          getAvailableShifts(),
+          getRequestedShifts(),
+          getAssignedShifts()
+        ]);
+        if (isMounted) {
+          // Employees
+          let employeesArr = [];
+          if (Array.isArray(employeesResponse)) {
+            employeesArr = employeesResponse;
+          } else if (employeesResponse?.data && Array.isArray(employeesResponse.data)) {
+            employeesArr = employeesResponse.data;
+          }
+          setEmployees(
+            employeesArr.map((emp: any) => ({
+              id: emp.employee_id ?? emp.id,
+              name: emp.employee_name ?? emp.name,
+              email: emp.employee_email ?? emp.email,
+              admin: emp.employee_admin ?? emp.admin,
+              phone: emp.employee_phone ?? emp.phone,
+            }))
+          );
+          // Available shifts
+          if (availableResponse?.data && Array.isArray(availableResponse.data)) {
+            setAvailableShifts(availableResponse.data.map((shift: any) => ({
+              id: shift.shift_id || shift.id,
+              date: shift.shift_date || shift.date,
+              start: shift.shift_time_start || shift.start,
+              end: shift.shift_time_end || shift.end,
+              shift_slots_amount: shift.shift_slots_amount || 0,
+              shift_slots_taken: shift.shift_slots_taken,
+            })));
+          }
+          // Requested shifts
+          if (requestedResponse?.data && Array.isArray(requestedResponse.data)) {
+            setRequestedShifts(requestedResponse.data.map((shift: any) => ({
+              id: shift.id,
+              employeeId: shift.employeeId,
+              availableShiftId: shift.availableShiftId,
+              notes: shift.notes || '',
+              status: shift.status || 'pending',
+            })));
+          }
+          // Assigned shifts
+          if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
+            setAssignedShifts(assignedResponse.data.map((shift: any) => ({
+              id: shift.assigned_id,
+              assigned_id: shift.assigned_id,
+              employeeId: shift.assigned_employee_id,
+              assigned_employee_id: shift.assigned_employee_id,
+              availableShiftId: shift.assigned_shift_id,
+              assigned_shift_id: shift.assigned_shift_id,
+              availableShift: shift.availableShift,
+              employee: shift.employee,
+            })));
+          }
+        }
       } catch (err) {
-        console.error('Error during auto-refresh:', err);
+        // Optionally handle error
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
-
-    // Initial refresh
-    refreshAllData();
-
-    // Set up polling interval
-    const interval = setInterval(refreshAllData, POLLING_INTERVAL);
-
-    // Cleanup on unmount
-    return () => clearInterval(interval);
-  }, []); // Empty dependency array means this only sets up on mount
-
+    fetchAndUpdateAll();
+    const interval = setInterval(fetchAndUpdateAll, POLLING_INTERVAL);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [setAvailableShifts, setRequestedShifts, setAssignedShifts, setEmployees, setLoading]);
 
   // Handle adding a new shift
   const handleAddShift = async () => {
@@ -420,7 +440,7 @@ const AdminDashboard: React.FC = () => {
 
 
   // Function that calls delete assigned shift by ID
-  const handleDeleteAssignedShift = async (assignedShiftId: number) => {
+  const handleDeleteAssignedShift = async (assignedShiftId: number, requestedShiftId: number) => {
     setLoading(true);
     try {
         console.log('Attempting to delete assigned shift:', assignedShiftId);
@@ -430,15 +450,15 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Add validation to check if shift exists in local state
-        const shiftExists = assignedShifts.some(shift => shift.id === assignedShiftId);
+        const shiftExists = assignedShifts.some(shift => shift.assigned_id === assignedShiftId);
         if (!shiftExists) {
             throw new Error(`Assigned shift with ID ${assignedShiftId} not found in local state`);
         }
 
         await deleteAssignedShiftById(assignedShiftId);
-        
+        await deleteRequestedShiftById(requestedShiftId)
         // Update local state
-        setAssignedShifts(prev => prev.filter(shift => shift.id !== assignedShiftId));
+        setAssignedShifts(prev => prev.filter(shift => shift.assigned_id !== assignedShiftId));
         
         // Close dialog and refresh data
         setInfoDialogOpen(false);
@@ -498,13 +518,15 @@ const AdminDashboard: React.FC = () => {
       // Call the API to update the requested shift status to "denied"
       await updateRequestedShiftById(requestedShiftId, { status: 'denied' });
 
-      // Refresh the requested shifts to ensure the denied status persists
       const updatedRequestedShifts = await getRequestedShifts();
       if (updatedRequestedShifts?.data) {
         setRequestedShifts(
           updatedRequestedShifts.data.map(shift => ({
-            ...shift,
-            request_shift_id: shift.id, // Add the missing property
+            id: shift.id,
+            employeeId: shift.employeeId,
+            availableShiftId: shift.availableShiftId,
+            notes: shift.notes || '',
+            status: shift.status || 'pending',
           }))
         );
       }
@@ -543,7 +565,6 @@ const AdminDashboard: React.FC = () => {
       // Then update the request status to approved
       await updateRequestedShiftById(requestedShift.id, { status: 'approved' });
 
-      // Update local state
       setRequestedShifts(prev =>
         prev.map(shift =>
           shift.id === requestedShift.id
@@ -826,6 +847,7 @@ const getFilteredShifts = () => {
                           const pendingRequests = requestedShifts.filter(
                             req => req.availableShiftId === shift.id && req.status === 'pending'
                           );
+                          console.log('Pending requests for shift:', shift.id, pendingRequests);
                           return (
                             <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
                               {/* Main shift card - always green */}
@@ -872,6 +894,7 @@ const getFilteredShifts = () => {
                               {/* Render a separate orange bar for each pending request */}
                               {pendingRequests.map((pendingRequest, i) => {
                                 const requester = employees.find(emp => emp.id === pendingRequest.employeeId);
+                                console.log('Requester for pending request:', employees);
                                 return (
                                   <Box
                                     key={pendingRequest.id}
@@ -1169,12 +1192,12 @@ const getFilteredShifts = () => {
                     Assigned Users:
                   </Typography>
                   {assignedShifts
-                    .filter(assign => assign.availableShiftId === selectedShiftInfo.id)
+                    .filter(assign => assign.assigned_shift_id === selectedShiftInfo.id)
                     .map(assign => {
-                      const user = employees.find(emp => emp.id === assign.employeeId);
+                      const user = employees.find(emp => emp.id === assign.assigned_employee_id);
                       return (
                         <Box 
-                          key={assign.id} 
+                          key={assign.assigned_id} 
                           sx={{ 
                             display: 'flex', 
                             justifyContent: 'space-between', 
@@ -1192,7 +1215,7 @@ const getFilteredShifts = () => {
                             size="small"
                             color="error"
                             onClick={() => {
-                              handleDeleteAssignedShift(assign.id);
+                              handleDeleteAssignedShift(assign.assigned_id, assign.assigned_shift_id);
                               setInfoDialogOpen(false);
                             }}
                             sx={{ minWidth: 0 }}

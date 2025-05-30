@@ -1,3 +1,4 @@
+import { Employee } from '../../components/CalendarFeatures/calendarStates';
 import { api } from './apiconfig'; // Adjust the import path as necessary
 import { CreateEmployeeDTO, UpdateEmployeeDTO, EmployeeQueryDTO } from './types'; // Import types
 

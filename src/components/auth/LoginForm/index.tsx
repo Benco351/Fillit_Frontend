@@ -137,7 +137,7 @@ const LoginForm: React.FC = () => {
         sessionStorage.setItem('customEmployeeId', customEmployeeId);
         sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
         sessionStorage.setItem('name', response.data.data.employee_name);
-        sessionStorage.setItem('email', response.data.data.email);
+        sessionStorage.setItem('email', response.data.data.employee_email);
 
         console.log('Session storage updated:', {
           customEmployeeId,

@@ -15,20 +15,29 @@ export interface AvailableShift {
   end: string;
   shift_slots_amount?: number;
   shift_slots_taken?: number;
-
+}
+export interface SelectedShift {
+  id: number;              // client PK (mirrors availableShift.id)
+  date: string;
+  start: string;
+  end: string;
+  shift_slots_amount?: number;
+  shift_slots_taken?: number;
 }
 
 export interface RequestedShift {
-  request_shift_id: number;      // server PK
-  id: number;                    // client PK (mirrors request_shift_id)
+  id: number;                    // server PK (request_shift_id)
   employeeId: number;
   availableShiftId: number;
   notes: string;
   status: 'pending' | 'approved' | 'denied';
 }
 
+
 export interface AssignedShift {
-  id: number;
-  employeeId: number;
-  availableShiftId: number;
+  assigned_id: number;
+  assigned_shift_id: number;
+  assigned_employee_id: number;
+  availableShift: any;
+  employee: any;
 }

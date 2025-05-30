@@ -54,16 +54,27 @@ export default function ChatPopup() {
     setMsgs(m => [...m, { from: 'user', text: prompt }]);
     setLoading(true);
     try {
+      // Fetch from sessionStorage
+      const employeeId = sessionStorage.getItem('customEmployeeId');
+      const adminMode = sessionStorage.getItem('isAdmin');
+
       const { data } = await aiLambda.post(
-        '/',
-        { user_prompt: prompt },
+        '/api/chat',
         {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-          },
+          user_prompt: prompt,
+          employee_id: employeeId ? Number(employeeId) : undefined,
+          admin_mode: adminMode ? String(JSON.parse(adminMode)) : 'false',
         }
       );
-      setMsgs(m => [...m, { from: 'ai', text: data.reply }]);
+      // Lambda returns a stringified JSON in the 'body' property
+      let aiReply = 'Sorry, something went wrong 🤖';
+      if (data && typeof data.body === 'string') {
+        try {
+          const parsed = JSON.parse(data.body);
+          aiReply = parsed.ai_reply || aiReply;
+        } catch { /* empty */ }
+      }
+      setMsgs(m => [...m, { from: 'ai', text: aiReply }]);
     } catch {
       setMsgs(m => [...m, { from: 'ai', text: 'Sorry, something went wrong 🤖' }]);
     } finally {
