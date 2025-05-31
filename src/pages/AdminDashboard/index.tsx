@@ -446,21 +446,49 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Add validation to check if shift exists in local state
-        const shiftExists = assignedShifts.some(shift => shift.assigned_id === assignedShiftId);
-        if (!shiftExists) {
+        const assignedShift = assignedShifts.find(shift => shift.assigned_id === assignedShiftId);
+        if (!assignedShift) {
             throw new Error(`Assigned shift with ID ${assignedShiftId} not found in local state`);
         }
 
+        // Find the corresponding requested shift based on employee and available shift
+        const correspondingRequestedShift = requestedShifts.find(req => 
+          req.employeeId === assignedShift.assigned_employee_id && 
+          req.availableShiftId === assignedShift.assigned_shift_id &&
+          req.status === 'approved'
+        );
+
+        console.log('Found corresponding requested shift:', correspondingRequestedShift);
+
+        // Delete the assigned shift first
         await deleteAssignedShiftById(assignedShiftId);
-        await deleteRequestedShiftById(requestedShiftId)
-        // Update local state
+        
+        // If we found a corresponding requested shift, delete it
+        if (correspondingRequestedShift) {
+          console.log('Deleting corresponding requested shift:', correspondingRequestedShift.id);
+          await deleteRequestedShiftById(correspondingRequestedShift.id);
+          
+          // Update local requested shifts state
+          setRequestedShifts(prev => prev.filter(req => req.id !== correspondingRequestedShift.id));
+        }
+
+        // Update local assigned shifts state
         setAssignedShifts(prev => prev.filter(shift => shift.assigned_id !== assignedShiftId));
+        
+        // Decrement shift_slots_taken for the available shift
+        setAvailableShifts(prev =>
+          prev.map(shift =>
+            shift.id === assignedShift.assigned_shift_id
+              ? { ...shift, shift_slots_taken: Math.max((shift.shift_slots_taken || 1) - 1, 0) }
+              : shift
+          )
+        );
         
         // Close dialog and refresh data
         setInfoDialogOpen(false);
         await refreshDashboard();
 
-        setSuccess('Assigned shift deleted successfully');
+        setSuccess('Assigned shift and corresponding request deleted successfully');
     } catch (err: any) {
         console.error('Error deleting assigned shift:', err);
         setError(err.message || 'Failed to delete assigned shift. Please try again.');
@@ -1407,7 +1435,7 @@ const combinedShifts = useMemo(() => {
                             color="error"
                             variant="outlined"
                             onClick={() => {
-                              handleDeleteAssignedShift(assign.assigned_id, assign.assigned_shift_id);
+                              handleDeleteAssignedShift(assign.assigned_id, 0); // Pass 0 as placeholder
                             }}
                             sx={{ minWidth: 'auto', px: 1 }}
                           >
