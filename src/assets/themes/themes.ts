@@ -278,3 +278,63 @@ export const DrawerTheme = createTheme({
     },
   },
 });
+
+
+export const AdminTheme = createTheme({
+  palette: {
+    primary: {
+      main: '#093039', // Green color from Fillit logo
+      dark: '#009e6f',
+      light: '#33cf9f'
+    },
+    secondary: {
+      main: '#2c353d', // Dark background from Fillit logo
+      dark: '#232a31',
+      light: '#4e5a64'
+    },
+    background: {
+      default: '#f8f9fa',
+      paper: '#ffffff'
+    }
+  },
+  typography: {
+    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    button: {
+      fontWeight: 500,
+      textTransform: 'none',
+    }
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 30,
+          padding: '10px 24px',
+          fontSize: '1rem',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+          transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-5px)',
+            boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.12)',
+          },
+        },
+      },
+    },
+  },
+});
+

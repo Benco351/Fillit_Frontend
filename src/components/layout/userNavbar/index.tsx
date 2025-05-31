@@ -14,6 +14,9 @@ const Navbar = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery(NavBarTheme.breakpoints.down('md'));
 
+  // Detect admin mode from sessionStorage
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
+
   const handleLogout = () => {
     signOut();
     navigate(ROUTES.LOGIN, { replace: true });
@@ -76,7 +79,7 @@ const Navbar = () => {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
       {/* Logo */}
-      <LogoOnly />
+      <LogoOnly color={'white'} />
       
       {isMobile ? (
         <>

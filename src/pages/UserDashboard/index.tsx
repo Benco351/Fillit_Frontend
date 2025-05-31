@@ -311,10 +311,10 @@ const UserDashboard: React.FC = () => {
                     borderRadius: '4px',
                   },
                   '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(0, 194, 140, 0.3)',
+                    backgroundColor: '#093039',
                     borderRadius: '4px',
                     '&:hover': {
-                      backgroundColor: 'rgba(0, 194, 140, 0.5)',
+                      backgroundColor: '#093039',
                     }
                   }
                 }}
@@ -323,9 +323,9 @@ const UserDashboard: React.FC = () => {
                   <Box
                     key={index}
                     sx={{
-                      flex: '1 1 0',
-                      minWidth: 180,
-                      maxWidth: 'calc(100% / 7)',
+                      flex: 1, // Make columns flexible and fill the row
+                      minWidth: 0, // Allow shrinking to fit
+                      maxWidth: '100%',
                       height: '600px',
                       display: 'flex',
                       flexDirection: 'column',
