@@ -581,28 +581,8 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-
-// Updated getFilteredShifts function
-const getFilteredShifts = () => {
-  return availableShifts.filter(shift => {
-    // If shift_slots_amount is defined and shift is full, hide it
-    if (
-      typeof shift.shift_slots_amount === 'number' &&
-      typeof shift.shift_slots_taken === 'number' &&
-      shift.shift_slots_taken >= shift.shift_slots_amount
-    ) {
-      return false;
-    }
-    // Otherwise, always show the shift
-    return true;
-  });
-};
-
-
   // #093039 - color for user
   //sidescroll
-
-  const filteredShifts = getFilteredShifts();
 
   return (
     <ThemeProvider theme={MainTheme}>
@@ -840,21 +820,26 @@ const getFilteredShifts = () => {
                       }}
                     >
                       {/* Shift Card - Update the existing shift mapping code */}
-                      {filteredShifts
+                      {availableShifts
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                         .map((shift, idx, arr) => {
                           const pendingRequests = requestedShifts.filter(
                             req => req.availableShiftId === shift.id && req.status === 'pending'
                           );
                           console.log('Pending requests for shift:', shift.id, pendingRequests);
+                          
+                          // Determine if shift is full for visual indication
+                          const isShiftFull = shift.shift_slots_amount && shift.shift_slots_taken && 
+                                             shift.shift_slots_taken >= shift.shift_slots_amount;
+                          
                           return (
                             <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
-                              {/* Main shift card - always green */}
+                              {/* Main shift card */}
                               <Box
                                 sx={{
                                   p: 2,
                                   borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
-                                  backgroundColor: '#4caf50',
+                                  backgroundColor: isShiftFull ? '#ff5722' : '#4caf50', // Orange if full, green if available
                                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
                                   backdropFilter: 'blur(4px)',
                                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
@@ -865,8 +850,17 @@ const getFilteredShifts = () => {
                                 }}
                               >
                                 <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                                  {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                                  {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
                                 </Typography>
+                                
+                                {/* Show slot information */}
+                                {shift.shift_slots_amount && (
+                                  <Typography variant="caption" sx={{ display: 'block', fontSize: '0.7rem', mt: 0.5 }}>
+                                    Slots: {shift.shift_slots_taken || 0}/{shift.shift_slots_amount}
+                                    {isShiftFull && ' (FULL)'}
+                                  </Typography>
+                                )}
+                                
                                 <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', gap: 1 }}>
                                   <IconButton
                                     size="small"
@@ -890,7 +884,7 @@ const getFilteredShifts = () => {
                                   </IconButton>
                                 </Box>
                               </Box>
-                              {/* Render a separate orange bar for each pending request */}
+                              {/* Render pending requests */}
                               {pendingRequests.map((pendingRequest, i) => {
                                 const requester = employees.find(emp => emp.id === pendingRequest.employeeId);
                                 console.log('Requester for pending request:', employees);
