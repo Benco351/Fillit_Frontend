@@ -22,6 +22,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'requested' | 'accepted'>('all');
+  
   const [assignedShifts, setAssignedShifts] = useState<AssignedShift[]>([]);
 
   const commonButtonStyle = {

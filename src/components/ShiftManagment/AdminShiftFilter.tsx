@@ -24,7 +24,7 @@ const filterButtonStyle = {
   }
 };
 
-const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
+const AdminShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
   return (
     <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
       <ButtonGroup sx={{ gap: 1 }}>
@@ -36,7 +36,7 @@ const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
           className={filter === 'all' ? 'active' : ''}
           onClick={() => setFilter('all')}
         >
-          All Shifts
+          Full
         </Button>
         <Button
           sx={{
@@ -46,7 +46,7 @@ const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
           className={filter === 'requested' ? 'active' : ''}
           onClick={() => setFilter('requested')}
         >
-          Requested
+          Not Full
         </Button>
         <Button
           sx={{
@@ -56,7 +56,7 @@ const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
           className={filter === 'accepted' ? 'active' : ''}
           onClick={() => setFilter('accepted')}
         >
-          Accepted
+          Full
         </Button>
       </ButtonGroup>
     </Box>
@@ -65,4 +65,4 @@ const ShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
 
 
 
-export default ShiftFilters;
+export default AdminShiftFilters;
