@@ -20,7 +20,7 @@ const Navbar = () => {
   };
 
   const handleOpenSettings = () => {
-    // Your settings opening logic here
+    navigate('/settings');
   };
 
   const glassButtonStyle = {

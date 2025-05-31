@@ -440,7 +440,7 @@ const AdminDashboard: React.FC = () => {
 
 
   // Function that calls delete assigned shift by ID
-  const handleDeleteAssignedShift = async (assignedShiftId: number, requestedShiftId: number) => {
+  const handleDeleteAssignedShift = async (assignedShiftId: number) => {
     setLoading(true);
     try {
         console.log('Attempting to delete assigned shift:', assignedShiftId);
@@ -456,7 +456,6 @@ const AdminDashboard: React.FC = () => {
         }
 
         await deleteAssignedShiftById(assignedShiftId);
-        await deleteRequestedShiftById(requestedShiftId)
         // Update local state
         setAssignedShifts(prev => prev.filter(shift => shift.assigned_id !== assignedShiftId));
         
@@ -1195,6 +1194,7 @@ const getFilteredShifts = () => {
                     .filter(assign => assign.assigned_shift_id === selectedShiftInfo.id)
                     .map(assign => {
                       const user = employees.find(emp => emp.id === assign.assigned_employee_id);
+
                       return (
                         <Box 
                           key={assign.assigned_id} 
@@ -1215,7 +1215,7 @@ const getFilteredShifts = () => {
                             size="small"
                             color="error"
                             onClick={() => {
-                              handleDeleteAssignedShift(assign.assigned_id, assign.assigned_shift_id);
+                              handleDeleteAssignedShift(assign.assigned_id);
                               setInfoDialogOpen(false);
                             }}
                             sx={{ minWidth: 0 }}

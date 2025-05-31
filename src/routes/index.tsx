@@ -8,6 +8,7 @@ import SignUpForm      from '../components/auth/SignUpForm';
 import LoginForm       from '../components/auth/LoginForm';
 import UserDashboard   from '../pages/UserDashboard';
 import AdminDashboard  from '../pages/AdminDashboard';
+import SettingsPage    from '../pages/Settings';
 
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -44,6 +45,15 @@ const AppRoutes: React.FC = () => (
         element={
           <ProtectedRoute redirectTo={ROUTES.LOGIN} requireGroup="admin">
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute redirectTo={ROUTES.LOGIN}>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />
