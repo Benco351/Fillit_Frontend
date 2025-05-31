@@ -1011,7 +1011,7 @@ const filteredShifts = React.useMemo(() => {
                           );
                         })}
                     </Box>
-                  </Box>
+                          </Box>
                 ))}
               </Box>
             </Box>

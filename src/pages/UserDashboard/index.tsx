@@ -324,9 +324,9 @@ const UserDashboard: React.FC = () => {
                   <Box
                     key={index}
                     sx={{
-                      flex: '1 1 220px', // Responsive: min 220px, grows as needed
-                      minWidth: { xs: 220, sm: 180, md: 160 },
-                      maxWidth: 400,
+                      flex: 1, 
+                      minWidth: 0, 
+                      maxWidth: '100%',
                       height: '600px',
                       display: 'flex',
                       flexDirection: 'column',
@@ -447,7 +447,7 @@ const UserDashboard: React.FC = () => {
                                 <Typography
                                   variant="body2"
                                   sx={{
-                                    fontSize: { xs: '0.8rem', sm: '0.95rem' },
+                                    fontSize: { xs: '0.7rem', sm: '0.7rem' },
                                     wordBreak: 'break-word',
                                     mb: 0.5,
                                   }}
