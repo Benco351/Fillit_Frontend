@@ -43,7 +43,7 @@ const UserDashboard: React.FC = () => {
   const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, setLoading,
     error, success, filter, setFilter, setSuccess, 
     setError, setRequestedShifts, assignedShifts, weekDays, goToNextWeek,
-    goToPreviousWeek, fetchShiftsForWeek, commonButtonStyle
+    goToPreviousWeek, fetchShiftsForWeek, commonButtonStyle, fetchAssignedShifts
   } = useUserDashboard(currentEmployee);
 
   const [requestingShifts, setRequestingShifts] = useState<number[]>([]); // Separate loading state for each shift request
@@ -53,6 +53,7 @@ const UserDashboard: React.FC = () => {
   // Automatically fetch shifts when the component mounts or the week changes
   useEffect(() => {
     fetchShiftsForWeek();
+    fetchAssignedShifts();
   }, [currentWeekStart]);
 
 
@@ -141,29 +142,37 @@ const UserDashboard: React.FC = () => {
     return employee ? employee.name : 'Unknown Employee';
   };
 
+  // Compute combined shifts that include those fully taken (from assignedShifts availableShift)
+  const combinedShifts = useMemo(() => {
+    const availableMap = new Map(availableShifts.map((s) => [s.id, s]));
+    const additional = assignedShifts
+      .map((assign) => assign.availableShift)
+      .filter((s: any) => s && !availableMap.has(s.id));
+    return [...availableShifts, ...additional];
+  }, [availableShifts, assignedShifts]);
+
   // Filtered shifts based on the selected filter
   const filteredShifts = useMemo(() => {
-    // Always start with all available shifts
-    if (!availableShifts) return [];
+    if (!combinedShifts) return [];
     switch (filter) {
       case 'requested':
-        // Show all shifts that have been requested by the user
-        return availableShifts.filter(shift =>
-          requestedShifts.some(req => req.availableShiftId === shift.id)
+        return combinedShifts.filter((shift) =>
+          requestedShifts.some((req) => req.availableShiftId === shift.id)
         );
       case 'accepted':
-        // Show all shifts that have been approved or assigned to the user
-        return availableShifts.filter(shift =>
-          requestedShifts.some(req =>
-            req.availableShiftId === shift.id && req.status === 'approved'
+        return combinedShifts.filter((shift) =>
+          requestedShifts.some(
+            (req) =>
+              req.availableShiftId === shift.id && req.status === 'approved'
           ) ||
-          assignedShifts.some(assign => assign.assigned_shift_id === shift.id)
+          assignedShifts.some(
+            (assign) => assign.assigned_shift_id === shift.id
+          )
         );
       default:
-        // Always show all available shifts (live)
-        return availableShifts;
+        return combinedShifts;
     }
-  }, [availableShifts, requestedShifts, assignedShifts, filter]);
+  }, [combinedShifts, requestedShifts, assignedShifts, filter]);
 
   return (
     <ThemeProvider theme={MainTheme}>

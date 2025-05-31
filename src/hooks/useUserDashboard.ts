@@ -164,6 +164,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     // Dialog states
   const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState<boolean>(false);
   const [isRequestShiftDialogOpen, setIsRequestShiftDialogOpen] = useState<boolean>(false);
+
   // Fetch shifts for the current week
   const fetchShiftsForWeek = useCallback(async () => {
     setLoading(true);
@@ -372,7 +373,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     loadingRequested, setLoadingAvailable, setLoadingRequested, goToPreviousWeek, goToNextWeek, handleEditShift, fetchShiftsForWeek,
     denyDialogOpen, setDenyDialogOpen,
     denyRequestId, setDenyRequestId,
-    infoDialogOpen, setInfoDialogOpen, selectedShiftInfo, setSelectedShiftInfo
+    infoDialogOpen, setInfoDialogOpen, selectedShiftInfo, setSelectedShiftInfo, fetchAssignedShifts
 
   };
 };

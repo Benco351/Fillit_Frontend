@@ -15,6 +15,8 @@ export interface AvailableShift {
   end: string;
   shift_slots_amount?: number;
   shift_slots_taken?: number;
+  isFromAssigned?: boolean; // Added optional property
+
 }
 export interface SelectedShift {
   id: number;              // client PK (mirrors availableShift.id)
@@ -40,4 +42,6 @@ export interface AssignedShift {
   assigned_employee_id: number;
   availableShift: any;
   employee: any;
+  shift_slots_amount?: number;
+  shift_slots_taken?: number;
 }

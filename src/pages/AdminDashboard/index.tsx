@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {Box, Container, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
 IconButton, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, MenuItem as DropdownMenuItem,
+Chip
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, addDays, parseISO, isWithinInterval } from 'date-fns';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon, Info as InfoIcon } from '@mui/icons-material';
@@ -28,6 +28,7 @@ import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 import UserDashboardTitle from '../../components/sections/UserPage';
 import AIChatPopup from '../../components/aiChat';
 import { GlobalStyles } from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 
 const AdminDashboard: React.FC = () => {
@@ -122,7 +123,7 @@ const AdminDashboard: React.FC = () => {
             start: shift.shift_time_start || shift.start,
             end: shift.shift_time_end || shift.end,
             shift_slots_amount: shift.shift_slots_amount || 0, 
-            shift_slots_taken: shift.shift_slots_taken, 
+            shift_slots_taken: shift.shift_slots_taken !== undefined ? shift.shift_slots_taken : 0, // default to 0
           }));
           setAvailableShifts(mappedAvailableShifts);
         }
@@ -187,7 +188,7 @@ const AdminDashboard: React.FC = () => {
           start: shift.shift_time_start || shift.start,
           end: shift.shift_time_end || shift.end,
           shift_slots_amount: shift.shift_slots_amount || 0, 
-          shift_slots_taken: shift.shift_slots_taken, 
+          shift_slots_taken: shift.shift_slots_taken !== undefined ? shift.shift_slots_taken : 0, // default to 0
         }));
         setAvailableShifts(mappedAvailableShifts);
       }
@@ -298,7 +299,7 @@ const AdminDashboard: React.FC = () => {
               start: shift.shift_time_start || shift.start,
               end: shift.shift_time_end || shift.end,
               shift_slots_amount: shift.shift_slots_amount || 0,
-              shift_slots_taken: shift.shift_slots_taken,
+              shift_slots_taken: shift.shift_slots_taken !== undefined ? shift.shift_slots_taken : 0, // default to 0
             })));
           }
           // Requested shifts
@@ -579,26 +580,49 @@ const AdminDashboard: React.FC = () => {
 
 
 // Updated getFilteredShifts function
-const getFilteredShifts = () => {
-  return availableShifts.filter(shift => {
-    // If shift_slots_amount is defined and shift is full, hide it
-    if (
-      typeof shift.shift_slots_amount === 'number' &&
-      typeof shift.shift_slots_taken === 'number' &&
-      shift.shift_slots_taken >= shift.shift_slots_amount
-    ) {
-      return false;
+const combinedShifts = useMemo(() => {
+  // Step 1: Create a map of availableShifts for quick ID lookups
+  const availableShiftsMap = new Map(
+    availableShifts.map(shift => [shift.id, shift])
+  );
+  
+  // Step 2: Process assigned shifts to extract their underlying available shifts
+  const assignedAvailableShifts = assignedShifts
+    .filter(assigned => assigned.availableShift) // Only process those with availableShift
+    .map(assigned => {
+      const availableShift = assigned.availableShift;
+      
+      // Normalize shift data regardless of API format
+      return {
+        id: availableShift.shift_id || availableShift.id,
+        date: availableShift.shift_date || availableShift.date,
+        start: availableShift.shift_time_start || availableShift.start,
+        end: availableShift.shift_time_end || availableShift.end,
+        shift_slots_amount: availableShift.shift_slots_amount || 1, // Default to 1 if not specified
+        shift_slots_taken: availableShift.shift_slots_taken || 1, // Default to 1 if not specified
+        isFromAssigned: true // Flag to identify this came from an assigned shift
+      };
+    });
+    
+  // Step 3: Build a complete set of shifts
+  // For each assigned shift, if it doesn't exist in availableShifts, add it
+  const completeShifts = [...availableShifts];
+  
+  assignedAvailableShifts.forEach(assignedShift => {
+    if (!availableShiftsMap.has(assignedShift.id)) {
+      completeShifts.push(assignedShift);
     }
-    // Otherwise, always show the shift
-    return true;
   });
-};
+  
+  // For deep debugging
+  console.log('Available shifts:', availableShifts);
+  console.log('Assigned shifts with availableShift:', assignedAvailableShifts);
+  console.log('Combined shifts result:', completeShifts);
+  
+  return completeShifts;
+}, [availableShifts, assignedShifts]);
 
-
-  // #093039 - color for user
   //sidescroll
-
-  const filteredShifts = getFilteredShifts();
 
   return (
     <ThemeProvider theme={MainTheme}>
@@ -836,13 +860,14 @@ const getFilteredShifts = () => {
                       }}
                     >
                       {/* Shift Card - Update the existing shift mapping code */}
-                      {filteredShifts
+                      {combinedShifts
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                         .map((shift, idx, arr) => {
                           const pendingRequests = requestedShifts.filter(
                             req => req.availableShiftId === shift.id && req.status === 'pending'
                           );
                           console.log('Pending requests for shift:', shift.id, pendingRequests);
+                          const isFromAssigned = Boolean(shift.isFromAssigned);
                           return (
                             <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
                               {/* Main shift card - always green */}
@@ -850,7 +875,7 @@ const getFilteredShifts = () => {
                                 sx={{
                                   p: 2,
                                   borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
-                                  backgroundColor: '#4caf50',
+                                  backgroundColor: isFromAssigned ? '#2196f3' : '#4caf50',
                                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
                                   backdropFilter: 'blur(4px)',
                                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
@@ -861,7 +886,7 @@ const getFilteredShifts = () => {
                                 }}
                               >
                                 <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                                  {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                                  {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
                                 </Typography>
                                 <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', gap: 1 }}>
                                   <IconButton
@@ -885,6 +910,21 @@ const getFilteredShifts = () => {
                                     <EditIcon fontSize="small" />
                                   </IconButton>
                                 </Box>
+                                {isFromAssigned && (
+                                  <Chip 
+                                    label="From Assigned" 
+                                    size="small" 
+                                    sx={{ 
+                                      position: 'absolute',
+                                      bottom: 4,
+                                      right: 4,
+                                      fontSize: '0.6rem',
+                                      height: 16,
+                                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                      color: 'white'
+                                    }}
+                                  />
+                                )}
                               </Box>
                               {/* Render a separate orange bar for each pending request */}
                               {pendingRequests.map((pendingRequest, i) => {
@@ -970,7 +1010,93 @@ const getFilteredShifts = () => {
             </Box>
           </Box>
 
-        
+          {/* After the calendar grid box but before dialogs */}
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" sx={{ color: '#00c28c', mb: 2, fontWeight: 600 }}>
+              All Assigned Shifts
+            </Typography>
+            
+            <Box sx={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+              borderRadius: 2,
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              p: 2,
+              maxHeight: '300px',
+              overflowY: 'auto',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0, 194, 140, 0.2)',
+                borderRadius: '4px',
+              }
+            }}>
+              {assignedShifts.length === 0 ? (
+                <Typography sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                  No assigned shifts found
+                </Typography>
+              ) : (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                  {assignedShifts.map(shift => (
+                    <Box 
+                      key={shift.assigned_id} 
+                      sx={{ 
+                        backgroundColor: 'rgba(0, 194, 140, 0.1)', 
+                        borderRadius: 2,
+                        p: 2,
+                        border: '1px solid rgba(0, 194, 140, 0.2)',
+                        width: { xs: '100%', sm: 'calc(50% - 8px)', md: 'calc(33% - 8px)', lg: 'calc(25% - 8px)' },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="subtitle1" sx={{ color: '#00c28c' }}>
+                          Shift #{shift.assigned_shift_id}
+                        </Typography>
+                        <Chip 
+                          label="Assigned" 
+                          size="small" 
+                          sx={{ 
+                            backgroundColor: 'rgba(0, 194, 140, 0.2)', 
+                            color: '#00c28c',
+                            fontSize: '0.7rem'
+                          }} 
+                        />
+                      </Box>
+                      
+                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 1 }}>
+                        <strong>Date:</strong> {shift.availableShift?.shift_date || 'N/A'}
+                      </Typography>
+                      
+                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 1 }}>
+                        <strong>Time:</strong> {shift.availableShift?.shift_time_start?.substring(0, 5) || 'N/A'} - 
+                        {shift.availableShift?.shift_time_end?.substring(0, 5) || 'N/A'}
+                      </Typography>
+                      
+                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                        <strong>Employee:</strong> {shift.employee?.employee_name || 'Unknown'}
+                      </Typography>
+                      
+                      <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteAssignedShift(shift.assigned_id, shift.assigned_shift_id)}
+                          sx={{ color: '#f44336' }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Box>
+
           {/* Add Shift Dialog */}
           <Dialog open={isAddShiftDialogOpen} onClose={() => setIsAddShiftDialogOpen(false)} maxWidth="sm" fullWidth>
             <DialogTitle>Add Available Shift</DialogTitle>
@@ -1173,7 +1299,7 @@ const getFilteredShifts = () => {
           <Dialog 
             open={infoDialogOpen} 
             onClose={() => setInfoDialogOpen(false)}
-            maxWidth="xs"
+            maxWidth="sm"
             fullWidth
           >
             <DialogTitle>Shift Information</DialogTitle>
@@ -1181,15 +1307,76 @@ const getFilteredShifts = () => {
               {selectedShiftInfo && (
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="body1" gutterBottom>
-                    Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount || 'unlimited'}
+                    <strong>Date:</strong> {selectedShiftInfo.date}
                   </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    <strong>Time:</strong> {selectedShiftInfo.start?.substring(0, 5)} - {selectedShiftInfo.end?.substring(0, 5)}
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    <strong>Slots:</strong> {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount || 'unlimited'}
+                  </Typography>
+                  
                   <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
                     Assigned Users:
                   </Typography>
-                  {assignedShifts
-                    .filter(assign => assign.assigned_shift_id === selectedShiftInfo.id)
-                    .map(assign => {
-                      const user = employees.find(emp => emp.id === assign.assigned_employee_id);
+                  
+                  {(() => {
+                    // Try multiple ways to find matching assigned shifts
+                    let assignedUsersForThisShift = assignedShifts.filter(assign => 
+                      assign.assigned_shift_id === selectedShiftInfo.id
+                    );
+                    
+                    // If no matches found with assigned_shift_id, try with availableShiftId
+                    if (assignedUsersForThisShift.length === 0) {
+                      assignedUsersForThisShift = assignedShifts.filter(assign => 
+                        assign.availableShift === selectedShiftInfo.id
+                      );
+                    }
+                    
+                    // If still no matches, try comparing with the availableShift nested object
+                    if (assignedUsersForThisShift.length === 0) {
+                      assignedUsersForThisShift = assignedShifts.filter(assign => 
+                        assign.availableShift && 
+                        (assign.availableShift.shift_id === selectedShiftInfo.id || 
+                         assign.availableShift.id === selectedShiftInfo.id)
+                      );
+                    }
+                    
+                    console.log('Selected shift ID:', selectedShiftInfo.id);
+                    console.log('All assigned shifts:', assignedShifts);
+                    console.log('Filtered assigned users for this shift:', assignedUsersForThisShift);
+                    console.log('All employees:', employees);
+                    
+                    if (assignedUsersForThisShift.length === 0) {
+                      return (
+                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontStyle: 'italic' }}>
+                          No users assigned to this shift
+                        </Typography>
+                      );
+                    }
+                    
+                    return assignedUsersForThisShift.map(assign => {
+                      // Try multiple ways to find the user
+                      let user = employees.find(emp => emp.id === assign.assigned_employee_id);
+                      
+                      // If not found, try with employeeId
+                      if (!user) {
+                        user = employees.find(emp => emp.id === assign.employee);
+                      }
+                      
+                      // If still not found, try using the nested employee object
+                      if (!user && assign.employee) {
+                        user = {
+                          id: assign.employee.employee_id || assign.assigned_employee_id,
+                          name: assign.employee.employee_name || 'Unknown User',
+                          email: assign.employee.employee_email || 'No email'
+                        };
+                      }
+                      
+                      console.log('Looking for employee ID:', assign.assigned_employee_id);
+                      console.log('Found user:', user);
+                      console.log('Assign object:', assign);
+                      
                       return (
                         <Box 
                           key={assign.assigned_id} 
@@ -1198,28 +1385,38 @@ const getFilteredShifts = () => {
                             justifyContent: 'space-between', 
                             alignItems: 'center',
                             mb: 1,
-                            p: 1,
+                            p: 2,
                             borderRadius: 1,
-                            backgroundColor: 'rgba(0, 194, 140, 0.1)'
+                            backgroundColor: 'rgba(0, 194, 140, 0.1)',
+                            border: '1px solid rgba(0, 194, 140, 0.2)'
                           }}
                         >
-                          <Typography variant="body2">
-                            {user?.name || 'Unknown User'}
-                          </Typography>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                              {user?.name || assign.employee?.employee_name || 'Unknown User'}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                              {user?.email || assign.employee?.employee_email || 'No email'}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', display: 'block' }}>
+                              Employee ID: {assign.assigned_employee_id || assign.employee || 'N/A'}
+                            </Typography>
+                          </Box>
                           <Button
                             size="small"
                             color="error"
+                            variant="outlined"
                             onClick={() => {
                               handleDeleteAssignedShift(assign.assigned_id, assign.assigned_shift_id);
-                              setInfoDialogOpen(false);
                             }}
-                            sx={{ minWidth: 0 }}
+                            sx={{ minWidth: 'auto', px: 1 }}
                           >
                             <DeleteIcon fontSize="small" />
                           </Button>
                         </Box>
                       );
-                    })}
+                    });
+                  })()}
                 </Box>
               )}
             </DialogContent>
