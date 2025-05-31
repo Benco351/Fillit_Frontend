@@ -21,7 +21,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   const [loadingRequested, setLoadingRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'requested' | 'accepted'>('all');
+  const [filter, setFilter] = useState<any>('all');
   
   const [assignedShifts, setAssignedShifts] = useState<AssignedShift[]>([]);
 

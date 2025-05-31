@@ -1,10 +1,10 @@
-import React, { Dispatch, SetStateAction } from "react";
-import { Box, Button, ButtonGroup } from "@mui/material";
+import React from 'react';
+import { Box, Button, ButtonGroup } from '@mui/material';
 
-type Props = {
-  filter: "all" | "requested" | "accepted";
-  setFilter: Dispatch<SetStateAction<"all" | "requested" | "accepted">>;
-};
+interface AdminShiftFilterProps {
+  filter: 'all' | 'full';
+  setFilter: (value: 'all' | 'full') => void;
+}
 
 const filterButtonStyle = {
   minWidth: '120px',
@@ -24,45 +24,33 @@ const filterButtonStyle = {
   }
 };
 
-const AdminShiftFilters: React.FC<Props> = ({ filter, setFilter }) => {
+const AdminShiftFilter: React.FC<AdminShiftFilterProps> = ({ filter, setFilter }) => {
   return (
-    <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
       <ButtonGroup sx={{ gap: 1 }}>
         <Button
           sx={{
             ...filterButtonStyle,
-            ...(filter === 'all' && { '&.active': filterButtonStyle['&.active'] })
+            ...(filter === 'all' ? filterButtonStyle['&.active'] : {})
           }}
           className={filter === 'all' ? 'active' : ''}
           onClick={() => setFilter('all')}
         >
-          Full
+          All Shifts
         </Button>
         <Button
           sx={{
             ...filterButtonStyle,
-            ...(filter === 'requested' && { '&.active': filterButtonStyle['&.active'] })
+            ...(filter === 'full' ? filterButtonStyle['&.active'] : {})
           }}
-          className={filter === 'requested' ? 'active' : ''}
-          onClick={() => setFilter('requested')}
+          className={filter === 'full' ? 'active' : ''}
+          onClick={() => setFilter('full')}
         >
-          Not Full
-        </Button>
-        <Button
-          sx={{
-            ...filterButtonStyle,
-            ...(filter === 'accepted' && { '&.active': filterButtonStyle['&.active'] })
-          }}
-          className={filter === 'accepted' ? 'active' : ''}
-          onClick={() => setFilter('accepted')}
-        >
-          Full
+          Full Shifts
         </Button>
       </ButtonGroup>
     </Box>
   );
 };
 
-
-
-export default AdminShiftFilters;
+export default AdminShiftFilter;

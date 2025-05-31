@@ -2,8 +2,8 @@ import React, { Dispatch, SetStateAction } from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
 
 type Props = {
-  filter: "all" | "requested" | "accepted";
-  setFilter: Dispatch<SetStateAction<"all" | "requested" | "accepted">>;
+  filter: "all" | "requested" | "accepted" | "full";
+  setFilter: Dispatch<SetStateAction<"all" | "requested" | "accepted" | "full">>;
 };
 
 const filterButtonStyle = {

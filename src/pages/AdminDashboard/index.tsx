@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {Box, Container, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
 IconButton, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, MenuItem as DropdownMenuItem,
+Tooltip,
+DialogContentText,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
 import { format, addDays, parseISO, isWithinInterval } from 'date-fns';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon, Info as InfoIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIcon, Info as InfoIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
 import { MainTheme } from '../../assets/themes/themes';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/layout/Footer';
@@ -28,11 +30,13 @@ import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 import UserDashboardTitle from '../../components/sections/UserPage';
 import AIChatPopup from '../../components/aiChat';
 import { GlobalStyles } from '@mui/material';
+import AdminShiftFilter from '../../components/ShiftManagment/AdminShiftFilter';
 
 
 const AdminDashboard: React.FC = () => {
 
-     
+     const [pendingInfoDialogOpen, setPendingInfoDialogOpen] = useState(false);
+const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedShift | null>(null);
       // Current user 
       const customEmployeeId = Number(sessionStorage.getItem('customEmployeeId'));
       const name = sessionStorage.getItem('name') || '';
@@ -586,6 +590,22 @@ const AdminDashboard: React.FC = () => {
   // #093039 - color for user
   //sidescroll
 
+  // Filtered shifts based on the selected filter
+const filteredShifts = React.useMemo(() => {
+  if (!availableShifts) return [];
+  if (filter === 'full') {
+    // Only show shifts where slots taken >= slots amount
+    return availableShifts.filter(
+      shift =>
+        typeof shift.shift_slots_amount === 'number' &&
+        typeof shift.shift_slots_taken === 'number' &&
+        shift.shift_slots_taken >= shift.shift_slots_amount
+    );
+  }
+  // Default: show all
+  return availableShifts;
+}, [availableShifts, filter]);
+
   return (
     <ThemeProvider theme={MainTheme}>
     <AIChatPopup />
@@ -620,7 +640,7 @@ const AdminDashboard: React.FC = () => {
               display: 'flex', 
               justifyContent: 'center'
             }}>
-              <ShiftFilters filter={filter} setFilter={setFilter} />
+              <AdminShiftFilter filter={filter} setFilter={setFilter} />
             </Box>
 
             {/* Frame Box */}
@@ -809,7 +829,7 @@ const AdminDashboard: React.FC = () => {
                       }}
                     >
                       {/* Shift Card - Update the existing shift mapping code */}
-                      {availableShifts
+                      {filteredShifts
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                         .map((shift, idx, arr) => {
                           const pendingRequests = requestedShifts.filter(
@@ -825,55 +845,109 @@ const AdminDashboard: React.FC = () => {
                             <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
 
                               {/* Main shift card */}
-                              <Box
-                                sx={{
-                                  p: 2,
-                                  borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
-                                  backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50', // Orange if full, green if available
-                                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-                                  backdropFilter: 'blur(4px)',
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                  border: '1px solid rgba(255,255,255,0.1)',
-                                  transition: 'all 0.3s ease',
-                                  position: 'relative',
-                                  minHeight: 70,
-                                }}
-                              >
-                                <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                                  {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
-                                </Typography>
+                              {isShiftFull ? (
+  <Tooltip 
+    title="Full shift: No more slots available" 
+    placement="top" 
+    enterTouchDelay={0} 
+    leaveTouchDelay={3000}
+    arrow
+  >
+    <Box
+      sx={{
+        p: 2,
+        borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
+        backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50',
+        backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+        backdropFilter: 'blur(4px)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        minHeight: 70,
+      }}
+    >
+      <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+        {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
+      </Typography>
 
-                                {Number(shift.shift_slots_amount) === Number(shift.shift_slots_taken) && (
-                                  <Typography variant="caption" sx={{ color: 'white', mt: 0.7, fontWeight: 'bold',
-                                    fontSize: '0.9rem' }}>
-                                    Shift full
-                                    </Typography>
-                                  )}
-          
-                                <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: 'white',
-                                      padding: { xs: 0.5, sm: 1 }
-                                    }}
-                                    onClick={() => handleOpenEditDialogFromCalendar(shift)}
-                                  >
-                                    <EditIcon fontSize="small" />
-                                  </IconButton>
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: 'white',
-                                      padding: { xs: 0.5, sm: 1 },
-                                      mt: -1.7 // Move the Info button slightly upwards
-                                    }}
-                                    onClick={() => handleOpenInfoDialog(shift)}
-                                  >
-                                    <InfoIcon fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </Box>
+      <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Tooltip title="Edit Shift">
+          <IconButton
+            size="small"
+            sx={{
+              color: 'white',
+              padding: { xs: 0.5, sm: 1 }
+            }}
+            onClick={() => handleOpenEditDialogFromCalendar(shift)}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Shift Information">
+          <IconButton
+            size="small"
+            sx={{
+              color: 'white',
+              padding: { xs: 0.5, sm: 1 },
+              mt: -1.7
+            }}
+            onClick={() => handleOpenInfoDialog(shift)}
+          >
+            <InfoIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </Box>
+  </Tooltip>
+) : (
+  <Box
+    sx={{
+      p: 2,
+      borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
+      backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50',
+      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+      backdropFilter: 'blur(4px)',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      transition: 'all 0.3s ease',
+      position: 'relative',
+      minHeight: 70,
+    }}
+  >
+    <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+      {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
+    </Typography>
+
+    <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Tooltip title="Edit Shift">
+        <IconButton
+          size="small"
+          sx={{
+            color: 'white',
+            padding: { xs: 0.5, sm: 1 }
+          }}
+          onClick={() => handleOpenEditDialogFromCalendar(shift)}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Shift Information">
+        <IconButton
+          size="small"
+          sx={{
+            color: 'white',
+            padding: { xs: 0.5, sm: 1 },
+            mt: -1.7
+          }}
+          onClick={() => handleOpenInfoDialog(shift)}
+        >
+          <InfoIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  </Box>
+)}
                               {/* Render pending requests */}
                               {pendingRequests.map((pendingRequest, i) => {
                                 const requester = employees.find(emp => emp.id === pendingRequest.employeeId);
@@ -893,57 +967,42 @@ const AdminDashboard: React.FC = () => {
                                       borderTop: '1px solid rgba(255,255,255,0.1)',
                                     }}
                                   >
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => {
-                                        alert(
-                                          `Requested by: ${requester?.name ?? 'Unknown'}\nEmail: ${requester?.email ?? 'Unknown'}`
-                                        );
-                                      }}
-                                      sx={{
-                                        color: '#ff9800',
-                                        '&:hover': { backgroundColor: 'rgba(255,152,0,0.1)' }
-                                      }}
-                                    >
-                                      <InfoIcon fontSize="small" />
-                                    </IconButton>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                      <Button
-                                        variant="contained"
+                                    <Tooltip title="View Request Details">
+                                      <IconButton
                                         size="small"
-                                        color="success"
-                                        onClick={() => handleAcceptRequest(pendingRequest)}
-                                        disabled={loading}
+                                        onClick={() => {
+                                          setSelectedPendingRequest(pendingRequest);
+                                          setPendingInfoDialogOpen(true);
+                                        }}
                                         sx={{
-                                          minWidth: 0,
-                                          px: 1,
-                                          py: 0.5,
-                                          fontSize: '0.9rem',
-                                          background: 'linear-gradient(135deg, rgba(0,194,140,0.1), rgba(0,194,140,0.2))',
-                                          border: '1px solid rgba(0,194,140,0.3)',
-                                          width: '90px',
-                                          height: '30px',
+                                          color: '#ff9800',
+                                          '&:hover': { backgroundColor: 'rgba(255,152,0,0.1)' }
                                         }}
                                       >
-                                        Accept
-                                      </Button>
-                                      <Button
-                                        variant="outlined"
-                                        size="small"
-                                        color="error"
-                                        onClick={() => handleOpenDenyDialog(pendingRequest.id)}
-                                        disabled={loading}
-                                        sx={{
-                                          minWidth: 0,
-                                          px: 1,
-                                          py: 0.5,
-                                          fontSize: '0.9rem',
-                                          borderColor: 'rgba(244,67,54,0.5)',
-                                          color: '#f44336',
-                                        }}
-                                      >
-                                        Deny
-                                      </Button>
+                                        <InfoIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+                                      <Tooltip title="Accept Request">
+                                        <IconButton
+                                          size="small"
+                                          onClick={() => handleAcceptRequest(pendingRequest)}
+                                          disabled={loading}
+                                          sx={{ color: 'green' }}
+                                        >
+                                          <CheckIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title="Deny Request">
+                                        <IconButton
+                                          size="small"
+                                          onClick={() => handleOpenDenyDialog(pendingRequest.id)}
+                                          disabled={loading}
+                                          sx={{ color: 'red' }}
+                                        >
+                                          <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
                                     </Box>
                                   </Box>
                                 );
@@ -1216,6 +1275,40 @@ const AdminDashboard: React.FC = () => {
               <Button onClick={() => setInfoDialogOpen(false)}>Close</Button>
             </DialogActions>
           </Dialog>
+
+          {/* Pending Request Info Dialog */}
+          <Dialog
+  open={pendingInfoDialogOpen}
+  onClose={() => {
+    setPendingInfoDialogOpen(false);
+    setSelectedPendingRequest(null);
+  }}
+  maxWidth="xs"
+  fullWidth
+>
+  <DialogTitle>Request Details</DialogTitle>
+  <DialogContent>
+    {selectedPendingRequest && (
+      <Box sx={{ mt: 1 }}>
+        <DialogContentText>
+          Requested by: {employees.find(emp => emp.id === selectedPendingRequest.employeeId)?.name || 'Unknown'}
+        </DialogContentText>
+        <DialogContentText>
+          Email: {employees.find(emp => emp.id === selectedPendingRequest.employeeId)?.email || 'Unknown'}
+        </DialogContentText>
+        <DialogContentText>
+          Notes: {selectedPendingRequest.notes || 'None'}
+        </DialogContentText>
+        <DialogContentText>
+          Status: {selectedPendingRequest.status}
+        </DialogContentText>
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setPendingInfoDialogOpen(false)}>Close</Button>
+  </DialogActions>
+</Dialog>
 
           {/* Snackbars for notifications */}
           <Snackbar

@@ -3,8 +3,8 @@ import ShiftFilters from "../ShiftManagment/ShiftFilters";
 import { Dispatch, SetStateAction } from "react";
 
 interface FilterProps {
-  filter: 'all' | 'requested' | 'accepted';
-  setFilter: Dispatch<SetStateAction<'all' | 'requested' | 'accepted'>>;
+  filter: 'all' | 'requested' | 'accepted' | 'full';
+  setFilter: Dispatch<SetStateAction<'all' | 'requested' | 'accepted' | 'full'>>;
 }
 
 const Filter: React.FC<FilterProps> = ({ filter, setFilter }) => {
