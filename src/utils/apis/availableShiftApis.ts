@@ -13,7 +13,7 @@ export const createAvailableShift = async (data: CreateAvailableShiftDTO): Promi
       throw new Error('No data returned from the server');
     }
 
-    console.log('createAvailableShift API response:', response.data);
+    //console.log('createAvailableShift API response:', response.data);
     
     // Return the whole response.data to handle different structures
     return response.data;
@@ -56,7 +56,7 @@ export const getAvailableShifts = async (params: AvailableShiftQueryDTO = {}) =>
 export const deleteAvailableShiftById = async (id: number) => {
   try {
     const response = await api.delete(`/api/available-shifts/${id}`);
-    console.log('Delete response:', response.data);
+    //console.log('Delete response:', response.data);
     return response.data; 
   } catch (error) {
     console.error('Error deleting available shift by ID:', error);

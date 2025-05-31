@@ -19,7 +19,7 @@ export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // 
             throw new Error('No data returned from the server');
         }
 
-        console.log('Shift assigned SUCCESS', response.data);
+        //console.log('Shift assigned SUCCESS', response.data);
         return response.data; // Return the response data
     } 
     
@@ -31,7 +31,7 @@ export const createAssignedShift = async (data: CreateAssignedShiftDTO) => { // 
 
 export const deleteAssignedShiftById = async (id: number) => {
     try {
-        console.log('Attempting to delete assigned shift with ID:', id);
+        //console.log('Attempting to delete assigned shift with ID:', id);
 
         if (!id || isNaN(id)) {
             throw new Error('Invalid shift ID provided');

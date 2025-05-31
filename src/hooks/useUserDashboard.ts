@@ -115,7 +115,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         
             setLoading(true);
             try {
-              console.log('Updating shift:', editShift);
+              // console.log('Updating shift:', editShift);
         
               // Call the API to update the shift
               const updatedShiftResponse = await updateAvailableShiftById(editShift.id, {
@@ -124,7 +124,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
                 end: editShift.end,
               });
         
-              console.log('Updated shift response:', updatedShiftResponse);
+              // console.log('Updated shift response:', updatedShiftResponse);
         
               // Update the local state with the updated shift
               setAvailableShifts((prev) =>
@@ -167,7 +167,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         shift_end_date: new Date(endDate),
       });
 
-      console.log('API response for getAvailableShifts:', response);
+      // console.log('API response for getAvailableShifts:', response);
 
       if (response?.data && Array.isArray(response.data)) {
         const mappedShifts = response.data.map((shift: any) => ({
@@ -284,7 +284,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           availableShift: shift.availableShift,
           employee: shift.employee
         })));
-        console.log('Requested shifts fetched:', response.data);
+        // console.log('Requested shifts fetched:', response.data);
       }
     } catch (err) {
       //setError('Failed to fetch requested shifts');

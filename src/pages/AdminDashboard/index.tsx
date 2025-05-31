@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Container, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-IconButton, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, MenuItem as DropdownMenuItem,
-Tooltip,
-DialogContentText,
+import {
+  Box, Container, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  IconButton, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider, MenuItem as DropdownMenuItem,
+  Tooltip,
+  DialogContentText,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, TimePicker, DatePicker } from '@mui/x-date-pickers';
@@ -16,8 +17,8 @@ import { createRequestedShift, deleteRequestedShiftById, getRequestedShifts, upd
 import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
 import { createAssignedShift, deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 //Types
-import {AvailableShift, RequestedShift, SelectedShift} from '../../components/CalendarFeatures/ShiftUtils';
-import {Employee, availableShiftsResponse, assignedShiftsResponse} from '../../components/CalendarFeatures/calendarStates';
+import { AvailableShift, RequestedShift, SelectedShift } from '../../components/CalendarFeatures/ShiftUtils';
+import { Employee, availableShiftsResponse, assignedShiftsResponse } from '../../components/CalendarFeatures/calendarStates';
 import { getEmployees } from '../../utils/apis/employeeShiftApis';
 //import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
@@ -35,26 +36,26 @@ import AdminShiftFilter from '../../components/ShiftManagment/AdminShiftFilter';
 
 const AdminDashboard: React.FC = () => {
 
-     const [pendingInfoDialogOpen, setPendingInfoDialogOpen] = useState(false);
-const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedShift | null>(null);
-      // Current user 
-      const customEmployeeId = Number(sessionStorage.getItem('customEmployeeId'));
-      const name = sessionStorage.getItem('name') || '';
-      const email = sessionStorage.getItem('email') || '';
-    
-    // Create Employee object
-      const currentEmployee: Employee = {
-        id: customEmployeeId,
-        name,
-        email
-      };
-  
-    //These guys are in useUserDashboard
-    const {currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
-      error, success, filter, setFilter, setSuccess, setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift, 
-      setNewShift, isAddShiftDialogOpen, setIsAddShiftDialogOpen, isEditShiftDialogOpen, setIsEditShiftDialogOpen, 
-      editShift, setEditShift, shiftIdToFetch, setFetchedShift, weekDays, goToNextWeek, goToPreviousWeek
-    } = useUserDashboard(currentEmployee);
+  const [pendingInfoDialogOpen, setPendingInfoDialogOpen] = useState(false);
+  const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedShift | null>(null);
+  // Current user 
+  const customEmployeeId = Number(sessionStorage.getItem('customEmployeeId'));
+  const name = sessionStorage.getItem('name') || '';
+  const email = sessionStorage.getItem('email') || '';
+
+  // Create Employee object
+  const currentEmployee: Employee = {
+    id: customEmployeeId,
+    name,
+    email
+  };
+
+  //These guys are in useUserDashboard
+  const { currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
+    error, success, filter, setFilter, setSuccess, setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift,
+    setNewShift, isAddShiftDialogOpen, setIsAddShiftDialogOpen, isEditShiftDialogOpen, setIsEditShiftDialogOpen,
+    editShift, setEditShift, shiftIdToFetch, setFetchedShift, weekDays, goToNextWeek, goToPreviousWeek
+  } = useUserDashboard(currentEmployee);
 
   // State for deny confirmation dialog
   const [denyDialogOpen, setDenyDialogOpen] = useState(false);
@@ -121,7 +122,7 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
           }))
         );
 
-        console.log(employees)
+        // console.log(employees)
         // Fetch available shifts
         const availableShiftsResponse = await getAvailableShifts();
         if (availableShiftsResponse?.data && Array.isArray(availableShiftsResponse.data)) {
@@ -236,7 +237,7 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
     }
   };
 
- 
+
   useEffect(() => {
     const pollShifts = async () => {
       try {
@@ -352,7 +353,7 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
   const handleAddShift = async () => {
     setLoading(true);
     try {
-      console.log('Adding new shift:', newShift);
+      // console.log('Adding new shift:', newShift);
 
       const apiResponse = await createAvailableShift({
         date: new Date(newShift.date),
@@ -361,7 +362,7 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
         shift_slots_amount: newShift.shift_slots_amount // Add this line
       });
 
-      console.log('API response:', apiResponse);
+      // console.log('API response:', apiResponse);
 
       let shiftId = null;
 
@@ -408,7 +409,7 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
 
     setLoading(true);
     try {
-      console.log('Updating shift:', editShift);
+      // console.log('Updating shift:', editShift);
 
       // Call the API to update the shift
       const updatedShiftResponse = await updateAvailableShiftById(editShift.id, {
@@ -417,7 +418,7 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
         end: editShift.end,
       });
 
-      console.log('Updated shift response:', updatedShiftResponse);
+      //console.log('Updated shift response:', updatedShiftResponse);
 
       // Update the local state with the updated shift
       setAvailableShifts((prev) =>
@@ -449,40 +450,40 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
   const handleDeleteAssignedShift = async (assignedShiftId: number) => {
     setLoading(true);
     try {
-        console.log('Attempting to delete assigned shift:', assignedShiftId);
-        
-        if (!assignedShiftId) {
-            throw new Error('No shift ID provided');
-        }
+      //console.log('Attempting to delete assigned shift:', assignedShiftId);
 
-        // Add validation to check if shift exists in local state
-        const shiftExists = assignedShifts.some(shift => shift.assigned_id === assignedShiftId);
-        if (!shiftExists) {
-            throw new Error(`Assigned shift with ID ${assignedShiftId} not found in local state`);
-        }
+      if (!assignedShiftId) {
+        throw new Error('No shift ID provided');
+      }
 
-        await deleteAssignedShiftById(assignedShiftId);
-        // Update local state
-        setAssignedShifts(prev => prev.filter(shift => shift.assigned_id !== assignedShiftId));
-        
-        // Close dialog and refresh data
-        setInfoDialogOpen(false);
-        await refreshDashboard();
+      // Add validation to check if shift exists in local state
+      const shiftExists = assignedShifts.some(shift => shift.assigned_id === assignedShiftId);
+      if (!shiftExists) {
+        throw new Error(`Assigned shift with ID ${assignedShiftId} not found in local state`);
+      }
 
-        setSuccess('Assigned shift deleted successfully');
+      await deleteAssignedShiftById(assignedShiftId);
+      // Update local state
+      setAssignedShifts(prev => prev.filter(shift => shift.assigned_id !== assignedShiftId));
+
+      // Close dialog and refresh data
+      setInfoDialogOpen(false);
+      await refreshDashboard();
+
+      setSuccess('Assigned shift deleted successfully');
     } catch (err: any) {
-        console.error('Error deleting assigned shift:', err);
-        setError(err.message || 'Failed to delete assigned shift. Please try again.');
-        // Keep the dialog open if there's an error
+      console.error('Error deleting assigned shift:', err);
+      setError(err.message || 'Failed to delete assigned shift. Please try again.');
+      // Keep the dialog open if there's an error
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
-  
+
 
   const handleRequestShiftFromEditDialog = async () => {
     if (!editShift) return;
-  
+
     setLoading(true);
     try {
       const payload = {
@@ -490,14 +491,14 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
         shiftSlotId: editShift.id,
         notes: '', // Optional: Add a default or empty note
       };
-  
-      console.log('Requesting shift with payload:', payload); // Log the payload
-  
+
+      //console.log('Requesting shift with payload:', payload); // Log the payload
+
       // Call the createRequestedShift function to handle the request
       const newRequestResponse = await createRequestedShift(payload);
-  
-      console.log('Requested shift response:', newRequestResponse); // Log the response
-  
+
+      //console.log('Requested shift response:', newRequestResponse); // Log the response
+
 
       setSuccess('Shift requested successfully');
       setIsEditShiftDialogOpen(false); // Close the edit dialog after requesting
@@ -518,7 +519,7 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
   const handleDenyRequestedShift = async (requestedShiftId: number) => {
     setLoading(true);
     try {
-      console.log('Denying requested shift with ID:', requestedShiftId);
+      //console.log('Denying requested shift with ID:', requestedShiftId);
 
       // Call the API to update the requested shift status to "denied"
       await updateRequestedShiftById(requestedShiftId, { status: 'denied' });
@@ -591,25 +592,25 @@ const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedSh
   //sidescroll
 
   // Filtered shifts based on the selected filter
-const filteredShifts = React.useMemo(() => {
-  if (!availableShifts) return [];
-  if (filter === 'full') {
-    // Only show shifts where slots taken >= slots amount
-    return availableShifts.filter(
-      shift =>
-        typeof shift.shift_slots_amount === 'number' &&
-        typeof shift.shift_slots_taken === 'number' &&
-        shift.shift_slots_taken >= shift.shift_slots_amount
-    );
-  }
-  // Default: show all
-  return availableShifts;
-}, [availableShifts, filter]);
+  const filteredShifts = React.useMemo(() => {
+    if (!availableShifts) return [];
+    if (filter === 'full') {
+      // Only show shifts where slots taken >= slots amount
+      return availableShifts.filter(
+        shift =>
+          typeof shift.shift_slots_amount === 'number' &&
+          typeof shift.shift_slots_taken === 'number' &&
+          shift.shift_slots_taken >= shift.shift_slots_amount
+      );
+    }
+    // Default: show all
+    return availableShifts;
+  }, [availableShifts, filter]);
 
   return (
     <ThemeProvider theme={MainTheme}>
-    <AIChatPopup />
-      
+      <AIChatPopup />
+
       <CssBaseline />
       <Box
         sx={{
@@ -622,7 +623,7 @@ const filteredShifts = React.useMemo(() => {
       >
         <Container
           maxWidth={false}
-          sx={{ 
+          sx={{
             px: { xs: 1, sm: 2, md: 3 },
             width: '100%',
             maxWidth: '100vw', // Prevent container from exceeding viewport width
@@ -635,9 +636,9 @@ const filteredShifts = React.useMemo(() => {
             <UserDashboardTitle title="Admin Management System" />
 
             {/* Filters - Matching User Dashboard position */}
-            <Box sx={{ 
-              mb: 4, 
-              display: 'flex', 
+            <Box sx={{
+              mb: 4,
+              display: 'flex',
               justifyContent: 'center'
             }}>
               <AdminShiftFilter filter={filter} setFilter={setFilter} />
@@ -689,12 +690,12 @@ const filteredShifts = React.useMemo(() => {
                 </Button>
 
                 {/* Right side: Week navigation (moved from center) */}
-                <Box sx={{ 
+                <Box sx={{
                   display: 'flex',
                   gap: 2,
                 }}>
-                  <Button 
-                    variant="outlined" 
+                  <Button
+                    variant="outlined"
                     onClick={goToPreviousWeek}
                     sx={{
                       background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
@@ -714,8 +715,8 @@ const filteredShifts = React.useMemo(() => {
                     currentWeekStart={currentWeekStart}
                     onWeekChange={setCurrentWeekStart}
                   />
-                  <Button 
-                    variant="outlined" 
+                  <Button
+                    variant="outlined"
                     onClick={goToNextWeek}
                     sx={{
                       background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
@@ -783,10 +784,10 @@ const filteredShifts = React.useMemo(() => {
                         backdropFilter: 'blur(4px)',
                       }}
                     >
-                      <Typography 
-                        variant="h6" 
-                        align="center" 
-                        sx={{ 
+                      <Typography
+                        variant="h6"
+                        align="center"
+                        sx={{
                           fontSize: '1.1rem',
                           fontWeight: 600,
                           color: '#00c28c',
@@ -795,10 +796,10 @@ const filteredShifts = React.useMemo(() => {
                       >
                         {format(day, 'EEE')}
                       </Typography>
-                      <Typography 
-                        variant="body2" 
+                      <Typography
+                        variant="body2"
                         align="center"
-                        sx={{ 
+                        sx={{
                           fontSize: '0.9rem',
                           color: 'rgba(255, 255, 255, 0.7)'
                         }}
@@ -835,123 +836,123 @@ const filteredShifts = React.useMemo(() => {
                           const pendingRequests = requestedShifts.filter(
                             req => req.availableShiftId === shift.id && req.status === 'pending'
                           );
-                          console.log('Pending requests for shift:', shift.id, pendingRequests);
-                          
+                          //console.log('Pending requests for shift:', shift.id, pendingRequests);
+
                           // Determine if shift is full for visual indication
-                          const isShiftFull = shift.shift_slots_amount && shift.shift_slots_taken && 
-                                             shift.shift_slots_taken >= shift.shift_slots_amount;
-                          
+                          const isShiftFull = shift.shift_slots_amount && shift.shift_slots_taken &&
+                            shift.shift_slots_taken >= shift.shift_slots_amount;
+
                           return (
                             <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
 
                               {/* Main shift card */}
                               {isShiftFull ? (
-  <Tooltip 
-    title="Full shift: No more slots available" 
-    placement="top" 
-    enterTouchDelay={0} 
-    leaveTouchDelay={3000}
-    arrow
-  >
-    <Box
-      sx={{
-        p: 2,
-        borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
-        backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50',
-        backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-        backdropFilter: 'blur(4px)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        transition: 'all 0.3s ease',
-        position: 'relative',
-        minHeight: 70,
-      }}
-    >
-      <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-        {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
-      </Typography>
+                                <Tooltip
+                                  title="Full shift: No more slots available"
+                                  placement="top"
+                                  enterTouchDelay={0}
+                                  leaveTouchDelay={3000}
+                                  arrow
+                                >
+                                  <Box
+                                    sx={{
+                                      p: 2,
+                                      borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
+                                      backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50',
+                                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                                      backdropFilter: 'blur(4px)',
+                                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                      border: '1px solid rgba(255,255,255,0.1)',
+                                      transition: 'all 0.3s ease',
+                                      position: 'relative',
+                                      minHeight: 70,
+                                    }}
+                                  >
+                                    <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                                      {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
+                                    </Typography>
 
-      <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Tooltip title="Edit Shift">
-          <IconButton
-            size="small"
-            sx={{
-              color: 'white',
-              padding: { xs: 0.5, sm: 1 }
-            }}
-            onClick={() => handleOpenEditDialogFromCalendar(shift)}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Shift Information">
-          <IconButton
-            size="small"
-            sx={{
-              color: 'white',
-              padding: { xs: 0.5, sm: 1 },
-              mt: -1.7
-            }}
-            onClick={() => handleOpenInfoDialog(shift)}
-          >
-            <InfoIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    </Box>
-  </Tooltip>
-) : (
-  <Box
-    sx={{
-      p: 2,
-      borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
-      backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50',
-      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-      backdropFilter: 'blur(4px)',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-      border: '1px solid rgba(255,255,255,0.1)',
-      transition: 'all 0.3s ease',
-      position: 'relative',
-      minHeight: 70,
-    }}
-  >
-    <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-      {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
-    </Typography>
+                                    <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                      <Tooltip title="Edit Shift">
+                                        <IconButton
+                                          size="small"
+                                          sx={{
+                                            color: 'white',
+                                            padding: { xs: 0.5, sm: 1 }
+                                          }}
+                                          onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                                        >
+                                          <EditIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title="Shift Information">
+                                        <IconButton
+                                          size="small"
+                                          sx={{
+                                            color: 'white',
+                                            padding: { xs: 0.5, sm: 1 },
+                                            mt: -1.7
+                                          }}
+                                          onClick={() => handleOpenInfoDialog(shift)}
+                                        >
+                                          <InfoIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
+                                    </Box>
+                                  </Box>
+                                </Tooltip>
+                              ) : (
+                                <Box
+                                  sx={{
+                                    p: 2,
+                                    borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
+                                    backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50',
+                                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                                    backdropFilter: 'blur(4px)',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    transition: 'all 0.3s ease',
+                                    position: 'relative',
+                                    minHeight: 70,
+                                  }}
+                                >
+                                  <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                                    {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
+                                  </Typography>
 
-    <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Tooltip title="Edit Shift">
-        <IconButton
-          size="small"
-          sx={{
-            color: 'white',
-            padding: { xs: 0.5, sm: 1 }
-          }}
-          onClick={() => handleOpenEditDialogFromCalendar(shift)}
-        >
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Shift Information">
-        <IconButton
-          size="small"
-          sx={{
-            color: 'white',
-            padding: { xs: 0.5, sm: 1 },
-            mt: -1.7
-          }}
-          onClick={() => handleOpenInfoDialog(shift)}
-        >
-          <InfoIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Box>
-  </Box>
-)}
+                                  <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <Tooltip title="Edit Shift">
+                                      <IconButton
+                                        size="small"
+                                        sx={{
+                                          color: 'white',
+                                          padding: { xs: 0.5, sm: 1 }
+                                        }}
+                                        onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                                      >
+                                        <EditIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Shift Information">
+                                      <IconButton
+                                        size="small"
+                                        sx={{
+                                          color: 'white',
+                                          padding: { xs: 0.5, sm: 1 },
+                                          mt: -1.7
+                                        }}
+                                        onClick={() => handleOpenInfoDialog(shift)}
+                                      >
+                                        <InfoIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Box>
+                                </Box>
+                              )}
                               {/* Render pending requests */}
                               {pendingRequests.map((pendingRequest, i) => {
                                 const requester = employees.find(emp => emp.id === pendingRequest.employeeId);
-                                console.log('Requester for pending request:', employees);
+                                //console.log('Requester for pending request:', employees);
                                 return (
                                   <Box
                                     key={pendingRequest.id}
@@ -1011,13 +1012,13 @@ const filteredShifts = React.useMemo(() => {
                           );
                         })}
                     </Box>
-                          </Box>
+                  </Box>
                 ))}
               </Box>
             </Box>
           </Box>
 
-        
+
           {/* Add Shift Dialog */}
           <Dialog open={isAddShiftDialogOpen} onClose={() => setIsAddShiftDialogOpen(false)} maxWidth="sm" fullWidth>
             <DialogTitle>Add Available Shift</DialogTitle>
@@ -1038,7 +1039,7 @@ const filteredShifts = React.useMemo(() => {
                     sx={{ width: '100%', mb: 2 }}
                   />
                 </LocalizationProvider>
-                
+
                 <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                   <Box sx={{ flex: 1 }}>
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -1082,7 +1083,7 @@ const filteredShifts = React.useMemo(() => {
                   label="Number of Slots"
                   type="number"
                   inputProps={{ min: 1 }}
-                  value={newShift.shift_slots_amount|| ''}
+                  value={newShift.shift_slots_amount || ''}
                   onChange={(e) => {
                     const value = e.target.value;
                     setNewShift(prev => ({
@@ -1096,8 +1097,8 @@ const filteredShifts = React.useMemo(() => {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setIsAddShiftDialogOpen(false)}>Cancel</Button>
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 onClick={handleAddShift}
                 disabled={loading}
               >
@@ -1192,8 +1193,8 @@ const filteredShifts = React.useMemo(() => {
           </Dialog>
 
           {/* Request Shift Dialog */}
-          
-          <RequestShiftDialog/>
+
+          <RequestShiftDialog />
 
           {/* Deny confirmation dialog */}
           <Dialog open={denyDialogOpen} onClose={handleCancelDeny}>
@@ -1217,8 +1218,8 @@ const filteredShifts = React.useMemo(() => {
           </Dialog>
 
           {/* Shift Info Dialog */}
-          <Dialog 
-            open={infoDialogOpen} 
+          <Dialog
+            open={infoDialogOpen}
             onClose={() => setInfoDialogOpen(false)}
             maxWidth="xs"
             fullWidth
@@ -1239,11 +1240,11 @@ const filteredShifts = React.useMemo(() => {
                       const user = employees.find(emp => emp.id === assign.assigned_employee_id);
 
                       return (
-                        <Box 
-                          key={assign.assigned_id} 
-                          sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
+                        <Box
+                          key={assign.assigned_id}
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
                             alignItems: 'center',
                             mb: 1,
                             p: 1,
@@ -1278,37 +1279,37 @@ const filteredShifts = React.useMemo(() => {
 
           {/* Pending Request Info Dialog */}
           <Dialog
-  open={pendingInfoDialogOpen}
-  onClose={() => {
-    setPendingInfoDialogOpen(false);
-    setSelectedPendingRequest(null);
-  }}
-  maxWidth="xs"
-  fullWidth
->
-  <DialogTitle>Request Details</DialogTitle>
-  <DialogContent>
-    {selectedPendingRequest && (
-      <Box sx={{ mt: 1 }}>
-        <DialogContentText>
-          Requested by: {employees.find(emp => emp.id === selectedPendingRequest.employeeId)?.name || 'Unknown'}
-        </DialogContentText>
-        <DialogContentText>
-          Email: {employees.find(emp => emp.id === selectedPendingRequest.employeeId)?.email || 'Unknown'}
-        </DialogContentText>
-        <DialogContentText>
-          Notes: {selectedPendingRequest.notes || 'None'}
-        </DialogContentText>
-        <DialogContentText>
-          Status: {selectedPendingRequest.status}
-        </DialogContentText>
-      </Box>
-    )}
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setPendingInfoDialogOpen(false)}>Close</Button>
-  </DialogActions>
-</Dialog>
+            open={pendingInfoDialogOpen}
+            onClose={() => {
+              setPendingInfoDialogOpen(false);
+              setSelectedPendingRequest(null);
+            }}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle>Request Details</DialogTitle>
+            <DialogContent>
+              {selectedPendingRequest && (
+                <Box sx={{ mt: 1 }}>
+                  <DialogContentText>
+                    Requested by: {employees.find(emp => emp.id === selectedPendingRequest.employeeId)?.name || 'Unknown'}
+                  </DialogContentText>
+                  <DialogContentText>
+                    Email: {employees.find(emp => emp.id === selectedPendingRequest.employeeId)?.email || 'Unknown'}
+                  </DialogContentText>
+                  <DialogContentText>
+                    Notes: {selectedPendingRequest.notes || 'None'}
+                  </DialogContentText>
+                  <DialogContentText>
+                    Status: {selectedPendingRequest.status}
+                  </DialogContentText>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setPendingInfoDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
 
           {/* Snackbars for notifications */}
           <Snackbar
@@ -1321,7 +1322,7 @@ const filteredShifts = React.useMemo(() => {
               {error}
             </Alert>
           </Snackbar>
-          
+
           <Snackbar
             open={!!success}
             autoHideDuration={6000}
@@ -1334,7 +1335,7 @@ const filteredShifts = React.useMemo(() => {
           </Snackbar>
         </Container>
       </Box>
-      
+
       <Footer /> {/* Add Footer at the bottom */}
     </ThemeProvider>
   );

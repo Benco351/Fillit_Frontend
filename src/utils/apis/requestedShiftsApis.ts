@@ -25,7 +25,7 @@ interface RequestedShiftResponse {
 
 export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
   try {
-    console.log('Request payload for createRequestedShift:', data); // Log the request payload
+    //console.log('Request payload for createRequestedShift:', data); // Log the request payload
     const response = await api.post<{ status: string; message: string; data: RequestedShiftResponse }>('/api/requested-shifts', {
       employeeId: data.employeeId,
       shiftSlotId: data.shiftSlotId,
@@ -36,7 +36,7 @@ export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
       throw new Error('No data returned from the server');
     }
 
-    console.log('Response from createRequestedShift:', response.data); // Log the response
+    //console.log('Response from createRequestedShift:', response.data); // Log the response
     return {
       id: response.data.data.request_id,
       employeeId: response.data.data.request_employee_id,

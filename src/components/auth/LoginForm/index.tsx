@@ -126,11 +126,11 @@ const LoginForm: React.FC = () => {
         }
 
         // Print the logged in customEmployeeId
-        console.log('Logged in customEmployeeId:', customEmployeeId);
+        // console.log('Logged in customEmployeeId:', customEmployeeId);
 
         // Retrieve if admin from back
         const response = await api.get(`/api/employees/${customEmployeeId}`);
-        console.log('Employee data:', response.data);
+        //console.log('Employee data:', response.data);
         const isAdmin = response.data.data.employee_admin;
 
         // Save customEmployeeId and isAdmin in sessionStorage
@@ -139,12 +139,12 @@ const LoginForm: React.FC = () => {
         sessionStorage.setItem('name', response.data.data.employee_name);
         sessionStorage.setItem('email', response.data.data.employee_email);
 
-        console.log('Session storage updated:', {
-          customEmployeeId,
-          isAdmin,
-          name: response.data.employee_name,
-          email: response.data.email,
-        });
+        // console.log('Session storage updated:', {
+        //   customEmployeeId,
+        //   isAdmin,
+        //   name: response.data.employee_name,
+        //   email: response.data.email,
+        // });
 
         if (isAdmin) {
           navigate('/admin-dashboard', { replace: true });
