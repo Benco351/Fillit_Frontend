@@ -24,7 +24,6 @@ import { getAvailableShifts } from '../../utils/apis/availableShiftApis';
 import { getAssignedShifts } from '../../utils/apis/assignedShiftApis';
 import { deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 import { deleteAvailableShiftById } from '../../utils/apis/availableShiftApis';
-import { makeadmin } from '../../utils/apis/assignedShiftApis';
 
 const UserDashboard: React.FC = () => {
 
