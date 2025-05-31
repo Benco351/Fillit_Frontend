@@ -126,8 +126,8 @@ const AdminDashboard: React.FC = () => {
             date: shift.shift_date || shift.date,
             start: shift.shift_time_start || shift.start,
             end: shift.shift_time_end || shift.end,
-            shift_slots_amount: shift.shift_slots_amount || 0, 
-            shift_slots_taken: shift.shift_slots_taken, 
+            shift_slots_amount: parseInt(shift.shift_slots_amount, 10) || 1, // Ensure it's parsed as integer with default
+            shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0, // Ensure it's parsed as integer
           }));
           setAvailableShifts(mappedAvailableShifts);
         }
@@ -191,8 +191,8 @@ const AdminDashboard: React.FC = () => {
           date: shift.shift_date || shift.date,
           start: shift.shift_time_start || shift.start,
           end: shift.shift_time_end || shift.end,
-          shift_slots_amount: shift.shift_slots_amount || 0, 
-          shift_slots_taken: shift.shift_slots_taken, 
+          shift_slots_amount: parseInt(shift.shift_slots_amount, 10) || 1, // Ensure it's parsed as integer with default
+          shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0, // Ensure it's parsed as integer
         }));
         setAvailableShifts(mappedAvailableShifts);
       }
@@ -302,8 +302,8 @@ const AdminDashboard: React.FC = () => {
               date: shift.shift_date || shift.date,
               start: shift.shift_time_start || shift.start,
               end: shift.shift_time_end || shift.end,
-              shift_slots_amount: shift.shift_slots_amount || 0,
-              shift_slots_taken: shift.shift_slots_taken,
+              shift_slots_amount: parseInt(shift.shift_slots_amount, 10) || 1, // Ensure it's parsed as integer with default
+              shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0, // Ensure it's parsed as integer
             })));
           }
           // Requested shifts
@@ -378,6 +378,8 @@ const AdminDashboard: React.FC = () => {
         date: format(new Date(newShift.date), 'yyyy-MM-dd'),
         start: newShift.start,
         end: newShift.end,
+        shift_slots_amount: newShift.shift_slots_amount || 1, // Include the slots amount
+        shift_slots_taken: 0, // Initialize to 0
       };
 
       // Update local state
@@ -834,12 +836,13 @@ const AdminDashboard: React.FC = () => {
                           
                           return (
                             <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
+
                               {/* Main shift card */}
                               <Box
                                 sx={{
                                   p: 2,
                                   borderRadius: pendingRequests.length > 0 ? '12px 12px 0 0' : '12px',
-                                  backgroundColor: isShiftFull ? '#ff5722' : '#4caf50', // Orange if full, green if available
+                                  backgroundColor: isShiftFull ? '#ada8a6' : '#4caf50', // Orange if full, green if available
                                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
                                   backdropFilter: 'blur(4px)',
                                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
@@ -852,15 +855,14 @@ const AdminDashboard: React.FC = () => {
                                 <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                   {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
                                 </Typography>
-                                
-                                {/* Show slot information */}
-                                {shift.shift_slots_amount && (
-                                  <Typography variant="caption" sx={{ display: 'block', fontSize: '0.7rem', mt: 0.5 }}>
-                                    Slots: {shift.shift_slots_taken || 0}/{shift.shift_slots_amount}
-                                    {isShiftFull && ' (FULL)'}
-                                  </Typography>
-                                )}
-                                
+
+                                {Number(shift.shift_slots_amount) === Number(shift.shift_slots_taken) && (
+                                  <Typography variant="caption" sx={{ color: 'white', mt: 0.7, fontWeight: 'bold',
+                                    fontSize: '0.9rem' }}>
+                                    Shift full
+                                    </Typography>
+                                  )}
+          
                                 <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', gap: 1 }}>
                                   <IconButton
                                     size="small"
@@ -1033,7 +1035,7 @@ const AdminDashboard: React.FC = () => {
                   label="Number of Slots"
                   type="number"
                   inputProps={{ min: 1 }}
-                  value={newShift.shift_slots_amount || ''}
+                  value={newShift.shift_slots_amount|| ''}
                   onChange={(e) => {
                     const value = e.target.value;
                     setNewShift(prev => ({
@@ -1179,7 +1181,7 @@ const AdminDashboard: React.FC = () => {
               {selectedShiftInfo && (
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="body1" gutterBottom>
-                    Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount || 'unlimited'}
+                    Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount}
                   </Typography>
                   <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
                     Assigned Users:

@@ -174,6 +174,8 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           date: shift.shift_date || shift.date,
           start: shift.shift_time_start || shift.start,
           end: shift.shift_time_end || shift.end,
+          shift_slots_amount: Number(shift.shift_slots_amount) ?? 1,
+          shift_slots_taken: Number(shift.shift_slots_taken) ?? 0,
         }));
 
         setAvailableShifts(mappedShifts);
@@ -221,8 +223,8 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           date: shift.shift_date || shift.date,
           start: shift.shift_time_start || shift.start,
           end: shift.shift_time_end || shift.end,
-          shift_slots_amount: shift.shift_slots_amount,
-          shift_slots_taken: shift.shift_slots_taken,
+          shift_slots_amount: Number(shift.shift_slots_amount) ?? 1,
+          shift_slots_taken: Number(shift.shift_slots_taken) ?? 0,
         })));
       }
     } catch (err) {
