@@ -59,7 +59,7 @@ export default function ChatPopup() {
       const adminMode = sessionStorage.getItem('isAdmin');
 
       const { data } = await aiLambda.post(
-        '/',
+        '/chat',
         {
           user_prompt: prompt,
           employee_id: employeeId ? Number(employeeId) : undefined,
