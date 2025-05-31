@@ -94,24 +94,3 @@ export const swapAssignedShift = async (data: SwapAssignedShiftsDTO) => { // don
         throw error; // Re-throw the error for further handling
     }
 };
-
-
-
-export const makeadmin = async () => { // done
-    try {
-        const response = await api.put(
-            `/api/employees/assign_admin/${sessionStorage.getItem('customEmployeeId')}`,
-            { admin: true }
-        );
-        if (!response.data.data) {
-            throw new Error('No data returned from the server');
-        }
-        else
-        {
-            console.log('Admin assigned SUCCESS', response.data);
-        }
-    } catch (error) {
-        console.error('Error assigning admin:', error);
-        throw error; // Re-throw the error for further handling
-    }
-};
