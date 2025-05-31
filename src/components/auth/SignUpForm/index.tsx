@@ -160,7 +160,6 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
   }
 };
 
-
   /* dark-theme field styling */
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {

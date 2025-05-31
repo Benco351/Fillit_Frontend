@@ -9,7 +9,7 @@ import { createRequestedShift, deleteRequestedShiftById } from '../../utils/apis
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
 import {employees} from '../../components/CalendarFeatures/calendarStates';
-import { createEmployee } from '../../utils/apis/employeeShiftApis'; 
+import { createEmployee, getEmployees, deleteEmployeeById } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import RequestShiftDialog from '../../components/ShiftManagment';
@@ -19,6 +19,12 @@ import ActionButtons from '../../components/sections/UserPage/ActionButtons';
 import UserDashboardTitle from '../../components/sections/UserPage';
 import Filter from '../../components/CalendarFeatures/Filter';
 import AIChatPopup from '../../components/aiChat';
+import { getRequestedShifts } from '../../utils/apis/requestedShiftsApis';
+import { getAvailableShifts } from '../../utils/apis/availableShiftApis';
+import { getAssignedShifts } from '../../utils/apis/assignedShiftApis';
+import { deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
+import { deleteAvailableShiftById } from '../../utils/apis/availableShiftApis';
+import { makeadmin } from '../../utils/apis/assignedShiftApis';
 
 const UserDashboard: React.FC = () => {
 
@@ -165,9 +171,84 @@ const UserDashboard: React.FC = () => {
     }
   }, [availableShifts, requestedShifts, assignedShifts, filter]);
 
+  // TESTS button component for debugging
+  const TESTS = () => (
+    <Button
+      variant="contained"
+      color="secondary"
+      sx={{ position: 'fixed', top: 24, right: 24, zIndex: 3000 }}
+      onClick={async () => {
+        try {
+          const [employees, requested, available, assigned] = await Promise.all([
+            getEmployees(),
+            getRequestedShifts({}, true),
+            getAvailableShifts(),
+            getAssignedShifts(),
+          ]);
+          console.log('EMPLOYEES:', employees);
+          console.log('REQUESTED SHIFTS:', requested);
+          console.log('AVAILABLE SHIFTS:', available);
+          console.log('ASSIGNED SHIFTS:', assigned);
+        } catch (err) {
+          console.error('TESTS fetch error:', err);
+        }
+      }}
+    >
+      TESTS
+    </Button>
+  );
+
+  // DELETE button component for debugging (hardcoded loop of 50 by id)
+  const DELETE = () => (
+    <Button
+      variant="contained"
+      color="error"
+      sx={{ position: 'fixed', top: 24, right: 120, zIndex: 3000 }}
+      onClick={async () => {
+        try {
+          for (let id = 1; id <= 50; id++) {
+            try { await deleteEmployeeById(id); } catch {}
+            try { await deleteAssignedShiftById(id); } catch {}
+            try { await deleteAvailableShiftById(id); } catch {}
+            try { await deleteRequestedShiftById(id); } catch {}
+          }
+          alert('Tried to delete all employees, assigned shifts, available shifts, and requested shifts (IDs 1-50).');
+        } catch (err) {
+          console.error('DELETE error:', err);
+          alert('Error deleting all data. Check console.');
+        }
+      }}
+    >
+      DELETE
+    </Button>
+  );
+
+  // ADMIN button component for debugging
+  const ADMIN = () => (
+    <Button
+      variant="contained"
+      color="info"
+      sx={{ position: 'fixed', top: 24, right: 216, zIndex: 3000 }}
+      onClick={async () => {
+        try {
+          await makeadmin();
+          alert('Admin rights assigned to current employee.');
+        } catch (err) {
+          console.error('ADMIN error:', err);
+          alert('Error assigning admin. Check console.');
+        }
+      }}
+    >
+      ADMIN
+    </Button>
+  );
+
   return (
     <ThemeProvider theme={MainTheme}>
       <AIChatPopup />
+      <TESTS/>
+      <DELETE/>
+      <ADMIN/>
       <CssBaseline />
       <Box sx={{ backgroundColor: '#093039', minHeight: '100vh', py: 4, px: 2 }}>
         <Container maxWidth={false} sx={{ px: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
