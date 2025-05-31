@@ -716,34 +716,20 @@ const AdminDashboard: React.FC = () => {
               {/* Calendar Grid */}
               <Box
                 sx={{
-                  display: 'flex', 
-                  gap: 2, 
-                  overflowX: 'auto',
+                  display: 'flex',
+                  gap: 2,
+                  width: '100%',
+                  overflowX: 'visible', // Remove horizontal scroll
                   pb: 2,
-                  '&::-webkit-scrollbar': {
-                    height: '8px',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(0, 194, 140, 0.3)',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 194, 140, 0.5)',
-                    }
-                  }
                 }}
               >
                 {weekDays.map((day, index) => (
                   <Box
                     key={index}
                     sx={{
-                      flex: '1 1 0',
-                      minWidth: 180, // Slightly wider columns
-                      maxWidth: 'calc(100% / 7)',
+                      flex: 1, // Make columns flexible and fill the row
+                      minWidth: 0, // Allow shrinking to fit
+                      maxWidth: '100%',
                       height: '600px',
                       display: 'flex',
                       flexDirection: 'column',
@@ -863,17 +849,7 @@ const AdminDashboard: React.FC = () => {
                                     </Typography>
                                   )}
           
-                                <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', gap: 1 }}>
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: 'white',
-                                      padding: { xs: 0.5, sm: 1 }
-                                    }}
-                                    onClick={() => handleOpenInfoDialog(shift)}
-                                  >
-                                    <InfoIcon fontSize="small" />
-                                  </IconButton>
+                                <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <IconButton
                                     size="small"
                                     sx={{
@@ -883,6 +859,17 @@ const AdminDashboard: React.FC = () => {
                                     onClick={() => handleOpenEditDialogFromCalendar(shift)}
                                   >
                                     <EditIcon fontSize="small" />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      color: 'white',
+                                      padding: { xs: 0.5, sm: 1 },
+                                      mt: -1.7 // Move the Info button slightly upwards
+                                    }}
+                                    onClick={() => handleOpenInfoDialog(shift)}
+                                  >
+                                    <InfoIcon fontSize="small" />
                                   </IconButton>
                                 </Box>
                               </Box>
