@@ -46,41 +46,55 @@ export default function ChatPopup() {
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  /* send prompt */
+  /* send prompt */// Fully robust version — handles every payload shape we see from the Lambda
   const send = async () => {
     if (!input.trim()) return;
-    const prompt = input;
+
+    const prompt = input.trim();
     setInput('');
     setMsgs(m => [...m, { from: 'user', text: prompt }]);
     setLoading(true);
-    try {
-      // Fetch from sessionStorage
-      const employeeId = sessionStorage.getItem('customEmployeeId');
-      const adminMode = sessionStorage.getItem('isAdmin');
 
-      const { data } = await aiLambda.post(
-        '/chat',
-        {
-          user_prompt: prompt,
-          employee_id: employeeId ? Number(employeeId) : undefined,
-          admin_mode: adminMode ? String(JSON.parse(adminMode)) : 'false',
-        }
-      );
-      // Lambda returns a stringified JSON in the 'body' property
+    // helper to parse JSON safely
+    const safeJson = (str: string) => {
+      try { return JSON.parse(str); } catch { return null; }
+    };
+
+    try {
+      /* 1 ▸ call the Lambda */
+      const employeeId = sessionStorage.getItem('customEmployeeId');
+      const adminMode  = sessionStorage.getItem('isAdmin');
+
+      const { data } = await aiLambda.post('/chat', {
+        user_prompt : prompt,
+        employee_id : employeeId ? Number(employeeId) : undefined,
+        admin_mode  : adminMode ? String(JSON.parse(adminMode)) : 'false',
+      });
+
+      /* 2 ▸ extract ai_reply regardless of wrapper */
       let aiReply = 'Sorry, something went wrong 🤖';
-      if (data && typeof data.body === 'string') {
-        try {
-          const parsed = JSON.parse(data.body);
-          aiReply = parsed.ai_reply || aiReply;
-        } catch { /* empty */ }
+
+      if (data?.ai_reply) {
+        // direct JSON payload   →  { ai_reply: "…"}
+        aiReply = data.ai_reply;
+      } else if (typeof data?.body === 'string') {
+        // string-encoded JSON   →  { body: "{\"ai_reply\":\"…\"}" }
+        const parsed = safeJson(data.body);
+        if (parsed?.ai_reply) aiReply = parsed.ai_reply;
+      } else if (typeof data?.body === 'object' && data.body?.ai_reply) {
+        // body already an object →  { body: { ai_reply: "…" } }
+        aiReply = data.body.ai_reply;
       }
+
       setMsgs(m => [...m, { from: 'ai', text: aiReply }]);
-    } catch {
+    } catch (err) {
+      console.error('AI request failed:', err);
       setMsgs(m => [...m, { from: 'ai', text: 'Sorry, something went wrong 🤖' }]);
     } finally {
       setLoading(false);
     }
   };
+
 
   /* UI ------------------------------------------------------------------- */
   return (
