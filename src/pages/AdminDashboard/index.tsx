@@ -588,6 +588,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <ThemeProvider theme={MainTheme}>
+    <AIChatPopup />
       
       <CssBaseline />
       <Box
