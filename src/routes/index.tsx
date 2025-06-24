@@ -9,6 +9,7 @@ import LoginForm       from '../components/auth/LoginForm';
 import UserDashboard   from '../pages/UserDashboard';
 import AdminDashboard  from '../pages/AdminDashboard';
 import SettingsPage    from '../pages/Settings';
+import SwapPage from '../pages/Swap';
 
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -47,6 +48,16 @@ const AppRoutes: React.FC = () => (
             <AdminDashboard />
           </ProtectedRoute>
         }
+      />
+
+      <Route
+        path={ROUTES.SWAP}
+        // element={
+        //   <ProtectedRoute redirectTo={ROUTES.LOGIN}>
+        //     <SwapPage />
+        //   </ProtectedRoute>
+        // }
+        element={<SwapPage />}
       />
 
       <Route

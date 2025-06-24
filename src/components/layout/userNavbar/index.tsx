@@ -101,6 +101,14 @@ const Navbar = () => {
           >
             Home
           </Button>
+          {/* Swap Button */}
+          <Button
+            variant="contained"
+            onClick={() => navigate(ROUTES.SWAP)}
+            sx={glassButtonStyle}
+          >
+            Swap
+          </Button>
           <Button
             variant="contained"
             onClick={handleOpenSettings}

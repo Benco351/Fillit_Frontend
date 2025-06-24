@@ -19,7 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
 import { SignUpTheme } from '../../../assets/themes/themes';
 import { api } from '../../../utils/apis/apiconfig';
-import { signUp, confirmSignUp, signOut, fetchAuthSession} from '@aws-amplify/auth';
+// import { signUp, confirmSignUp, signOut, fetchAuthSession} from '@aws-amplify/auth';
 import axios from 'axios';
 import { Api } from '@mui/icons-material';
 
@@ -40,7 +40,7 @@ const SignUpSchema = z
     path: ['confirmPassword'],
   });
 
-type SignUpFormType = z.infer<typeof SignUpSchema>;   //  ← missing “>” fixed
+type SignUpFormType = z.infer<typeof SignUpSchema>;   //  ← missing ">" fixed
 
 /* ──────────────────────────────────────────────
    Component
@@ -67,14 +67,14 @@ const SignUpForm: React.FC = () => {
   /** 
  * Signs out **only if** there's currently a user signed in.
  */
-async function clearSessionIfNeeded() {
-  try {
-    await fetchAuthSession();
-    await signOut();
-  } catch {
-    // no user was signed in, nothing to do
-  }
-}
+// async function clearSessionIfNeeded() {
+//   try {
+//     await fetchAuthSession();
+//     await signOut();
+//   } catch {
+//     // no user was signed in, nothing to do
+//   }
+// }
 
   /* ──────────────────────────────────────────
      Submit handler
@@ -93,57 +93,54 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
         password: data.password,
       });
       const id = createRes.data.data.employee_id;
-
+      // Check if the employee is admin from the response
+      const isAdmin = createRes.data.data.employee_admin;
       /* STORE it for the confirm step (if needed) */
       setPendingEmployeeId(id);
       setPendingEmail(data.email);
       setPendingSignUpData(data);
 
-      /* STEP 2 — sign up in Cognito, embedding the custom:employeeId */
-      const { nextStep } = await signUp({
-        username: data.email,
-        password: data.password,
-        options: {
-          userAttributes: {
-            email:              data.email,
-            'custom:employeeId': String(id),
-            ...(data.phone ? { phone_number: data.phone } : {}),
-          },
-        },
-      });
-
-      if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
-        setAwaitingCode(true);
-        return;
-      }
-      /* no confirmation required */
+      // --- Cognito signUp code commented out ---
+      // const { nextStep } = await signUp({
+      //   username: data.email,
+      //   password: data.password,
+      //   options: {
+      //     userAttributes: {
+      //       email:              data.email,
+      //       'custom:employeeId': String(id),
+      //       ...(data.phone ? { phone_number: data.phone } : {}),
+      //     },
+      //   },
+      // });
+      // if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+      //   setAwaitingCode(true);
+      //   return;
+      // }
+      // /* no confirmation required */
       setSnackOpen(true);
-      
-      await api.post('/auth/add-to-group', {
-        email: data.email,
-        group: 'Users',
-      });
+      // await api.post('/auth/add-to-group', {
+      //   email: data.email,
+      //   group: isAdmin ? 'Admins' : 'Users',
+      // });
+      // (add-to-group call commented out as requested)
       setTimeout(() => navigate('/login'), 2000);
       return;
     }
 
     /* STEP 3 — confirm code (nothing else to push) */
-    const code = getValues('code')?.trim();
-    if (!code) throw new Error('Please enter the verification code.');
-
-    await confirmSignUp({
-      username:         pendingEmail!,
-      confirmationCode: code,
-    });
-
-    await clearSessionIfNeeded();
-    setSnackOpen(true);
-
-    await api.post('/auth/add-to-group', {
-      email: data.email,
-      group: 'Users',
-    });
-    setTimeout(() => navigate('/login'), 2000);
+    // const code = getValues('code')?.trim();
+    // if (!code) throw new Error('Please enter the verification code.');
+    // await confirmSignUp({
+    //   username:         pendingEmail!,
+    //   confirmationCode: code,
+    // });
+    // await clearSessionIfNeeded();
+    // setSnackOpen(true);
+    // await api.post('/auth/add-to-group', {
+    //   email: data.email,
+    //   group: 'Users',
+    // });
+    // setTimeout(() => navigate('/login'), 2000);
   }
   catch (err: unknown) {
     if (axios.isAxiosError(err) && err.response?.status === 409) {

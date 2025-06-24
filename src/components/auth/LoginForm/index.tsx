@@ -17,14 +17,14 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
 
-import {
-  signIn,
-  fetchAuthSession,
-  resetPassword,
-  confirmResetPassword,
-  fetchUserAttributes,
-  signOut, // add this import
-} from '@aws-amplify/auth';
+// import {
+//   signIn,
+//   fetchAuthSession,
+//   resetPassword,
+//   confirmResetPassword,
+//   fetchUserAttributes,
+//   signOut, // add this import
+// } from '@aws-amplify/auth';
 import { LoginTheme } from '../../../assets/themes/themes';
 import axios from 'axios';
 import { api } from '../../../utils/apis/apiconfig';
@@ -98,54 +98,43 @@ const LoginForm: React.FC = () => {
       /* 1 ► sign-in */
       if (mode === 'login') {
         const data = form as LoginFormData;
-        const result = await signIn({
-          username: data.email,
+        // --- Cognito signIn logic commented out ---
+        // const result = await signIn({
+        //   username: data.email,
+        //   password: data.password,
+        // });
+        // if (!result.isSignedIn) {
+        //   throw new Error(`Unexpected next step: ${result.nextStep.signInStep}`);
+        // }
+        // const session = await fetchAuthSession();
+        // const token = session.tokens?.accessToken;
+        // if (!token) throw new Error('Unable to retrieve access token');
+        // const attributes = await fetchUserAttributes();
+        // let customEmployeeId: string | undefined = undefined;
+        // if (Array.isArray(attributes)) {
+        //   customEmployeeId = attributes.find(attr => attr.Name === 'custom:employeeId')?.Value;
+        // } else if (typeof attributes === 'object' && attributes !== null && 'custom:employeeId' in attributes) {
+        //   customEmployeeId = (attributes as Record<string, string>)['custom:employeeId'];
+        // }
+        // if (!customEmployeeId) {
+        //   throw new Error('Unable to retrieve custom employee ID');
+        // }
+        // --- END Cognito logic ---
+
+        // Use backend API for login
+        const response = await api.post('/api/login', {
+          email: data.email,
           password: data.password,
         });
-
-        if (!result.isSignedIn) {
-          throw new Error(`Unexpected next step: ${result.nextStep.signInStep}`);
-        }
-
-        const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken;
-        if (!token) throw new Error('Unable to retrieve access token');
-
-        // Retrieve current user and fetch its attributes
-        const attributes = await fetchUserAttributes();
-        let customEmployeeId: string | undefined = undefined;
-        if (Array.isArray(attributes)) {
-          customEmployeeId = attributes.find(attr => attr.Name === 'custom:employeeId')?.Value;
-        } else if (typeof attributes === 'object' && attributes !== null && 'custom:employeeId' in attributes) {
-          // If fetchUserAttributes returns an object (key-value map)
-          customEmployeeId = (attributes as Record<string, string>)['custom:employeeId'];
-        }
-
-        if (!customEmployeeId) {
-          throw new Error('Unable to retrieve custom employee ID');
-        }
-
-        // Print the logged in customEmployeeId
-        // console.log('Logged in customEmployeeId:', customEmployeeId);
-
-        // Retrieve if admin from back
-        const response = await api.get(`/api/employees/${customEmployeeId}`);
-        //console.log('Employee data:', response.data);
-        const isAdmin = response.data.data.employee_admin;
-
+        // Expecting response.data to have employee info and admin status
+        const employee = response.data.data;
+        const customEmployeeId = employee.employee_id;
+        const isAdmin = employee.employee_admin;
         // Save customEmployeeId and isAdmin in sessionStorage
         sessionStorage.setItem('customEmployeeId', customEmployeeId);
         sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
-        sessionStorage.setItem('name', response.data.data.employee_name);
-        sessionStorage.setItem('email', response.data.data.employee_email);
-
-        // console.log('Session storage updated:', {
-        //   customEmployeeId,
-        //   isAdmin,
-        //   name: response.data.employee_name,
-        //   email: response.data.email,
-        // });
-
+        sessionStorage.setItem('name', employee.employee_name);
+        sessionStorage.setItem('email', employee.employee_email);
         if (isAdmin) {
           navigate('/admin-dashboard', { replace: true });
         } else {
@@ -154,27 +143,31 @@ const LoginForm: React.FC = () => {
       }
       /* 2 ► forgot-password: request code */
       else if (mode === 'resetRequest') {
-        const data = form as ResetRequestData;
-        const { nextStep } = await resetPassword({ username: data.email });
-
-        if (nextStep.resetPasswordStep !== 'CONFIRM_RESET_PASSWORD_WITH_CODE') {
-          throw new Error('Unexpected reset-password step');
-        }
-        setEmail(data.email);
-        reset();
-        setMode('resetConfirm');
+        // --- Cognito resetPassword logic commented out ---
+        // const data = form as ResetRequestData;
+        // const { nextStep } = await resetPassword({ username: data.email });
+        // if (nextStep.resetPasswordStep !== 'CONFIRM_RESET_PASSWORD_WITH_CODE') {
+        //   throw new Error('Unexpected reset-password step');
+        // }
+        // setEmail(data.email);
+        // reset();
+        // setMode('resetConfirm');
+        // --- END Cognito logic ---
+        setAuthError('Password reset is not available. Please contact your administrator.');
       }
       /* 3 ► forgot-password: confirm code */
       else if (mode === 'resetConfirm') {
-        const data = form as ResetConfirmData;
-        await confirmResetPassword({
-          username:         emailForReset,
-          confirmationCode: data.code,
-          newPassword:      data.newPassword,
-        });
-
-        setSnackOpen(true);
-        setTimeout(() => navigate('/login', { replace: true }), 2000);
+        // --- Cognito confirmResetPassword logic commented out ---
+        // const data = form as ResetConfirmData;
+        // await confirmResetPassword({
+        //   username:         emailForReset,
+        //   confirmationCode: data.code,
+        //   newPassword:      data.newPassword,
+        // });
+        // setSnackOpen(true);
+        // setTimeout(() => navigate('/login', { replace: true }), 2000);
+        // --- END Cognito logic ---
+        setAuthError('Password reset is not available. Please contact your administrator.');
       }
     } catch (err: unknown) {
       console.error('Auth flow error', err);

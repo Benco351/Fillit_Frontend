@@ -338,3 +338,15 @@ export const AdminTheme = createTheme({
   },
 });
 
+// Swap page specific colors
+export const swapPageColors = {
+  background: '#093039', // matches UserDashboard background
+  cardBg: 'rgba(255,255,255,0.08)', // card background for swap cards
+  cardHover: 'rgba(255,255,255,0.15)',
+  cardBorder: '2px solid rgba(0, 194, 140, 0.18)',
+  cardShadow: '0 4px 20px rgba(0,0,0,0.10)',
+  avatarBg: '#00c28c',
+  avatarText: '#fff',
+  infoPaperBg: 'rgba(255,255,255,0.10)',
+};
+
