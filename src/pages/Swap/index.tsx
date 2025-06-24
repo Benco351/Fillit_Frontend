@@ -11,6 +11,10 @@ import {
   IconButton,
   Stack,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
@@ -40,102 +44,145 @@ const getCurrentUser = () => {
 const EmployeeCard: React.FC<{ emp: Employee }> = ({ emp }) => {
   const theme = useTheme();
   const { commonButtonStyle } = useUserDashboard({ id: 0, name: '', email: '' });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [assignedShifts, setAssignedShifts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRequestSwap = async () => {
+    console.log('Requesting assigned shifts for employee:', emp, 'with id:', emp.id);
+    setDialogOpen(true);
+    setLoading(true);
+    setError(null);
+    try {
+      const mod = await import('../../utils/apis/assignedShiftApis');
+      const res = await mod.getAssignedShifts({ assigned_employee_id: emp.id });
+      // Debugging output
+      console.log('Assigned shifts response:', res);
+      // Try both options for safety
+      const assigned = res.data?.data || res.data || [];
+      setAssignedShifts(assigned);
+      console.log('Assigned shifts set:', assigned);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch assigned shifts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        minWidth: 260,
-        maxWidth: 320,
-        borderRadius: 3,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 1.5,
-        border: swapPageColors.cardBorder,
-        boxShadow: swapPageColors.cardShadow,
-        background: swapPageColors.cardBg,
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-          transform: 'translateY(-4px) scale(1.03)',
-          background: swapPageColors.cardHover,
-          boxShadow: '0px 8px 30px rgba(0,0,0,0.13)',
-        },
-      }}
-    >
-      <Box
+    <>
+      <Paper
+        elevation={0}
         sx={{
-          width: 64,
-          height: 64,
-          borderRadius: '50%',
-          background: swapPageColors.avatarBg,
+          p: 3,
+          minWidth: 260,
+          maxWidth: 320,
+          borderRadius: 3,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 32,
-          color: swapPageColors.avatarText,
-          mb: 1,
-          fontWeight: 600,
-          textTransform: 'uppercase',
+          gap: 1.5,
+          border: swapPageColors.cardBorder,
+          boxShadow: swapPageColors.cardShadow,
+          background: swapPageColors.cardBg,
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': {
+            transform: 'translateY(-4px) scale(1.03)',
+            background: swapPageColors.cardHover,
+            boxShadow: '0px 8px 30px rgba(0,0,0,0.13)',
+          },
         }}
       >
-        {emp.name?.[0] || '?'}
-      </Box>
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom align="center" color="white">
-        {emp.name}
-      </Typography>
-      <Typography variant="body2" color="grey.300" align="center">
-        ID: {emp.id}
-      </Typography>
-      <Typography variant="body2" color="grey.300" align="center">
-        Email: {emp.email || 'N/A'}
-      </Typography>
-      <Typography variant="body2" color="primary" fontWeight={500} align="center">
-        Role: {emp.admin ? 'Admin' : 'User'}
-      </Typography>
-      <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
-        <IconButton
-          color="primary"
+        <Box
           sx={{
-            bgcolor: 'primary.light',
-            color: 'white',
-            width: 48,
-            height: 48,
+            width: 64,
+            height: 64,
             borderRadius: '50%',
+            background: swapPageColors.avatarBg,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,194,140,0.10)',
-            '&:hover': { bgcolor: 'primary.main' },
-            p: 0,
-          }}
-          aria-label="Chat"
-        >
-          <ChatIcon fontSize="medium" />
-        </IconButton>
-        <Button
-          variant="contained"
-          startIcon={<SwapHorizIcon />}
-          sx={{
-            ...commonButtonStyle,
-            borderRadius: 3,
-            bgcolor: 'primary.main',
-            color: 'white',
-            minWidth: 120,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.10)',
-            '&:hover': {
-              bgcolor: 'primary.dark',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.13)',
-            },
-            '&:active': {
-              boxShadow: '0 2px 6px rgba(0,0,0,0.10)',
-            },
+            fontSize: 32,
+            color: swapPageColors.avatarText,
+            mb: 1,
+            fontWeight: 600,
+            textTransform: 'uppercase',
           }}
         >
-          Request Swap
-        </Button>
-      </Stack>
-    </Paper>
+          {emp.name?.[0] || '?'}
+        </Box>
+        <Typography variant="subtitle1" fontWeight={600} gutterBottom align="center" color="white">
+          {emp.name}
+        </Typography>
+        <Typography variant="body2" color="grey.300" align="center">
+          ID: {emp.id}
+        </Typography>
+        <Typography variant="body2" color="grey.300" align="center">
+          Email: {emp.email || 'N/A'}
+        </Typography>
+        <Typography variant="body2" color="primary" fontWeight={500} align="center">
+          Role: {emp.admin ? 'Admin' : 'User'}
+        </Typography>
+        <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
+          <IconButton
+            color="primary"
+            sx={{
+              bgcolor: 'primary.light',
+              color: 'white',
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0,194,140,0.10)',
+              '&:hover': { bgcolor: 'primary.main' },
+              p: 0,
+            }}
+            aria-label="Chat"
+          >
+            <ChatIcon fontSize="medium" />
+          </IconButton>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SwapHorizIcon />}
+            sx={{
+              minWidth: 120,
+              borderRadius: 3,
+            }}
+            onClick={handleRequestSwap}
+          >
+            Request Swap
+          </Button>
+        </Stack>
+      </Paper>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{emp.name}'s Assigned Shifts</DialogTitle>
+        <DialogContent>
+          {loading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>}
+          {error && <Alert severity="error">{error}</Alert>}
+          {!loading && !error && assignedShifts.length === 0 && (
+            <Typography>No assigned shifts found.</Typography>
+          )}
+          {!loading && !error && assignedShifts.length > 0 && (
+            <Box>
+              {assignedShifts.map((shift: any) => (
+                <Paper key={shift.assigned_id} sx={{ p: 2, mb: 2, background: swapPageColors.cardBg, color: 'white' }}>
+                  <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
+                  <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
+                  <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
+                </Paper>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
@@ -178,7 +225,13 @@ const SwapPage: React.FC = () => {
           {/* Return Button */}
           <Button
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate(ROUTES.DASHBOARD)}
+            onClick={() => {
+              if (user.admin) {
+                navigate(ROUTES.ADMIN);
+              } else {
+                navigate(ROUTES.DASHBOARD);
+              }
+            }}
             sx={{ ...commonButtonStyle, mb: 3, bgcolor: 'primary.main', color: 'white', boxShadow: 'none', '&:hover': { bgcolor: 'primary.dark' } }}
           >
             Back to Dashboard
