@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Container,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
@@ -26,6 +27,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../routes/config/routes';
 import Footer from '../../components/layout/Footer';
+import Navbar from '../../components/layout/userNavbar';
 
 const getCurrentUser = () => {
   // Read from sessionStorage (set during login)
@@ -105,6 +107,7 @@ const EmployeeCard: React.FC<{ emp: Employee }> = ({ emp }) => {
 
   return (
     <>
+
       <Paper
         elevation={0}
         sx={{
@@ -308,9 +311,15 @@ const SwapPage: React.FC = () => {
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
-      <Box sx={{ minHeight: '100vh', background: swapPageColors.background, py: { xs: 4, md: 8 } }}>
-        <Box sx={{ maxWidth: 900, mx: 'auto', px: 2 }}>
-          {/* Return Button */}
+      <Box sx={{ 
+        backgroundColor: user.admin ? '#18191c' : '#093039', 
+        minHeight: '100vh', 
+        py: 4, 
+        px: 2 
+      }}>
+        <Container maxWidth={false} sx={{ px: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
+          <Navbar />
+          {/* Return Button
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => {
@@ -323,37 +332,60 @@ const SwapPage: React.FC = () => {
             sx={{ ...commonButtonStyle, mb: 3, bgcolor: 'primary.main', color: 'white', boxShadow: 'none', '&:hover': { bgcolor: 'primary.dark' } }}
           >
             Back to Dashboard
-          </Button>
-          {/* Main Content */}
-          <Typography variant="h3" fontWeight={700} color="primary" align="center" gutterBottom>
-            Swap Shifts
-          </Typography>
-          <Typography variant="body1" align="center" color="grey.300" sx={{ mb: 3 }}>
-            Connect with other employees to chat and request shift swaps.
-          </Typography>
-          <Paper sx={{ mt: 4, p: { xs: 2, sm: 3 }, display: 'inline-block', minWidth: 300, borderRadius: 3, mx: 'auto', background: swapPageColors.infoPaperBg, border: swapPageColors.cardBorder, boxShadow: swapPageColors.cardShadow }} elevation={0}>
-            <Typography variant="h6" gutterBottom align="center" color="white">Current User Info</Typography>
-            <Typography color="white">Name: {user.name}</Typography>
-            <Typography color="grey.300">Email: {user.email}</Typography>
-            <Typography color="grey.300">User ID: {user.id}</Typography>
-            <Typography color="primary">Role: {user.admin ? 'Admin' : 'User'}</Typography>
-          </Paper>
-          <Box sx={{ mt: 7 }}>
-            <Typography variant="h5" fontWeight={600} align="center" gutterBottom color="white">All Employees</Typography>
-            {loading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress color="primary" /></Box>}
-            {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
-            {!loading && !error && employees.length === 0 && (
-              <Typography align="center" sx={{ mt: 4 }} color="grey.300">No employees found.</Typography>
-            )}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 3, mt: 3 }}>
-              {employees
-                .filter(emp => String(emp.id) !== String(user.id))
-                .map(emp => (
-                  <EmployeeCard key={emp.id} emp={emp} />
-                ))}
+          </Button> */}
+          {/* Main Content Card/Frame */}
+          <Box
+            sx={{
+              border: '2px solid rgba(0, 194, 140, 0.2)',
+              borderRadius: '12px',
+              padding: { xs: 2, sm: 3, md: 4 },
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+              margin: '24px 0',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="primary" align="center" gutterBottom>
+              Swap Shifts
+            </Typography>
+            <Typography variant="body1" align="center" color="grey.300" sx={{ mb: 3 }}>
+              Connect with other employees to chat and request shift swaps.
+            </Typography>
+            <Paper sx={{ mt: 2, mb: 4, p: { xs: 2, sm: 3 }, display: 'inline-block', minWidth: 300, borderRadius: 3, mx: 'auto', background: swapPageColors.infoPaperBg, border: swapPageColors.cardBorder, boxShadow: swapPageColors.cardShadow }} elevation={0}>
+              <Typography variant="h6" gutterBottom align="center" color="white">Current User Info</Typography>
+              <Typography color="white">Name: {user.name}</Typography>
+              <Typography color="grey.300">Email: {user.email}</Typography>
+              <Typography color="grey.300">User ID: {user.id}</Typography>
+              <Typography color="primary">Role: {user.admin ? 'Admin' : 'User'}</Typography>
+            </Paper>
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h5" fontWeight={600} align="center" gutterBottom color="white">All Employees</Typography>
+              {loading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress color="primary" /></Box>}
+              {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
+              {!loading && !error && employees.length === 0 && (
+                <Typography align="center" sx={{ mt: 4 }} color="grey.300">No employees found.</Typography>
+              )}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' },
+                  flexWrap: 'wrap',
+                  gap: 3,
+                  mt: 3,
+                  justifyContent: 'center',
+                }}
+              >
+                {employees
+                  .filter(emp => String(emp.id) !== String(user.id))
+                  .map(emp => (
+                    <EmployeeCard key={emp.id} emp={emp} />
+                  ))}
+              </Box>
             </Box>
           </Box>
-        </Box>
+        </Container>
+        
       </Box>
       <Footer />
     </ThemeProvider>

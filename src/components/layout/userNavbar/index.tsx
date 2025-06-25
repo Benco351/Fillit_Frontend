@@ -26,6 +26,14 @@ const Navbar = () => {
     navigate('/settings');
   };
 
+  const handleHome = () => {
+    if (isAdmin) {
+      navigate(ROUTES.ADMIN);
+    } else {
+      navigate(ROUTES.DASHBOARD);
+    }
+  };
+
   const glassButtonStyle = {
     background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
     backdropFilter: 'blur(8px)',
@@ -96,7 +104,7 @@ const Navbar = () => {
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="contained"
-            onClick={handleLogout}
+            onClick={handleHome}
             sx={glassButtonStyle}
           >
             Home
