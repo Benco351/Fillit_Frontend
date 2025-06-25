@@ -82,7 +82,7 @@ export const getAssignedShifts = async (params: AssignedShiftQueryDTO = {}) => {
 
 export const swapAssignedShift = async (data: SwapAssignedShiftsDTO) => { // done
     try {
-        const response = await api.post('/api/assigned-shifts/swap', data);
+        const response = await api.put('/api/assigned-shifts/swap', data);
 
         if (!response.data.data) {
             throw new Error('No data returned from the server');

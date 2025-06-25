@@ -46,27 +46,60 @@ const EmployeeCard: React.FC<{ emp: Employee }> = ({ emp }) => {
   const { commonButtonStyle } = useUserDashboard({ id: 0, name: '', email: '' });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assignedShifts, setAssignedShifts] = useState<any[]>([]);
+  const [userShifts, setUserShifts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedOtherShift, setSelectedOtherShift] = useState<number | null>(null);
+  const [selectedUserShift, setSelectedUserShift] = useState<number | null>(null);
+  const [swapLoading, setSwapLoading] = useState(false);
+  const [swapResult, setSwapResult] = useState<string | null>(null);
 
   const handleRequestSwap = async () => {
     console.log('Requesting assigned shifts for employee:', emp, 'with id:', emp.id);
     setDialogOpen(true);
     setLoading(true);
     setError(null);
+    setSwapResult(null);
+    setSelectedOtherShift(null);
+    setSelectedUserShift(null);
     try {
       const mod = await import('../../utils/apis/assignedShiftApis');
-      const res = await mod.getAssignedShifts({ assigned_employee_id: emp.id });
-      // Debugging output
-      console.log('Assigned shifts response:', res);
-      // Try both options for safety
-      const assigned = res.data?.data || res.data || [];
+      const resOther = await mod.getAssignedShifts({ assigned_employee_id: emp.id });
+      const assigned = resOther.data?.data || resOther.data || [];
       setAssignedShifts(assigned);
       console.log('Assigned shifts set:', assigned);
+
+      const currentUserId = sessionStorage.getItem('customEmployeeId');
+      if (currentUserId) {
+        const resUser = await mod.getAssignedShifts({ assigned_employee_id: Number(currentUserId) });
+        const userAssigned = resUser.data?.data || resUser.data || [];
+        setUserShifts(userAssigned);
+      } else {
+        setUserShifts([]);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch assigned shifts');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSwap = async () => {
+    if (!selectedOtherShift || !selectedUserShift) return;
+    setSwapLoading(true);
+    setSwapResult(null);
+    try {
+      const mod = await import('../../utils/apis/assignedShiftApis');
+      await mod.swapAssignedShift({
+        assignedShiftId1: selectedOtherShift,
+        assignedShiftId2: selectedUserShift,
+      });
+      setSwapResult('Swap successful!');
+      handleRequestSwap();
+    } catch (err: any) {
+      setSwapResult(err.message || 'Swap failed.');
+    } finally {
+      setSwapLoading(false);
     }
   };
 
@@ -158,28 +191,83 @@ const EmployeeCard: React.FC<{ emp: Employee }> = ({ emp }) => {
           </Button>
         </Stack>
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{emp.name}'s Assigned Shifts</DialogTitle>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Swap Shifts with {emp.name}</DialogTitle>
         <DialogContent>
           {loading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>}
           {error && <Alert severity="error">{error}</Alert>}
-          {!loading && !error && assignedShifts.length === 0 && (
-            <Typography>No assigned shifts found.</Typography>
-          )}
-          {!loading && !error && assignedShifts.length > 0 && (
-            <Box>
-              {assignedShifts.map((shift: any) => (
-                <Paper key={shift.assigned_id} sx={{ p: 2, mb: 2, background: swapPageColors.cardBg, color: 'white' }}>
-                  <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
-                  <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
-                  <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
-                </Paper>
-              ))}
+          {!loading && !error && (
+            <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Box sx={{ flex: 1, minWidth: 220 }}>
+                <Typography variant="subtitle1" color="primary" gutterBottom align="center">{emp.name}'s Shifts</Typography>
+                {assignedShifts.length === 0 ? (
+                  <Typography align="center">No assigned shifts found.</Typography>
+                ) : (
+                  assignedShifts.map((shift: any) => (
+                    <Paper
+                      key={shift.assigned_id}
+                      sx={{
+                        p: 2,
+                        mb: 2,
+                        background: selectedOtherShift === shift.assigned_id ? swapPageColors.avatarBg : swapPageColors.cardBg,
+                        color: selectedOtherShift === shift.assigned_id ? '#111' : 'white',
+                        cursor: 'pointer',
+                        border: selectedOtherShift === shift.assigned_id ? '2px solid #fff' : '1px solid #444',
+                        boxShadow: selectedOtherShift === shift.assigned_id ? '0 0 8px #00c28c' : swapPageColors.cardShadow,
+                        transition: 'all 0.2s',
+                      }}
+                      onClick={() => setSelectedOtherShift(shift.assigned_id)}
+                    >
+                      <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
+                      <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
+                      <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
+                    </Paper>
+                  ))
+                )}
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 220 }}>
+                <Typography variant="subtitle1" color="primary" gutterBottom align="center">Your Shifts</Typography>
+                {userShifts.length === 0 ? (
+                  <Typography align="center">No assigned shifts found.</Typography>
+                ) : (
+                  userShifts.map((shift: any) => (
+                    <Paper
+                      key={shift.assigned_id}
+                      sx={{
+                        p: 2,
+                        mb: 2,
+                        background: selectedUserShift === shift.assigned_id ? swapPageColors.avatarBg : swapPageColors.cardBg,
+                        color: selectedUserShift === shift.assigned_id ? '#111' : 'white',
+                        cursor: 'pointer',
+                        border: selectedUserShift === shift.assigned_id ? '2px solid #fff' : '1px solid #444',
+                        boxShadow: selectedUserShift === shift.assigned_id ? '0 0 8px #00c28c' : swapPageColors.cardShadow,
+                        transition: 'all 0.2s',
+                      }}
+                      onClick={() => setSelectedUserShift(shift.assigned_id)}
+                    >
+                      <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
+                      <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
+                      <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
+                    </Paper>
+                  ))
+                )}
+              </Box>
             </Box>
+          )}
+          {swapResult && (
+            <Alert severity={swapResult === 'Swap successful!' ? 'success' : 'error'} sx={{ mt: 2 }}>{swapResult}</Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Close</Button>
+          <Button
+            onClick={handleSwap}
+            variant="contained"
+            color="primary"
+            disabled={!selectedOtherShift || !selectedUserShift || swapLoading}
+          >
+            {swapLoading ? <CircularProgress size={22} color="inherit" /> : 'Swap'}
+          </Button>
         </DialogActions>
       </Dialog>
     </>
