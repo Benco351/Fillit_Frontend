@@ -365,7 +365,7 @@ const SwapPage: React.FC = () => {
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
       <Box sx={{ 
-        backgroundColor: user.admin ? swapPageTheme.adminBg : swapPageTheme.mainBg, 
+        backgroundColor: user.admin ? swapPageTheme.adminBg : '#093039', 
         minHeight: '100vh', 
         py: 4, 
         px: 2 
