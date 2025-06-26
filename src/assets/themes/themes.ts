@@ -75,7 +75,7 @@ export const MainTheme = createTheme({
     background: {
       default: '#f8f9fa',
       paper: '#ffffff'
-    }
+    },
   },
   typography: {
     fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -117,6 +117,31 @@ export const MainTheme = createTheme({
     },
   },
 });
+
+// Export swapPageTheme as a separate object
+export const swapPageTheme = {
+  background: '#093039',
+  cardBg: 'rgba(44, 53, 61, 0.95)',
+  cardHover: 'rgba(44, 53, 61, 1)',
+  cardBorder: '2px solid rgba(0, 194, 140, 0.18)',
+  cardShadow: '0 4px 20px rgba(0,0,0,0.10)',
+  avatarBg: '#00c28c',
+  avatarText: '#fff',
+  infoPaperBg: 'rgba(44, 53, 61, 0.95)',
+  selectedText: '#111',
+  unselectedText: 'white',
+  boxShadowSelected: '0px 8px 30px rgba(0,0,0,0.13)',
+  iconButtonBg: 'primary.light',
+  iconButtonColor: 'white',
+  iconButtonBoxShadow: '0 2px 8px rgba(0,194,140,0.10)',
+  selectedBorder: '2px solid #fff',
+  unselectedBorder: '1px solid #444',
+  selectedBoxShadow: '0 0 8px #00c28c',
+  adminBg: '#18191c',
+  mainBorder: '2px solid rgba(0, 194, 140, 0.2)',
+  mainBg: 'rgba(255, 255, 255, 0.05)',
+  mainBoxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+};
 
 export const SignUpTheme = createTheme({
     palette: {
@@ -337,16 +362,4 @@ export const AdminTheme = createTheme({
     },
   },
 });
-
-// Swap page specific colors
-export const swapPageColors = {
-  background: '#093039', // matches UserDashboard background
-  cardBg: 'rgba(44, 53, 61, 0.95)', // much darker card background
-  cardHover: 'rgba(44, 53, 61, 1)', // solid dark on hover
-  cardBorder: '2px solid rgba(0, 194, 140, 0.18)',
-  cardShadow: '0 4px 20px rgba(0,0,0,0.10)',
-  avatarBg: '#00c28c',
-  avatarText: '#fff',
-  infoPaperBg: 'rgba(44, 53, 61, 0.95)', // match cardBg for info paper
-};
 
