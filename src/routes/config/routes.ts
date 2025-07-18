@@ -4,7 +4,8 @@ export const ROUTES = {
   SIGNUP: '/signup',
   DASHBOARD: '/user-dashboard',
   ADMIN: '/admin-dashboard',
-  SWAP: '/swap'
+  SWAP: '/swap',
+  DEPARTMENTS: '/admin-dashboard/departments'
 } as const;
 
 export type AppRoutes = typeof ROUTES;

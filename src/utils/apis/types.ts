@@ -25,6 +25,7 @@ export const CreateAvailableShiftSchema = z.object({
     start: z.string().time(), 
     end: z.string().time(),
     shift_slots_amount: z.coerce.number().int().min(1).optional(), // Added field
+    department_id: z.coerce.number().optional(),
 }).strict();
 
 export const UpdateAvailableShiftSchema = z.object({
@@ -32,6 +33,7 @@ export const UpdateAvailableShiftSchema = z.object({
     start: z.string().time().optional(), 
     end: z.string().time().optional(),
     shift_slots_amount: z.coerce.number().int().min(1).optional(), // Added field
+    department_id: z.coerce.number().optional(),
 }).strict();
 
 export const AvailableShiftQuerySchema = z.object({
@@ -43,7 +45,8 @@ export const AvailableShiftQuerySchema = z.object({
     shift_end_before: z.string().time().optional(), 
     shift_end_after: z.string().time().optional(),
     shift_slots_amount: z.coerce.number().int().optional(), // Added field
-    shift_slots_taken: z.coerce.number().int().optional() // Added field
+    shift_slots_taken: z.coerce.number().int().optional(), // Added field
+    department: z.coerce.number().optional(), // New: filter by department id
 }).strict();
 
 export type CreateAvailableShiftDTO = z.infer<typeof CreateAvailableShiftSchema>;
@@ -95,8 +98,8 @@ export type CreateRequestedShiftDTO = z.infer<typeof CreateRequestedShiftSchema>
 export type UpdateRequestedShiftDTO = z.infer<typeof UpdateRequestedShiftSchema>;
 export type RequestedShiftQueryDTO = z.infer<typeof RequestedShiftQuerySchema>;
 
-// Mapped type for requested shifts (used in requestedShiftsApis.ts)
-export interface RequestedShiftMapped {
+// ---------- Requested Shift Mapped Type ----------
+export type RequestedShiftMapped = {
   id: number;
   employeeId: number;
   availableShiftId: number;
@@ -111,7 +114,7 @@ export interface RequestedShiftMapped {
     employee_name: string;
     employee_email: string;
   };
-}
+};
 
 /* ---------- Add to Group Types ---------- */
 export const AddtoGroupSchema = z.object({
@@ -149,3 +152,23 @@ export const ShiftSwapRequestQuerySchema = z.object({
 export type CreateShiftSwapRequestDTO = z.infer<typeof CreateShiftSwapRequestSchema>;
 export type RespondShiftSwapRequestDTO = z.infer<typeof RespondShiftSwapRequestSchema>;
 export type ShiftSwapRequestQueryDTO = z.infer<typeof ShiftSwapRequestQuerySchema>;
+
+/* ---------- Department Types ---------- */
+export const CreateDepartmentSchema = z.object({
+    name: z.string().nonempty(),
+    address: z.string().optional(),
+}).strict();
+
+export const UpdateDepartmentSchema = z.object({
+    name: z.string().nonempty().optional(),
+    address: z.string().optional(),
+}).strict();
+
+export const DepartmentQuerySchema = z.object({
+    department_id: z.coerce.number().optional(),
+    name: z.string().optional(),
+}).strict();
+
+export type CreateDepartmentDTO = z.infer<typeof CreateDepartmentSchema>;
+export type UpdateDepartmentDTO = z.infer<typeof UpdateDepartmentSchema>;
+export type DepartmentQueryDTO = z.infer<typeof DepartmentQuerySchema>;

@@ -10,6 +10,7 @@ import UserDashboard   from '../pages/UserDashboard';
 import AdminDashboard  from '../pages/AdminDashboard';
 import SettingsPage    from '../pages/Settings';
 import SwapPage from '../pages/Swap';
+import Departments from '../pages/Departments';
 
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -62,6 +63,15 @@ const AppRoutes: React.FC = () => (
       />
 
       <Route
+        path={ROUTES.DEPARTMENTS}
+        element={
+          <ProtectedRoute redirectTo={ROUTES.LOGIN} requireGroup="Admins">
+            <Departments />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/settings"
         element={
           <ProtectedRoute redirectTo={ROUTES.LOGIN}>
@@ -73,6 +83,7 @@ const AppRoutes: React.FC = () => (
       <Route path={ROUTES.DASHBOARD} element={<UserDashboard />} />
       <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
       <Route path={ROUTES.SWAP} element={<SwapPage />} />
+      <Route path={ROUTES.DEPARTMENTS} element={<Departments />} />
       <Route path="/settings" element={<SettingsPage />} />
 
       {/* sign-out helper */}

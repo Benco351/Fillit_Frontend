@@ -10,6 +10,7 @@ interface MobileDrawerProps {
 }
 
 const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) => {
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
   return (
     <ThemeProvider theme={DrawerTheme}>
       <Drawer anchor="right" open={isOpen} onClose={onClose}>
@@ -20,6 +21,13 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) => {
                 <ListItemText primary="Home" />
               </ListItemButton>
             </ListItem>
+            {isAdmin && (
+              <ListItem disablePadding>
+                <ListItemButton component={RouterLink} to={ROUTES.DEPARTMENTS} onClick={onClose}>
+                  <ListItemText primary="Departments" />
+                </ListItemButton>
+              </ListItem>
+            )}
             <ListItem disablePadding>
               <ListItemButton component={RouterLink} to={ROUTES.SWAP} onClick={onClose}>
                 <ListItemText primary="Swap" />

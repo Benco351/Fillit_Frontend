@@ -109,6 +109,15 @@ const Navbar = () => {
           >
             Home
           </Button>
+          {isAdmin && (
+            <Button
+              variant="contained"
+              onClick={() => navigate(ROUTES.DEPARTMENTS)}
+              sx={glassButtonStyle}
+            >
+              Departments
+            </Button>
+          )}
           {/* Swap Button */}
           <Button
             variant="contained"
