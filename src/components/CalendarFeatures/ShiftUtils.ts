@@ -15,6 +15,7 @@ export interface AvailableShift {
   end: string;
   shift_slots_amount?: number;
   shift_slots_taken?: number;
+  department_id?: number; // Optional department
 }
 export interface SelectedShift {
   id: number;              // client PK (mirrors availableShift.id)
@@ -23,6 +24,7 @@ export interface SelectedShift {
   end: string;
   shift_slots_amount?: number;
   shift_slots_taken?: number;
+  department_id?: number; // Optional department
 }
 
 export interface RequestedShift {

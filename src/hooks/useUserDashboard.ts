@@ -87,12 +87,19 @@ export const useUserDashboard = (currentEmployee: Employee) => {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
   
 
-  const [newShift, setNewShift] = useState({
-      date: format(new Date(), 'yyyy-MM-dd'),
-      start: '09:00:00',
-      end: '17:00:00',
-      shift_slots_amount: 1,
-    });
+  const [newShift, setNewShift] = useState<{
+    date: string;
+    start: string;
+    end: string;
+    shift_slots_amount: number;
+    department_id?: number;
+  }>({
+    date: format(new Date(), 'yyyy-MM-dd'),
+    start: '09:00:00',
+    end: '17:00:00',
+    shift_slots_amount: 1,
+    department_id: undefined,
+  });
 
   
   const [newRequest, setNewRequest] = useState({
@@ -177,6 +184,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           end: shift.shift_time_end || shift.end,
           shift_slots_amount: Number(shift.shift_slots_amount) ?? 1,
           shift_slots_taken: Number(shift.shift_slots_taken) ?? 0,
+          department_id: shift.department_id || shift.department?.id, // Always map department_id
         }));
 
         setAvailableShifts(mappedShifts);
@@ -226,6 +234,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           end: shift.shift_time_end || shift.end,
           shift_slots_amount: Number(shift.shift_slots_amount) ?? 1,
           shift_slots_taken: Number(shift.shift_slots_taken) ?? 0,
+          department_id: shift.department_id || shift.department?.id, // Always map department_id
         })));
       }
     } catch (err) {

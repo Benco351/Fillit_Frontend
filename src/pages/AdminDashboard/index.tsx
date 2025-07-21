@@ -16,6 +16,7 @@ import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, 
 import { createRequestedShift, deleteRequestedShiftById, getRequestedShifts, updateRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
 import { createAssignedShift, deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
+import { getDepartments } from '../../utils/apis/departmentApis';
 //Types
 import { AvailableShift, RequestedShift, SelectedShift } from '../../components/CalendarFeatures/ShiftUtils';
 import { Employee, availableShiftsResponse, assignedShiftsResponse } from '../../components/CalendarFeatures/calendarStates';
@@ -68,6 +69,9 @@ const AdminDashboard: React.FC = () => {
   // Employees state
   const [employees, setEmployees] = useState<Employee[]>([]);
 
+  // Departments state
+  const [departments, setDepartments] = useState<{ id: number; name: string; address?: string }[]>([]);
+
   // Open deny dialog
   const handleOpenDenyDialog = (requestId: number) => {
     setDenyRequestId(requestId);
@@ -98,7 +102,7 @@ const AdminDashboard: React.FC = () => {
     setInfoDialogOpen(true);
   };
 
-  // Fetch all shifts and employees on mount
+  // Fetch all shifts, employees, and departments on mount
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -122,7 +126,12 @@ const AdminDashboard: React.FC = () => {
           }))
         );
 
-        // console.log(employees)
+        // Fetch departments
+        const departmentsResponse = await getDepartments();
+        if (departmentsResponse?.data && Array.isArray(departmentsResponse.data)) {
+          setDepartments(departmentsResponse.data);
+        }
+
         // Fetch available shifts
         const availableShiftsResponse = await getAvailableShifts();
         if (availableShiftsResponse?.data && Array.isArray(availableShiftsResponse.data)) {
@@ -133,6 +142,7 @@ const AdminDashboard: React.FC = () => {
             end: shift.shift_time_end || shift.end,
             shift_slots_amount: parseInt(shift.shift_slots_amount, 10) || 1, // Ensure it's parsed as integer with default
             shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0, // Ensure it's parsed as integer
+            department_id: shift.department_id || shift.department?.id, // Support both flat and nested
           }));
           setAvailableShifts(mappedAvailableShifts);
         }
@@ -198,6 +208,7 @@ const AdminDashboard: React.FC = () => {
           end: shift.shift_time_end || shift.end,
           shift_slots_amount: parseInt(shift.shift_slots_amount, 10) || 1, // Ensure it's parsed as integer with default
           shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0, // Ensure it's parsed as integer
+          department_id: shift.department_id || shift.department?.id, // Ensure department_id is present
         }));
         setAvailableShifts(mappedAvailableShifts);
       }
@@ -309,6 +320,7 @@ const AdminDashboard: React.FC = () => {
               end: shift.shift_time_end || shift.end,
               shift_slots_amount: parseInt(shift.shift_slots_amount, 10) || 1, // Ensure it's parsed as integer with default
               shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0, // Ensure it's parsed as integer
+              department_id: shift.department_id || shift.department?.id, // Ensure department_id is present
             })));
           }
           // Requested shifts
@@ -359,7 +371,8 @@ const AdminDashboard: React.FC = () => {
         date: new Date(newShift.date),
         start: newShift.start,
         end: newShift.end,
-        shift_slots_amount: newShift.shift_slots_amount // Add this line
+        shift_slots_amount: newShift.shift_slots_amount, // Add this line
+        department_id: newShift.department_id || undefined, // Pass department_id if selected
       });
 
       // console.log('API response:', apiResponse);
@@ -385,6 +398,7 @@ const AdminDashboard: React.FC = () => {
         end: newShift.end,
         shift_slots_amount: newShift.shift_slots_amount || 1, // Include the slots amount
         shift_slots_taken: 0, // Initialize to 0
+        department_id: newShift.department_id || undefined,
       };
 
       // Update local state
@@ -416,6 +430,7 @@ const AdminDashboard: React.FC = () => {
         date: new Date(editShift.date),
         start: editShift.start,
         end: editShift.end,
+        department_id: editShift.department_id || undefined,
       });
 
       //console.log('Updated shift response:', updatedShiftResponse);
@@ -424,7 +439,13 @@ const AdminDashboard: React.FC = () => {
       setAvailableShifts((prev) =>
         prev.map((shift) =>
           shift.id === editShift.id
-            ? { ...shift, date: editShift.date, start: editShift.start, end: editShift.end }
+            ? {
+                ...shift,
+                date: editShift.date,
+                start: editShift.start,
+                end: editShift.end,
+                department_id: editShift.department_id || undefined,
+              }
             : shift
         )
       );
@@ -871,6 +892,11 @@ const AdminDashboard: React.FC = () => {
                                     <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                       {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
                                     </Typography>
+                                    {shift.department_id && (
+                                      <Typography variant="caption" sx={{ color: '#111', fontWeight: 500 }}>
+                                        {departments.find(d => d.id === shift.department_id)?.name || 'Department'}
+                                      </Typography>
+                                    )}
 
                                     <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                                       <Tooltip title="Edit Shift">
@@ -919,6 +945,11 @@ const AdminDashboard: React.FC = () => {
                                   <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                     {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
                                   </Typography>
+                                  {shift.department_id && (
+                                    <Typography variant="caption" sx={{ color: '#111', fontWeight: 500 }}>
+                                      {departments.find(d => d.id === shift.department_id)?.name || 'Department'}
+                                    </Typography>
+                                  )}
 
                                   <Box sx={{ position: 'absolute', top: 2, right: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                                     <Tooltip title="Edit Shift">
@@ -1077,6 +1108,31 @@ const AdminDashboard: React.FC = () => {
                   </Box>
                 </Box>
 
+                {/* Department Dropdown */}
+                <TextField
+                  select
+                  fullWidth
+                  label="Department (optional)"
+                  value={newShift.department_id || ''}
+                  onChange={e => {
+                    const value = e.target.value;
+                    setNewShift(prev => ({
+                      ...prev,
+                      department_id: value ? Number(value) : undefined
+                    }));
+                  }}
+                  sx={{ mt: 2 }}
+                >
+                  <DropdownMenuItem value="">
+                    <em>None</em>
+                  </DropdownMenuItem>
+                  {departments.map(dept => (
+                    <DropdownMenuItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </DropdownMenuItem>
+                  ))}
+                </TextField>
+
                 {/* Add this new TextField for shift slots */}
                 <TextField
                   fullWidth
@@ -1152,6 +1208,31 @@ const AdminDashboard: React.FC = () => {
                       />
                     </LocalizationProvider>
                   </Box>
+
+                  {/* Department Dropdown for Edit */}
+                  <TextField
+                    select
+                    fullWidth
+                    label="Department (optional)"
+                    value={editShift.department_id || ''}
+                    onChange={e => {
+                      const value = e.target.value;
+                      setEditShift(prev => prev && ({
+                        ...prev,
+                        department_id: value ? Number(value) : undefined
+                      }));
+                    }}
+                    sx={{ mt: 2 }}
+                  >
+                    <DropdownMenuItem value="">
+                      <em>None</em>
+                    </DropdownMenuItem>
+                    {departments.map(dept => (
+                      <DropdownMenuItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </TextField>
                 </Box>
               )}
             </DialogContent>
@@ -1228,6 +1309,22 @@ const AdminDashboard: React.FC = () => {
             <DialogContent>
               {selectedShiftInfo && (
                 <Box sx={{ mt: 1 }}>
+                  {/* Department info */}
+                  {selectedShiftInfo.department_id && (() => {
+                    const dept = departments.find(d => d.id === selectedShiftInfo.department_id);
+                    return dept ? (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="h6" sx={{ color: '#00c28c', fontWeight: 700, mb: dept.address ? 0.5 : 0 }}>
+                          Department: {dept.name}
+                        </Typography>
+                        {dept.address && (
+                          <Typography variant="body1" sx={{ color: '#00c28c', fontWeight: 500 }}>
+                            Address: {dept.address}
+                          </Typography>
+                        )}
+                      </Box>
+                    ) : null;
+                  })()}
                   <Typography variant="body1" gutterBottom>
                     Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount}
                   </Typography>

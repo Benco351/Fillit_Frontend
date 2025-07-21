@@ -24,6 +24,8 @@ import { getAvailableShifts } from '../../utils/apis/availableShiftApis';
 import { getAssignedShifts } from '../../utils/apis/assignedShiftApis';
 import { deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 import { deleteAvailableShiftById } from '../../utils/apis/availableShiftApis';
+import { getDepartments } from '../../utils/apis/departmentApis';
+import InfoIcon from '@mui/icons-material/Info';
 
 const UserDashboard: React.FC = () => {
 
@@ -54,11 +56,28 @@ const UserDashboard: React.FC = () => {
 
   const [requestingShifts, setRequestingShifts] = useState<number[]>([]); // Separate loading state for each shift request
   const [cancelingShifts, setCancelingShifts] = useState<number[]>([]); // Separate loading state for each shift cancellation
+  // Departments state
+  const [departments, setDepartments] = useState<{ id: number; name: string; address?: string }[]>([]);
+
+  // Info dialog state
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [selectedShiftInfo, setSelectedShiftInfo] = useState<AvailableShift | null>(null);
 
 
   // Automatically fetch shifts when the component mounts or the week changes
   useEffect(() => {
     fetchShiftsForWeek();
+    const fetchDepartments = async () => {
+      try {
+        const departmentsResponse = await getDepartments();
+        if (departmentsResponse?.data && Array.isArray(departmentsResponse.data)) {
+          setDepartments(departmentsResponse.data);
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchDepartments();
   }, [currentWeekStart]);
 
 
@@ -425,7 +444,7 @@ const UserDashboard: React.FC = () => {
                               sx={{
                                 width: '100%',
                                 pb: idx === arr.length - 1 ? 0 : 2,
-                                height: 'auto',
+                                height: 110, // Fixed height for all shift cards
                                 minWidth: 0,
                               }}
                             >
@@ -450,16 +469,34 @@ const UserDashboard: React.FC = () => {
                                   },
                                 }}
                               >
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    fontSize: { xs: '0.7rem', sm: '0.7rem' },
-                                    wordBreak: 'break-word',
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontSize: { xs: '0.7rem', sm: '0.7rem' },
+                                      wordBreak: 'break-word',
+                                    }}
+                                  >
+                                    {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                                  </Typography>
+                                  <IconButton
+                                    size="small"
+                                    sx={{ color: '#fff', ml: 1, p: 0.5, '&:hover': { color: '#fff', background: 'none' }, '&:focus': { color: '#fff' } }}
+                                    onClick={() => {
+                                      setSelectedShiftInfo(shift);
+                                      setInfoDialogOpen(true);
+                                    }}
+                                  >
+                                    <InfoIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                                <Box sx={{ minHeight: 18 }}>
+                                  {shift.department_id && (
+                                    <Typography variant="caption" sx={{ color: '#111', fontWeight: 500 }}>
+                                      {departments.find(d => d.id === shift.department_id)?.name || 'Department'}
+                                    </Typography>
+                                  )}
+                                </Box>
 
                                 {status === 'approved' && (
                                   <Typography
@@ -573,6 +610,41 @@ const UserDashboard: React.FC = () => {
           </Box>
         </Container>
       </Box>
+      {/* Info Dialog for department details */}
+      <Dialog
+        open={infoDialogOpen}
+        onClose={() => setInfoDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Shift Information</DialogTitle>
+        <DialogContent>
+          {selectedShiftInfo && (
+            (() => {
+              const dept = departments.find(d => d.id === selectedShiftInfo.department_id);
+              if (dept) {
+                return (
+                  <Box sx={{ mt: 1, mb: 2 }}>
+                    <Typography variant="h6" sx={{ color: '#00c28c', fontWeight: 700, mb: dept.address ? 0.5 : 0 }}>
+                      Department: {dept.name}
+                    </Typography>
+                    {dept.address && (
+                      <Typography variant="body1" sx={{ color: '#00c28c', fontWeight: 500 }}>
+                        Address: {dept.address}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              } else {
+                return <Typography variant="body2">No department information.</Typography>;
+              }
+            })()
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInfoDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
       <Footer /> {/* Add Footer at the bottom */}
     </ThemeProvider>
   );
