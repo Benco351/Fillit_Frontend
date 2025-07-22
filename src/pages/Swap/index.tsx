@@ -34,6 +34,7 @@ import {
   respondToShiftSwapRequest,
   ShiftSwapRequest,
 } from '../../utils/apis/shiftSwapRequestApis';
+import { getDepartments } from '../../utils/apis/departmentApis';
 
 const getCurrentUser = () => {
   // Read from sessionStorage (set during login)
@@ -63,6 +64,22 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
   const [swapResult, setSwapResult] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [requestLoading, setRequestLoading] = useState(false);
+  // Departments state
+  const [departments, setDepartments] = useState<{ id: number; name: string; address?: string }[]>([]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const departmentsResponse = await getDepartments();
+        if (departmentsResponse?.data && Array.isArray(departmentsResponse.data)) {
+          setDepartments(departmentsResponse.data);
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   const handleRequestSwap = async () => {
     console.log('Requesting assigned shifts for employee:', emp, 'with id:', emp.id);
@@ -75,14 +92,39 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
     try {
       const mod = await import('../../utils/apis/assignedShiftApis');
       const resOther = await mod.getAssignedShifts({ assigned_employee_id: emp.id });
-      const assigned = resOther.data?.data || resOther.data || [];
+      let assigned = resOther.data?.data || resOther.data || [];
+      // Map department_id from nested availableShift if present
+      assigned = assigned.map((shift: any) => ({
+        ...shift,
+        availableShift: {
+          ...shift.availableShift,
+          department_id:
+            shift.availableShift?.department_id ||
+            shift.availableShift?.department?.department_id ||
+            shift.department_id,
+          department_name: shift.availableShift?.department?.department_name,
+          department_address: shift.availableShift?.department?.department_address,
+        },
+      }));
       setAssignedShifts(assigned);
       console.log('Assigned shifts set:', assigned);
 
       const currentUserId = sessionStorage.getItem('customEmployeeId');
       if (currentUserId) {
         const resUser = await mod.getAssignedShifts({ assigned_employee_id: Number(currentUserId) });
-        const userAssigned = resUser.data?.data || resUser.data || [];
+        let userAssigned = resUser.data?.data || resUser.data || [];
+        userAssigned = userAssigned.map((shift: any) => ({
+          ...shift,
+          availableShift: {
+            ...shift.availableShift,
+            department_id:
+              shift.availableShift?.department_id ||
+              shift.availableShift?.department?.department_id ||
+              shift.department_id,
+            department_name: shift.availableShift?.department?.department_name,
+            department_address: shift.availableShift?.department?.department_address,
+          },
+        }));
         setUserShifts(userAssigned);
       } else {
         setUserShifts([]);
@@ -235,9 +277,48 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
                       }}
                       onClick={() => setSelectedOtherShift(shift.assigned_id)}
                     >
-                      <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
-                      <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
-                      <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+                        <Box>
+                          <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
+                          <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
+                          <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
+                        </Box>
+                        <Box sx={{ minWidth: 120, textAlign: 'right' }}>
+                          {(shift.availableShift?.department_name || shift.availableShift?.department_id) ? (
+                            <>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: selectedOtherShift === shift.assigned_id ? '#111' : '#00c28c',
+                                  fontWeight: 500,
+                                  fontSize: selectedOtherShift === shift.assigned_id ? '1.1rem' : '0.9rem',
+                                  transition: 'color 0.2s, font-size 0.2s',
+                                }}
+                              >
+                                {shift.availableShift?.department_name ||
+                                  departments.find(d => d.id === shift.availableShift.department_id)?.name ||
+                                  'Department'}
+                              </Typography>
+                              {shift.availableShift?.department_address && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: selectedOtherShift === shift.assigned_id ? '#111' : '#00c28c',
+                                    fontWeight: 400,
+                                    fontSize: selectedOtherShift === shift.assigned_id ? '1.05rem' : '0.9rem',
+                                    display: 'block',
+                                    transition: 'color 0.2s, font-size 0.2s',
+                                  }}
+                                >
+                                  {shift.availableShift.department_address}
+                                </Typography>
+                              )}
+                            </>
+                          ) : (
+                            <Typography variant="caption" sx={{ color: '#bdbdbd' }}>No Department</Typography>
+                          )}
+                        </Box>
+                      </Box>
                     </Paper>
                   ))
                 )}
@@ -262,9 +343,48 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
                       }}
                       onClick={() => setSelectedUserShift(shift.assigned_id)}
                     >
-                      <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
-                      <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
-                      <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+                        <Box>
+                          <Typography>Date: {shift.availableShift?.shift_date || 'N/A'}</Typography>
+                          <Typography>Start: {shift.availableShift?.shift_time_start || 'N/A'}</Typography>
+                          <Typography>End: {shift.availableShift?.shift_time_end || 'N/A'}</Typography>
+                        </Box>
+                        <Box sx={{ minWidth: 120, textAlign: 'right' }}>
+                          {(shift.availableShift?.department_name || shift.availableShift?.department_id) ? (
+                            <>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: selectedUserShift === shift.assigned_id ? '#111' : '#00c28c',
+                                  fontWeight: 500,
+                                  fontSize: selectedUserShift === shift.assigned_id ? '1.1rem' : '0.9rem',
+                                  transition: 'color 0.2s, font-size 0.2s',
+                                }}
+                              >
+                                {shift.availableShift?.department_name ||
+                                  departments.find(d => d.id === shift.availableShift.department_id)?.name ||
+                                  'Department'}
+                              </Typography>
+                              {shift.availableShift?.department_address && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: selectedUserShift === shift.assigned_id ? '#111' : '#00c28c',
+                                    fontWeight: 400,
+                                    fontSize: selectedUserShift === shift.assigned_id ? '1.05rem' : '0.9rem',
+                                    display: 'block',
+                                    transition: 'color 0.2s, font-size 0.2s',
+                                  }}
+                                >
+                                  {shift.availableShift.department_address}
+                                </Typography>
+                              )}
+                            </>
+                          ) : (
+                            <Typography variant="caption" sx={{ color: '#bdbdbd' }}>No Department</Typography>
+                          )}
+                        </Box>
+                      </Box>
                     </Paper>
                   ))
                 )}

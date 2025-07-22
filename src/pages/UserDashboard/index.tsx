@@ -212,7 +212,7 @@ const UserDashboard: React.FC = () => {
               flexWrap: 'wrap',
               alignItems: 'center',
             }}>
-              <Filter filter={filter} setFilter={setFilter} />
+            <Filter filter={filter} setFilter={setFilter} />
             </Box>
             {/* Centered department dropdown below filter row */}
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
@@ -517,15 +517,15 @@ const UserDashboard: React.FC = () => {
                                 }}
                               >
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-                                  <Typography
-                                    variant="body2"
-                                    sx={{
-                                      fontSize: { xs: '0.7rem', sm: '0.7rem' },
-                                      wordBreak: 'break-word',
-                                    }}
-                                  >
-                                    {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
-                                  </Typography>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontSize: { xs: '0.7rem', sm: '0.7rem' },
+                                    wordBreak: 'break-word',
+                                  }}
+                                >
+                                  {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
+                                </Typography>
                                   <IconButton
                                     size="small"
                                     sx={{ color: '#fff', ml: 1, p: 0.5, '&:hover': { color: '#fff', background: 'none' }, '&:focus': { color: '#fff' } }}
