@@ -72,6 +72,9 @@ const AdminDashboard: React.FC = () => {
   // Departments state
   const [departments, setDepartments] = useState<{ id: number; name: string; address?: string }[]>([]);
 
+  // Department filter state
+  const [departmentFilter, setDepartmentFilter] = useState<number | 'all'>('all');
+
   // Open deny dialog
   const handleOpenDenyDialog = (requestId: number) => {
     setDenyRequestId(requestId);
@@ -612,12 +615,15 @@ const AdminDashboard: React.FC = () => {
   // #093039 - color for user
   //sidescroll
 
-  // Filtered shifts based on the selected filter
+  // Filtered shifts based on the selected filter and department
   const filteredShifts = React.useMemo(() => {
-    if (!availableShifts) return [];
+    let shifts = availableShifts;
+    if (departmentFilter !== 'all') {
+      shifts = shifts.filter(shift => shift.department_id === departmentFilter);
+    }
     if (filter === 'full') {
       // Only show shifts where slots taken >= slots amount
-      return availableShifts.filter(
+      return shifts.filter(
         shift =>
           typeof shift.shift_slots_amount === 'number' &&
           typeof shift.shift_slots_taken === 'number' &&
@@ -625,8 +631,8 @@ const AdminDashboard: React.FC = () => {
       );
     }
     // Default: show all
-    return availableShifts;
-  }, [availableShifts, filter]);
+    return shifts;
+  }, [availableShifts, filter, departmentFilter]);
 
   return (
     <ThemeProvider theme={MainTheme}>
@@ -660,9 +666,32 @@ const AdminDashboard: React.FC = () => {
             <Box sx={{
               mb: 4,
               display: 'flex',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              gap: 2, // Add gap between filters
+              flexWrap: 'wrap',
+              alignItems: 'center',
             }}>
               <AdminShiftFilter filter={filter} setFilter={setFilter} />
+            </Box>
+            {/* Centered department dropdown below filter row */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+              <TextField
+                select
+                value={departmentFilter}
+                onChange={e => setDepartmentFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                sx={{ minWidth: 200, maxWidth: 320, width: '100%', background: '#fff', borderRadius: 1, color: '#00c28c',
+                  '& .MuiInputBase-input, & .MuiSelect-icon': { color: '#00c28c' },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' }
+                }}
+                size="small"
+              >
+                <DropdownMenuItem value="all" sx={{ color: '#00c28c', background: '#fff' }}>All Departments</DropdownMenuItem>
+                {departments.map(dept => (
+                  <DropdownMenuItem key={dept.id} value={dept.id} sx={{ color: '#00c28c', background: '#fff' }}>{dept.name}</DropdownMenuItem>
+                ))}
+              </TextField>
             </Box>
 
             {/* Frame Box */}
@@ -864,7 +893,7 @@ const AdminDashboard: React.FC = () => {
                             shift.shift_slots_taken >= shift.shift_slots_amount;
 
                           return (
-                            <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2 }}>
+                            <Box key={shift.id} sx={{ width: '100%', mb: idx === arr.length - 1 ? 0 : 2, minHeight: 110, minWidth: 0 }}>
 
                               {/* Main shift card */}
                               {isShiftFull ? (
@@ -886,7 +915,11 @@ const AdminDashboard: React.FC = () => {
                                       border: '1px solid rgba(255,255,255,0.1)',
                                       transition: 'all 0.3s ease',
                                       position: 'relative',
-                                      minHeight: 70,
+                                      minHeight: 80,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      justifyContent: 'space-between',
+                                      willChange: 'transform',
                                     }}
                                   >
                                     <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
@@ -939,7 +972,11 @@ const AdminDashboard: React.FC = () => {
                                     border: '1px solid rgba(255,255,255,0.1)',
                                     transition: 'all 0.3s ease',
                                     position: 'relative',
-                                    minHeight: 70,
+                                    minHeight: 80,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    willChange: 'transform',
                                   }}
                                 >
                                   <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>

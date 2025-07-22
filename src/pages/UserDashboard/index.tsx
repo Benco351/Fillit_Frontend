@@ -58,6 +58,8 @@ const UserDashboard: React.FC = () => {
   const [cancelingShifts, setCancelingShifts] = useState<number[]>([]); // Separate loading state for each shift cancellation
   // Departments state
   const [departments, setDepartments] = useState<{ id: number; name: string; address?: string }[]>([]);
+  // Department filter state
+  const [departmentFilter, setDepartmentFilter] = useState<number | 'all'>('all');
 
   // Info dialog state
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
@@ -166,29 +168,28 @@ const UserDashboard: React.FC = () => {
     return employee ? employee.name : 'Unknown Employee';
   };
 
-  // Filtered shifts based on the selected filter
+  // Filtered shifts based on the selected filter and department
   const filteredShifts = useMemo(() => {
-    // Always start with all available shifts
-    if (!availableShifts) return [];
+    let shifts = availableShifts;
+    if (departmentFilter !== 'all') {
+      shifts = shifts.filter(shift => shift.department_id === departmentFilter);
+    }
     switch (filter) {
       case 'requested':
-        // Show all shifts that have been requested by the user
-        return availableShifts.filter(shift =>
+        return shifts.filter(shift =>
           requestedShifts.some(req => req.availableShiftId === shift.id)
         );
       case 'accepted':
-        // Show all shifts that have been approved or assigned to the user
-        return availableShifts.filter(shift =>
+        return shifts.filter(shift =>
           requestedShifts.some(req =>
             req.availableShiftId === shift.id && req.status === 'approved'
           ) ||
           assignedShifts.some(assign => assign.assigned_shift_id === shift.id)
         );
       default:
-        // Always show all available shifts (live)
-        return availableShifts;
+        return shifts;
     }
-  }, [availableShifts, requestedShifts, assignedShifts, filter]);
+  }, [availableShifts, requestedShifts, assignedShifts, filter, departmentFilter]);
 
   return (
     <ThemeProvider theme={MainTheme}>
@@ -202,8 +203,37 @@ const UserDashboard: React.FC = () => {
             {/* Title Box */}
             <UserDashboardTitle/>
        
-            {/* Filters - Pass filter and setFilter props */}
-            <Filter filter={filter} setFilter={setFilter} />
+            {/* Filters - Matching User Dashboard position */}
+            <Box sx={{
+              mb: 4,
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 2, // Add gap between filters
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}>
+              <Filter filter={filter} setFilter={setFilter} />
+            </Box>
+            {/* Centered department dropdown below filter row */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+              <TextField
+                select
+                value={departmentFilter}
+                onChange={e => setDepartmentFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                sx={{ minWidth: 200, maxWidth: 320, width: '100%', background: '#fff', borderRadius: 1, color: '#00c28c',
+                  '& .MuiInputBase-input, & .MuiSelect-icon': { color: '#00c28c' },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' }
+                }}
+                size="small"
+              >
+                <MenuItem value="all" sx={{ color: '#00c28c', background: '#fff' }}>All Departments</MenuItem>
+                {departments.map(dept => (
+                  <MenuItem key={dept.id} value={dept.id} sx={{ color: '#00c28c', background: '#fff' }}>{dept.name}</MenuItem>
+                ))}
+              </TextField>
+            </Box>
    
             {/* Frame Box */}
             <Box
@@ -319,6 +349,22 @@ const UserDashboard: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
+
+              {/* Add department filter dropdown above the calendar grid */}
+              {/* <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <TextField
+                  select
+                  label="Department Filter"
+                  value={departmentFilter}
+                  onChange={e => setDepartmentFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                  sx={{ minWidth: 200 }}
+                >
+                  <MenuItem value="all">All Departments</MenuItem>
+                  {departments.map(dept => (
+                    <MenuItem key={dept.id} value={dept.id}>{dept.name}</MenuItem>
+                  ))}
+                </TextField>
+              </Box> */}
 
               {/* Calendar Grid */}
               <Box
@@ -444,7 +490,8 @@ const UserDashboard: React.FC = () => {
                               sx={{
                                 width: '100%',
                                 pb: idx === arr.length - 1 ? 0 : 2,
-                                height: 110, // Fixed height for all shift cards
+                                minHeight: 110, // Use minHeight instead of fixed height
+                                mb: 2, // Add consistent margin between shift cards
                                 minWidth: 0,
                               }}
                             >
