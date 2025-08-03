@@ -1373,22 +1373,6 @@ const AdminDashboard: React.FC = () => {
             <DialogContent>
               {selectedShiftInfo && (
                 <Box sx={{ mt: 1 }}>
-                  {/* Department info */}
-                  {selectedShiftInfo.department_id && (() => {
-                    const dept = departments.find(d => d.id === selectedShiftInfo.department_id);
-                    return dept ? (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="h6" sx={{ color: '#00c28c', fontWeight: 700, mb: dept.address ? 0.5 : 0 }}>
-                          Department: {dept.name}
-                        </Typography>
-                        {dept.address && (
-                          <Typography variant="body1" sx={{ color: '#00c28c', fontWeight: 500 }}>
-                            Address: {dept.address}
-                          </Typography>
-                        )}
-                      </Box>
-                    ) : null;
-                  })()}
                   <Typography variant="body1" gutterBottom>
                     Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount}
                   </Typography>

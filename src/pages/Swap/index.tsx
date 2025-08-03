@@ -435,6 +435,7 @@ const SwapPage: React.FC = () => {
   const [requestsToMe, setRequestsToMe] = useState<ShiftSwapRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [requestsError, setRequestsError] = useState<string | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
   
   // Shift swap log states
   const [logDialogOpen, setLogDialogOpen] = useState(false);
@@ -557,6 +558,29 @@ const SwapPage: React.FC = () => {
   useEffect(() => {
     fetchSwapRequests();
   }, []);
+
+  // Poll for new swap requests every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsPolling(true);
+      fetchSwapRequests().finally(() => {
+        setIsPolling(false);
+      });
+    }, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll for all swap requests when log dialog is open (every 15 seconds)
+  useEffect(() => {
+    if (!logDialogOpen) return;
+
+    const interval = setInterval(() => {
+      fetchAllSwapRequests();
+    }, 15000); // Poll every 15 seconds when dialog is open
+
+    return () => clearInterval(interval);
+  }, [logDialogOpen]);
 
   // Filter employees based on search term
   const filteredEmployees = employees.filter(emp => 
@@ -721,7 +745,12 @@ const SwapPage: React.FC = () => {
             </Box>
             {/* Swap Requests Section */}
             <Box sx={{ mt: 6 }}>
-              <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>My Pending Swap Requests</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+                <Typography variant="h5" fontWeight={600} style={{ color: swapPageTheme.unselectedText }}>My Pending Swap Requests</Typography>
+                {isPolling && (
+                  <CircularProgress size={16} color="primary" sx={{ ml: 1 }} />
+                )}
+              </Box>
               {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}
               {!requestsLoading && !requestsError && myRequests.filter(req => req.status === 'pending').length === 0 && (
@@ -749,7 +778,12 @@ const SwapPage: React.FC = () => {
               </Box>
             </Box>
             <Box sx={{ mt: 6 }}>
-              <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>Pending Requests to Me</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+                <Typography variant="h5" fontWeight={600} style={{ color: swapPageTheme.unselectedText }}>Pending Requests to Me</Typography>
+                {isPolling && (
+                  <CircularProgress size={16} color="primary" sx={{ ml: 1 }} />
+                )}
+              </Box>
               {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}
               {!requestsLoading && !requestsError && requestsToMe.filter(req => req.status === 'pending').length === 0 && (

@@ -226,20 +226,7 @@ const UserDashboard: React.FC = () => {
       return requestedShift.status;
     }
 
-    // For multi-slot shifts, only mark as assigned if ALL slots are taken
-    const isAssigned = assignedShifts.some(s => s.assigned_shift_id === availableShiftId);
-    if (isAssigned && availableShift) {
-      const slotsAmount = Number(availableShift.shift_slots_amount) || 1;
-      const slotsTaken = Number(availableShift.shift_slots_taken) || 0;
-      const availableSlots = isNaN(slotsAmount) || isNaN(slotsTaken) ? 1 : slotsAmount - slotsTaken;
-      
-      // Only mark as assigned if no slots are available
-      if (availableSlots <= 0) {
-        return 'assigned';
-      }
-    }
-
-    // Check if shift has available slots
+    // Check if shift has available slots first
     if (availableShift) {
       const slotsAmount = Number(availableShift.shift_slots_amount) || 1;
       const slotsTaken = Number(availableShift.shift_slots_taken) || 0;
@@ -259,12 +246,34 @@ const UserDashboard: React.FC = () => {
         isNaN_availableSlots: isNaN(availableSlots)
       });
       
-      // If no slots are available, mark as full
+      // If no slots are available, check if current user is part of this shift
       if (availableSlots <= 0) {
-        console.log('Shift is full, returning full status');
+        console.log('Shift is full, checking if current user is part of it');
+        
+        // Check if current user is assigned to this shift
+        const isUserAssigned = assignedShifts.some(s => 
+          s.assigned_shift_id === availableShiftId && 
+          s.assigned_employee_id === currentEmployee.id
+        );
+        
+        // Check if current user has a pending/approved request for this shift
+        const isUserRequested = requestedShifts.some(s => 
+          s.availableShiftId === availableShiftId && 
+          s.employeeId === currentEmployee.id &&
+          (s.status === 'pending' || s.status === 'approved')
+        );
+        
+        // If user is part of the shift (assigned or has pending/approved request), show as assigned
+        if (isUserAssigned || isUserRequested) {
+          return 'assigned';
+        }
+        
+        // If user is not part of the shift, show as full (will be displayed as grey)
         return 'full';
       }
     }
+
+
 
     return 'available';
   };
@@ -846,7 +855,7 @@ const UserDashboard: React.FC = () => {
           </Box>
         </Container>
       </Box>
-      {/* Info Dialog for department details */}
+      {/* Info Dialog for assigned users */}
       <Dialog
         open={infoDialogOpen}
         onClose={() => setInfoDialogOpen(false)}
@@ -856,25 +865,43 @@ const UserDashboard: React.FC = () => {
         <DialogTitle>Shift Information</DialogTitle>
         <DialogContent>
           {selectedShiftInfo && (
-            (() => {
-              const dept = departments.find(d => d.id === selectedShiftInfo.department_id);
-              if (dept) {
-                return (
-                  <Box sx={{ mt: 1, mb: 2 }}>
-                    <Typography variant="h6" sx={{ color: '#00c28c', fontWeight: 700, mb: dept.address ? 0.5 : 0 }}>
-                      Department: {dept.name}
-                    </Typography>
-                    {dept.address && (
-                      <Typography variant="body1" sx={{ color: '#00c28c', fontWeight: 500 }}>
-                        Address: {dept.address}
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body1" gutterBottom>
+                Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount}
+              </Typography>
+              <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                Assigned Users:
+              </Typography>
+              {assignedShifts
+                .filter(assign => assign.assigned_shift_id === selectedShiftInfo.id)
+                .map(assign => {
+                  const user = employees.find(emp => emp.id === assign.assigned_employee_id);
+
+                  return (
+                    <Box
+                      key={assign.assigned_id}
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 1,
+                        p: 1,
+                        borderRadius: 1,
+                        backgroundColor: 'rgba(0, 194, 140, 0.1)'
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {user?.name || 'Unknown User'}
                       </Typography>
-                    )}
-                  </Box>
-                );
-              } else {
-                return <Typography variant="body2">No department information.</Typography>;
-              }
-            })()
+                    </Box>
+                  );
+                })}
+              {assignedShifts.filter(assign => assign.assigned_shift_id === selectedShiftInfo.id).length === 0 && (
+                <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+                  No users assigned to this shift.
+                </Typography>
+              )}
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
