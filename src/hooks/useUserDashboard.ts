@@ -8,7 +8,7 @@ import { format, addDays, startOfWeek } from 'date-fns';
 // import { request } from 'http';
 // import { se } from 'date-fns/locale';
 
-const POLLING_INTERVAL = 7000; // Poll every 7 seconds
+const POLLING_INTERVAL = 10000; // Poll every 10 seconds to reduce data conflicts
 
 export const useUserDashboard = (currentEmployee: Employee) => {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
@@ -162,100 +162,61 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     // Dialog states
   const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState<boolean>(false);
   const [isRequestShiftDialogOpen, setIsRequestShiftDialogOpen] = useState<boolean>(false);
-  // Fetch shifts for the current week
+  
+  // Use sessionStorage for admin mode
+  const adminMode = typeof window !== 'undefined' ? sessionStorage.getItem('isAdmin') : null;
+  const isAdmin = adminMode === 'true';
+
+  // Consolidated fetch for all shifts for the current week
   const fetchShiftsForWeek = useCallback(async () => {
+    // Prevent multiple simultaneous calls
+    if (loading) return;
+    
     setLoading(true);
     try {
       const startDate = format(currentWeekStart, 'yyyy-MM-dd');
       const endDate = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
 
-      const response = await getAvailableShifts({
+      // Fetch available shifts for the current week
+      const availableResponse = await getAvailableShifts({
         shift_start_date: new Date(startDate),
         shift_end_date: new Date(endDate),
       });
 
-      // console.log('API response for getAvailableShifts:', response);
-
-      if (response?.data && Array.isArray(response.data)) {
-        const mappedShifts = response.data.map((shift: any) => ({
+      if (availableResponse?.data && Array.isArray(availableResponse.data)) {
+        const mappedShifts = availableResponse.data.map((shift: any) => ({
           id: shift.shift_id || shift.id,
           date: shift.shift_date || shift.date,
           start: shift.shift_time_start || shift.start,
           end: shift.shift_time_end || shift.end,
           shift_slots_amount: Number(shift.shift_slots_amount) ?? 1,
           shift_slots_taken: Number(shift.shift_slots_taken) ?? 0,
-          department_id: shift.department_id || shift.department?.id, // Always map department_id
+          department_id: shift.department_id || shift.department?.id,
         }));
 
         setAvailableShifts(mappedShifts);
       } else {
         setAvailableShifts([]);
       }
-    } catch (err) {
-      //setError('Failed to fetch shifts. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentWeekStart]); // Only depend on currentWeekStart
 
-  useEffect(() => {
-    fetchShiftsForWeek();
-  }, [fetchShiftsForWeek]);
-
-  useEffect(() => {
-    // Set up polling for available shifts
-    const interval = setInterval(fetchShiftsForWeek, POLLING_INTERVAL);
-
-    // Cleanup on unmount
-    return () => clearInterval(interval);
-  }, [fetchShiftsForWeek]);
-
-  
-  // Use sessionStorage for admin mode
-  const adminMode = typeof window !== 'undefined' ? sessionStorage.getItem('isAdmin') : null;
-  const isAdmin = adminMode === 'true';
-
-  // Centralized fetch for available shifts
-  const fetchAvailableShifts = useCallback(async () => {
-    setLoadingAvailable(true);
-    try {
-      let response;
-      if (isAdmin) {
-        response = await getAvailableShifts();
-      } else {
-        // Optionally filter by week or user if needed
-        response = await getAvailableShifts();
-      }
-      if (response?.data && Array.isArray(response.data)) {
-        setAvailableShifts(response.data.map((shift: any) => ({
-          id: shift.shift_id || shift.id,
-          date: shift.shift_date || shift.date,
-          start: shift.shift_time_start || shift.start,
-          end: shift.shift_time_end || shift.end,
-          shift_slots_amount: Number(shift.shift_slots_amount) ?? 1,
-          shift_slots_taken: Number(shift.shift_slots_taken) ?? 0,
-          department_id: shift.department_id || shift.department?.id, // Always map department_id
+      // Fetch requested shifts for the current employee
+      const requestedResponse = await getRequestedShifts({ request_employee_id: currentEmployee.id }, false);
+      if (requestedResponse?.data) {
+        setRequestedShifts(requestedResponse.data.map(shift => ({
+          id: shift.id,
+          employeeId: shift.employeeId,
+          availableShiftId: shift.availableShiftId,
+          notes: shift.notes || '',
+          status: shift.status || 'pending',
+          availableShift: shift.availableShift,
+          employee: shift.employee
         })));
       }
-    } catch (err) {
-      //setError('Failed to fetch available shifts');
-    } finally {
-      setLoadingAvailable(false);
-    }
-  }, [isAdmin]);
 
-  // Centralized fetch for assigned shifts
-  const fetchAssignedShifts = useCallback(async () => {
-    setLoading(true);
-    try {
-      let response;
-      if (isAdmin) {
-        response = await getAssignedShifts();
-      } else {
-          response = await getRequestedShifts({ request_employee_id: currentEmployee.id });
-      }
-      if (response?.data && Array.isArray(response.data)) {
-        setAssignedShifts(response.data.map((shift: any) => ({
+      // Fetch assigned shifts
+      const assignedResponse = await getAssignedShifts();
+      if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
+        setAssignedShifts(assignedResponse.data.map((shift: any) => ({
           id: shift.assigned_id,
           assigned_id: shift.assigned_id,
           employeeId: shift.assigned_employee_id,
@@ -267,54 +228,23 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         })));
       }
     } catch (err) {
-      //setError('Failed to fetch assigned shifts');
+      //setError('Failed to fetch shifts. Please try again later.');
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, currentEmployee.id]);
+  }, [currentWeekStart, currentEmployee.id]); // Include currentEmployee.id in dependencies
 
-  // Centralized fetch for requested shifts (already present)
-  const fetchRequestedShifts = useCallback(async () => {
-    setLoadingRequested(true);
-    try {
-      let response;
-      if (isAdmin) {
-        response = await getRequestedShifts({}, true);
-      } else {
-        response = await getRequestedShifts({ request_employee_id: currentEmployee.id }, false);
-      }
-      if (response?.data) {
-        setRequestedShifts(response.data.map(shift => ({
-          id: shift.id,
-          employeeId: shift.employeeId,
-          availableShiftId: shift.availableShiftId,
-          notes: shift.notes || '',
-          status: shift.status || 'pending',
-          availableShift: shift.availableShift,
-          employee: shift.employee
-        })));
-        // console.log('Requested shifts fetched:', response.data);
-      }
-    } catch (err) {
-      //setError('Failed to fetch requested shifts');
-    } finally {
-      setLoadingRequested(false);
-    }
-  }, [currentEmployee.id, isAdmin]);
-
-  // Initial fetch and polling for all shifts
+  // Initial fetch when component mounts or week changes
   useEffect(() => {
-    fetchAvailableShifts();
-    fetchAssignedShifts();
-    fetchRequestedShifts();
-    const pollInterval = setInterval(() => {
-      fetchAvailableShifts();
-      fetchAssignedShifts();
-      fetchRequestedShifts();
-    }, POLLING_INTERVAL);
-    return () => clearInterval(pollInterval);
-  }, [fetchAvailableShifts, fetchAssignedShifts, fetchRequestedShifts]);
-  
+    fetchShiftsForWeek();
+  }, [fetchShiftsForWeek]);
+
+  // Single polling mechanism for all shifts
+  useEffect(() => {
+    const interval = setInterval(fetchShiftsForWeek, POLLING_INTERVAL);
+    return () => clearInterval(interval);
+  }, [fetchShiftsForWeek]);
+
   // State for edit dialog
   const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false);
   const [selectedShift, setSelectedShift] = useState<AvailableShift | null>(null);  
@@ -356,7 +286,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     filter,
     setFilter,
     refreshAvailableShifts: fetchShiftsForWeek,
-    refreshRequestedShifts: fetchRequestedShifts,
+    refreshRequestedShifts: fetchShiftsForWeek,
     setRequestedShifts,
     setError,
     assignedShifts,

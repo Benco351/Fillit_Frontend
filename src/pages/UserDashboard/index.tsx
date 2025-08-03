@@ -174,21 +174,40 @@ const UserDashboard: React.FC = () => {
     if (departmentFilter !== 'all') {
       shifts = shifts.filter(shift => shift.department_id === departmentFilter);
     }
+    
+    // Apply filter
+    let filteredShifts;
     switch (filter) {
       case 'requested':
-        return shifts.filter(shift =>
+        filteredShifts = shifts.filter(shift =>
           requestedShifts.some(req => req.availableShiftId === shift.id)
         );
+        break;
       case 'accepted':
-        return shifts.filter(shift =>
+        filteredShifts = shifts.filter(shift =>
           requestedShifts.some(req =>
             req.availableShiftId === shift.id && req.status === 'approved'
           ) ||
           assignedShifts.some(assign => assign.assigned_shift_id === shift.id)
         );
+        break;
       default:
-        return shifts;
+        filteredShifts = shifts;
     }
+    
+    // Sort shifts consistently by date, start time, and ID to prevent position jumping
+    return filteredShifts.sort((a, b) => {
+      // First sort by date
+      if (a.date !== b.date) {
+        return a.date.localeCompare(b.date);
+      }
+      // Then by start time
+      if (a.start !== b.start) {
+        return a.start.localeCompare(b.start);
+      }
+      // Finally by ID for complete stability
+      return a.id - b.id;
+    });
   }, [availableShifts, requestedShifts, assignedShifts, filter, departmentFilter]);
 
   return (
@@ -486,7 +505,7 @@ const UserDashboard: React.FC = () => {
 
                           return (
                             <Box
-                              key={shift.id}
+                              key={`${shift.date}-${shift.id}`}
                               sx={{
                                 width: '100%',
                                 pb: idx === arr.length - 1 ? 0 : 2,
