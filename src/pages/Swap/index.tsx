@@ -16,9 +16,13 @@ import {
   DialogContent,
   DialogActions,
   Container,
+  TextField,
+  Pagination,
+  InputAdornment,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SearchIcon from '@mui/icons-material/Search';
 import { getEmployees } from '../../utils/apis/employeeShiftApis';
 import { Employee } from '../../components/CalendarFeatures/calendarStates';
 import { MainTheme, swapPageTheme } from '../../assets/themes/themes';
@@ -209,16 +213,13 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
           {emp.name}
         </Typography>
         <Typography variant="body2" style={{ color: '#b0b7be' }} align="center">
-          ID: {emp.id}
-        </Typography>
-        <Typography variant="body2" style={{ color: '#b0b7be' }} align="center">
           Email: {emp.email || 'N/A'}
         </Typography>
         <Typography variant="body2" color="primary" fontWeight={500} align="center">
           Role: {emp.admin ? 'Admin' : 'User'}
         </Typography>
         <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
-          <IconButton
+          {/* <IconButton
             sx={{
               bgcolor: swapPageTheme.iconButtonBg,
               color: swapPageTheme.iconButtonColor,
@@ -235,7 +236,7 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
             aria-label="Chat"
           >
             <ChatIcon fontSize="medium" />
-          </IconButton>
+          </IconButton> */}
           <Button
             variant="contained"
             color="primary"
@@ -403,7 +404,7 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
             />
           </Box>
           {swapResult && (
-            <Alert severity={swapResult === 'Swap successful!' ? 'success' : 'error'} sx={{ mt: 2 }}>{swapResult}</Alert>
+            <Alert severity={swapResult === 'Swap request sent!' ? 'success' : 'error'} sx={{ mt: 2 }}>{swapResult}</Alert>
           )}
         </DialogContent>
         <DialogActions>
@@ -433,6 +434,11 @@ const SwapPage: React.FC = () => {
   const [requestsToMe, setRequestsToMe] = useState<ShiftSwapRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [requestsError, setRequestsError] = useState<string | null>(null);
+  
+  // Pagination and search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const employeesPerPage = 5;
 
   const fetchSwapRequests = async () => {
     setRequestsLoading(true);
@@ -481,6 +487,23 @@ const SwapPage: React.FC = () => {
     fetchSwapRequests();
   }, []);
 
+  // Filter employees based on search term
+  const filteredEmployees = employees.filter(emp => 
+    String(emp.id) !== String(user.id) && 
+    emp.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredEmployees.length / employeesPerPage);
+  const startIndex = (currentPage - 1) * employeesPerPage;
+  const endIndex = startIndex + employeesPerPage;
+  const currentEmployees = filteredEmployees.slice(startIndex, endIndex);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
@@ -525,20 +548,67 @@ const SwapPage: React.FC = () => {
             <Typography variant="body1" align="center" style={{ color: '#b0b7be', marginBottom: 24 }}>
               Connect with other employees to chat and request shift swaps.
             </Typography>
-            <Paper sx={{ mt: 2, mb: 4, p: { xs: 2, sm: 3 }, display: 'inline-block', minWidth: 300, borderRadius: 3, mx: 'auto', background: swapPageTheme.infoPaperBg, border: swapPageTheme.cardBorder, boxShadow: swapPageTheme.cardShadow }} elevation={0}>
-              <Typography variant="h6" gutterBottom align="center" color={swapPageTheme.unselectedText}>Current User Info</Typography>
-              <Typography style={{ color: swapPageTheme.unselectedText }}>Name: {user.name}</Typography>
-              <Typography style={{ color: '#b0b7be' }}>Email: {user.email}</Typography>
-              <Typography style={{ color: '#b0b7be' }}>User ID: {user.id}</Typography>
-              <Typography color="primary">Role: {user.admin ? 'Admin' : 'User'}</Typography>
-            </Paper>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 4 }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 300, borderRadius: 3, background: swapPageTheme.infoPaperBg, border: swapPageTheme.cardBorder, boxShadow: swapPageTheme.cardShadow }} elevation={0}>
+                <Typography variant="h6" gutterBottom align="center" color={swapPageTheme.unselectedText}>Current User Info</Typography>
+                <Typography style={{ color: swapPageTheme.unselectedText }}>Name: {user.name}</Typography>
+                <Typography style={{ color: '#b0b7be' }}>Email: {user.email}</Typography>
+                <Typography style={{ color: '#b0b7be' }}>User ID: {user.id}</Typography>
+                <Typography color="primary">Role: {user.admin ? 'Admin' : 'User'}</Typography>
+              </Paper>
+            </Box>
             <Box sx={{ mt: 4 }}>
               <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>All Employees</Typography>
+              
+              {/* Search Field */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                <TextField
+                  placeholder="Search employees by email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{
+                    minWidth: 300,
+                    maxWidth: 500,
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      '& fieldset': {
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                    '& .MuiInputBase-input': {
+                      color: 'white',
+                      '&::placeholder': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        opacity: 1,
+                      },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  size="small"
+                />
+              </Box>
+
               {loading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress color="primary" /></Box>}
               {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
-              {!loading && !error && employees.length === 0 && (
-                <Typography align="center" sx={{ mt: 4 }} style={{ color: '#b0b7be' }}>No employees found.</Typography>
+              {!loading && !error && filteredEmployees.length === 0 && (
+                <Typography align="center" sx={{ mt: 4 }} style={{ color: '#b0b7be' }}>
+                  {searchTerm ? 'No employees found matching your search.' : 'No employees found.'}
+                </Typography>
               )}
+              
               <Box
                 sx={{
                   display: 'flex',
@@ -549,79 +619,97 @@ const SwapPage: React.FC = () => {
                   justifyContent: 'center',
                 }}
               >
-                {employees
-                  .filter(emp => String(emp.id) !== String(user.id))
-                  .map(emp => (
-                    <EmployeeCard key={emp.id} emp={emp} refreshSwapRequests={refreshSwapRequests.current} />
-                  ))}
+                {currentEmployees.map(emp => (
+                  <EmployeeCard key={emp.id} emp={emp} refreshSwapRequests={refreshSwapRequests.current} />
+                ))}
               </Box>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={(event, page) => setCurrentPage(page)}
+                    color="primary"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&.Mui-selected': {
+                          backgroundColor: 'primary.main',
+                          color: 'white',
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+              )}
             </Box>
             {/* Swap Requests Section */}
             <Box sx={{ mt: 6 }}>
-              <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>My Swap Requests</Typography>
+              <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>My Pending Swap Requests</Typography>
               {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}
-              {!requestsLoading && !requestsError && myRequests.length === 0 && (
-                <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No swap requests sent.</Typography>
+              {!requestsLoading && !requestsError && myRequests.filter(req => req.status === 'pending').length === 0 && (
+                <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No pending swap requests sent.</Typography>
               )}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, justifyContent: 'center' }}>
-                {myRequests.map(req => (
+                {myRequests.filter(req => req.status === 'pending').map(req => (
                   <Paper key={req.id} sx={{ p: 2, minWidth: 260, borderRadius: 2, background: swapPageTheme.cardBg, border: swapPageTheme.cardBorder }}>
                     <Typography fontWeight={600}>To Employee ID: {req.target_employee_id}</Typography>
                     <Typography>My Shift ID: {req.requester_shift_id}</Typography>
                     <Typography>Their Shift ID: {req.target_shift_id}</Typography>
                     <Typography>Status: {req.status}</Typography>
                     {req.message && <Typography sx={{ fontStyle: 'italic', color: '#888' }}>Message: {req.message}</Typography>}
-                    {req.status === 'pending' && (
-                      <Button
-                        size="small"
-                        color="error"
-                        sx={{ mt: 1 }}
-                        onClick={async () => {
-                          await respondToShiftSwapRequest(req.id, { status: 'cancelled' });
-                          fetchSwapRequests();
-                        }}
-                      >Cancel</Button>
-                    )}
+                    <Button
+                      size="small"
+                      color="error"
+                      sx={{ mt: 1 }}
+                      onClick={async () => {
+                        await respondToShiftSwapRequest(req.id, { status: 'cancelled' });
+                        fetchSwapRequests();
+                      }}
+                    >Cancel</Button>
                   </Paper>
                 ))}
               </Box>
             </Box>
             <Box sx={{ mt: 6 }}>
-              <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>Requests to Me</Typography>
+              <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>Pending Requests to Me</Typography>
               {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}
-              {!requestsLoading && !requestsError && requestsToMe.length === 0 && (
-                <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No swap requests received.</Typography>
+              {!requestsLoading && !requestsError && requestsToMe.filter(req => req.status === 'pending').length === 0 && (
+                <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No pending swap requests received.</Typography>
               )}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, justifyContent: 'center' }}>
-                {requestsToMe.map(req => (
+                {requestsToMe.filter(req => req.status === 'pending').map(req => (
                   <Paper key={req.id} sx={{ p: 2, minWidth: 260, borderRadius: 2, background: swapPageTheme.cardBg, border: swapPageTheme.cardBorder }}>
                     <Typography fontWeight={600}>From Employee ID: {req.requester_employee_id}</Typography>
                     <Typography>Their Shift ID: {req.requester_shift_id}</Typography>
                     <Typography>My Shift ID: {req.target_shift_id}</Typography>
                     <Typography>Status: {req.status}</Typography>
                     {req.message && <Typography sx={{ fontStyle: 'italic', color: '#888' }}>Message: {req.message}</Typography>}
-                    {req.status === 'pending' && (
-                      <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                        <Button
-                          size="small"
-                          color="success"
-                          onClick={async () => {
-                            await respondToShiftSwapRequest(req.id, { status: 'accepted' });
-                            fetchSwapRequests();
-                          }}
-                        >Accept</Button>
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={async () => {
-                            await respondToShiftSwapRequest(req.id, { status: 'rejected' });
-                            fetchSwapRequests();
-                          }}
-                        >Reject</Button>
-                      </Box>
-                    )}
+                    <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                      <Button
+                        size="small"
+                        color="success"
+                        onClick={async () => {
+                          await respondToShiftSwapRequest(req.id, { status: 'accepted' });
+                          fetchSwapRequests();
+                        }}
+                      >Accept</Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={async () => {
+                          await respondToShiftSwapRequest(req.id, { status: 'rejected' });
+                          fetchSwapRequests();
+                        }}
+                      >Reject</Button>
+                    </Box>
                   </Paper>
                 ))}
               </Box>

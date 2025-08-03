@@ -203,7 +203,6 @@ const Departments: React.FC = () => {
                     <Table stickyHeader>
                       <TableHead>
                         <TableRow sx={{ background: 'rgba(0,194,140,0.07)' }}>
-                          <TableCell sx={{ p: 2, fontWeight: 700, color: 'primary.main', background: 'rgba(0,194,140,0.07)', borderBottom: '1.5px solid rgba(0,194,140,0.15)' }}>ID</TableCell>
                           <TableCell sx={{ p: 2, fontWeight: 700, color: 'primary.main', background: 'rgba(0,194,140,0.07)', borderBottom: '1.5px solid rgba(0,194,140,0.15)' }}>Name</TableCell>
                           <TableCell sx={{ p: 2, fontWeight: 700, color: 'primary.main', background: 'rgba(0,194,140,0.07)', borderBottom: '1.5px solid rgba(0,194,140,0.15)' }}>Address</TableCell>
                           <TableCell sx={{ p: 2, fontWeight: 700, color: 'primary.main', background: 'rgba(0,194,140,0.07)', borderBottom: '1.5px solid rgba(0,194,140,0.15)' }}>Actions</TableCell>
@@ -216,7 +215,6 @@ const Departments: React.FC = () => {
                             hover
                             sx={{ borderBottom: idx === departments.length - 1 ? 'none' : '1px solid rgba(0,194,140,0.07)' }}
                           >
-                            <TableCell sx={{ p: 2, color: 'white', fontWeight: 500, borderBottom: idx === departments.length - 1 ? 'none' : undefined }}>{dept.id}</TableCell>
                             <TableCell sx={{ p: 2, color: 'white', borderBottom: idx === departments.length - 1 ? 'none' : undefined }}>
                               {editingId === dept.id ? (
                                 dept.name
@@ -274,7 +272,7 @@ const Departments: React.FC = () => {
                         ))}
                         {departments.length === 0 && !loading && (
                           <TableRow>
-                            <TableCell colSpan={4} sx={{ textAlign: 'center', p: 4, color: 'white' }}>
+                            <TableCell colSpan={3} sx={{ textAlign: 'center', p: 4, color: 'white' }}>
                               No departments found.
                             </TableCell>
                           </TableRow>

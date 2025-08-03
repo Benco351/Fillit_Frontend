@@ -679,17 +679,17 @@ const AdminDashboard: React.FC = () => {
                 select
                 value={departmentFilter}
                 onChange={e => setDepartmentFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                sx={{ minWidth: 200, maxWidth: 320, width: '100%', background: '#fff', borderRadius: 1, color: '#00c28c',
-                  '& .MuiInputBase-input, & .MuiSelect-icon': { color: '#00c28c' },
+                sx={{ minWidth: 200, maxWidth: 320, width: '100%', background: '#fff', borderRadius: 1, color: '#000',
+                  '& .MuiInputBase-input, & .MuiSelect-icon': { color: '#000' },
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#00c28c' }
                 }}
                 size="small"
               >
-                <DropdownMenuItem value="all" sx={{ color: '#00c28c', background: '#fff' }}>All Departments</DropdownMenuItem>
+                <DropdownMenuItem value="all" sx={{ color: '#000', background: '#fff' }}>All Departments</DropdownMenuItem>
                 {departments.map(dept => (
-                  <DropdownMenuItem key={dept.id} value={dept.id} sx={{ color: '#00c28c', background: '#fff' }}>{dept.name}</DropdownMenuItem>
+                  <DropdownMenuItem key={dept.id} value={dept.id} sx={{ color: '#000', background: '#fff' }}>{dept.name}</DropdownMenuItem>
                 ))}
               </TextField>
             </Box>
