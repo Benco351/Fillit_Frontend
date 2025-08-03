@@ -12,6 +12,7 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Menu as MenuIco
 import { MainTheme } from '../../assets/themes/themes';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/layout/Footer';
+import { ROUTES } from '../../routes/config/routes';
 import { createAvailableShift, getAvailableShiftById, deleteAvailableShiftById, updateAvailableShiftById } from '../../utils/apis/availableShiftApis'; // Adjust the import path as necessary
 import { createRequestedShift, deleteRequestedShiftById, getRequestedShifts, updateRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import { getAvailableShifts, getAssignedShifts } from '../../utils/apis/availableShiftApis'; // Import the API functions
@@ -36,6 +37,7 @@ import AdminShiftFilter from '../../components/ShiftManagment/AdminShiftFilter';
 
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
 
   const [pendingInfoDialogOpen, setPendingInfoDialogOpen] = useState(false);
   const [selectedPendingRequest, setSelectedPendingRequest] = useState<RequestedShift | null>(null);
@@ -95,6 +97,16 @@ const AdminDashboard: React.FC = () => {
   const handleCancelDeny = () => {
     setDenyDialogOpen(false);
     setDenyRequestId(null);
+  };
+
+  // Navigation functions
+  const handleNavigateToShiftInfo = (shiftId: number) => {
+    navigate(ROUTES.SHIFT_INFO.replace(':shiftId', shiftId.toString()));
+  };
+
+  const handleShiftCardClick = (shift: AvailableShift) => {
+    setSelectedShiftInfo(shift);
+    setInfoDialogOpen(true);
   };
 
   // Open info dialog to see shift details
@@ -623,15 +635,27 @@ const AdminDashboard: React.FC = () => {
     }
     if (filter === 'full') {
       // Only show shifts where slots taken >= slots amount
-      return shifts.filter(
+      shifts = shifts.filter(
         shift =>
           typeof shift.shift_slots_amount === 'number' &&
           typeof shift.shift_slots_taken === 'number' &&
           shift.shift_slots_taken >= shift.shift_slots_amount
       );
     }
-    // Default: show all
-    return shifts;
+    
+    // Sort shifts consistently by date, start time, and ID to prevent position jumping
+    return shifts.sort((a, b) => {
+      // First sort by date
+      if (a.date !== b.date) {
+        return a.date.localeCompare(b.date);
+      }
+      // Then by start time
+      if (a.start !== b.start) {
+        return a.start.localeCompare(b.start);
+      }
+      // Finally by ID for complete stability
+      return a.id - b.id;
+    });
   }, [availableShifts, filter, departmentFilter]);
 
   return (
@@ -920,7 +944,9 @@ const AdminDashboard: React.FC = () => {
                                       flexDirection: 'column',
                                       justifyContent: 'space-between',
                                       willChange: 'transform',
+                                      cursor: 'pointer',
                                     }}
+                                    onClick={() => handleShiftCardClick(shift)}
                                   >
                                     <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                       {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
@@ -939,12 +965,15 @@ const AdminDashboard: React.FC = () => {
                                             color: 'white',
                                             padding: { xs: 0.5, sm: 1 }
                                           }}
-                                          onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenEditDialogFromCalendar(shift);
+                                          }}
                                         >
                                           <EditIcon fontSize="small" />
                                         </IconButton>
                                       </Tooltip>
-                                      <Tooltip title="Shift Information">
+                                      <Tooltip title="Detailed Shift Information">
                                         <IconButton
                                           size="small"
                                           sx={{
@@ -952,7 +981,10 @@ const AdminDashboard: React.FC = () => {
                                             padding: { xs: 0.5, sm: 1 },
                                             mt: -1.7
                                           }}
-                                          onClick={() => handleOpenInfoDialog(shift)}
+                                          onClick={(e) => {
+                                            e.stopPropagation(); // Prevent triggering the card click
+                                            handleNavigateToShiftInfo(shift.id);
+                                          }}
                                         >
                                           <InfoIcon fontSize="small" />
                                         </IconButton>
@@ -977,7 +1009,9 @@ const AdminDashboard: React.FC = () => {
                                     flexDirection: 'column',
                                     justifyContent: 'space-between',
                                     willChange: 'transform',
+                                    cursor: 'pointer',
                                   }}
+                                  onClick={() => handleShiftCardClick(shift)}
                                 >
                                   <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                     {shift.start?.substring(0, 5) || '??:??'} - {shift.end?.substring(0, 5) || '??:??'}
@@ -996,12 +1030,15 @@ const AdminDashboard: React.FC = () => {
                                           color: 'white',
                                           padding: { xs: 0.5, sm: 1 }
                                         }}
-                                        onClick={() => handleOpenEditDialogFromCalendar(shift)}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditDialogFromCalendar(shift);
+                                        }}
                                       >
                                         <EditIcon fontSize="small" />
                                       </IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Shift Information">
+                                    <Tooltip title="Detailed Shift Information">
                                       <IconButton
                                         size="small"
                                         sx={{
@@ -1009,7 +1046,10 @@ const AdminDashboard: React.FC = () => {
                                           padding: { xs: 0.5, sm: 1 },
                                           mt: -1.7
                                         }}
-                                        onClick={() => handleOpenInfoDialog(shift)}
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent triggering the card click
+                                          handleNavigateToShiftInfo(shift.id);
+                                        }}
                                       >
                                         <InfoIcon fontSize="small" />
                                       </IconButton>
@@ -1039,7 +1079,8 @@ const AdminDashboard: React.FC = () => {
                                     <Tooltip title="View Request Details">
                                       <IconButton
                                         size="small"
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent triggering the card click
                                           setSelectedPendingRequest(pendingRequest);
                                           setPendingInfoDialogOpen(true);
                                         }}
@@ -1055,7 +1096,10 @@ const AdminDashboard: React.FC = () => {
                                       <Tooltip title="Accept Request">
                                         <IconButton
                                           size="small"
-                                          onClick={() => handleAcceptRequest(pendingRequest)}
+                                          onClick={(e) => {
+                                            e.stopPropagation(); // Prevent triggering the card click
+                                            handleAcceptRequest(pendingRequest);
+                                          }}
                                           disabled={loading}
                                           sx={{ color: 'green' }}
                                         >
@@ -1065,7 +1109,10 @@ const AdminDashboard: React.FC = () => {
                                       <Tooltip title="Deny Request">
                                         <IconButton
                                           size="small"
-                                          onClick={() => handleOpenDenyDialog(pendingRequest.id)}
+                                          onClick={(e) => {
+                                            e.stopPropagation(); // Prevent triggering the card click
+                                            handleOpenDenyDialog(pendingRequest.id);
+                                          }}
                                           disabled={loading}
                                           sx={{ color: 'red' }}
                                         >

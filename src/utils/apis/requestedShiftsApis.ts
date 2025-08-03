@@ -11,7 +11,7 @@ interface RequestedShiftResponse {
   request_shift_id: number;
   request_employee_id: number;
   request_notes: string | null;
-  request_status: 'pending' | 'approved' | 'denied';
+  request_status: 'pending' | 'approved' | 'denied' | 'swapped';
   availableShift?: {
     shift_date: string;
     shift_time_start: string;

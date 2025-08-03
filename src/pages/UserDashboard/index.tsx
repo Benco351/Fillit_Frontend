@@ -26,10 +26,13 @@ import { deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 import { deleteAvailableShiftById } from '../../utils/apis/availableShiftApis';
 import { getDepartments } from '../../utils/apis/departmentApis';
 import InfoIcon from '@mui/icons-material/Info';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../routes/config/routes';
 
 const UserDashboard: React.FC = () => {
+  const navigate = useNavigate();
 
-    // Current user  
+  // Current user  
 
   // //const [currentEmployee, setCurrentEmployee] = useState<Employee>(employees[0]);
   // const currentEmployee_id = parseInt(sessionStorage.getItem('customEmployeeId'))
@@ -64,6 +67,16 @@ const UserDashboard: React.FC = () => {
   // Info dialog state
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [selectedShiftInfo, setSelectedShiftInfo] = useState<AvailableShift | null>(null);
+
+  // Navigation functions
+  const handleNavigateToShiftInfo = (shiftId: number) => {
+    navigate(ROUTES.SHIFT_INFO.replace(':shiftId', shiftId.toString()));
+  };
+
+  const handleShiftCardClick = (shift: AvailableShift) => {
+    setSelectedShiftInfo(shift);
+    setInfoDialogOpen(true);
+  };
 
 
   // Automatically fetch shifts when the component mounts or the week changes
@@ -143,7 +156,7 @@ const UserDashboard: React.FC = () => {
     }
   };
 
-  // Update the getShiftStatus function to ensure users see denied shifts as "denied"
+  // Update the getShiftStatus function to handle swapped status
   const getShiftStatus = (availableShiftId: number): string => {
     const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
 
@@ -151,6 +164,10 @@ const UserDashboard: React.FC = () => {
       // If the shift is denied, show it as "denied" for users
       if (requestedShift.status === 'denied') {
         return 'denied';
+      }
+      // If the shift is swapped, treat it as available (user can request again)
+      if (requestedShift.status === 'swapped') {
+        return 'available';
       }
       return requestedShift.status;
     }
@@ -529,11 +546,13 @@ const UserDashboard: React.FC = () => {
                                   flexDirection: 'column',
                                   justifyContent: 'space-between',
                                   position: 'relative',
+                                  cursor: 'pointer',
                                   '&:hover': {
                                     transform: 'translateY(-2px)',
                                     boxShadow: '0 6px 16px rgba(0, 0, 0, 0.15)',
                                   },
                                 }}
+                                onClick={() => handleShiftCardClick(shift)}
                               >
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
                                 <Typography
@@ -548,9 +567,9 @@ const UserDashboard: React.FC = () => {
                                   <IconButton
                                     size="small"
                                     sx={{ color: '#fff', ml: 1, p: 0.5, '&:hover': { color: '#fff', background: 'none' }, '&:focus': { color: '#fff' } }}
-                                    onClick={() => {
-                                      setSelectedShiftInfo(shift);
-                                      setInfoDialogOpen(true);
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent triggering the card click
+                                      handleNavigateToShiftInfo(shift.id);
                                     }}
                                   >
                                     <InfoIcon fontSize="small" />
@@ -598,6 +617,30 @@ const UserDashboard: React.FC = () => {
                                       fontWeight: 600,
                                       letterSpacing: '0.5px',
                                       boxShadow: '0 2px 8px rgba(211,47,47,0.12)',
+                                      maxWidth: '100%',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      alignSelf: 'flex-start',
+                                      mt: 0.5,
+                                    }}
+                                  />
+                                )}
+
+                                {status === 'swapped' && (
+                                  <Chip
+                                    label="Previously Swapped"
+                                    size="small"
+                                    sx={{
+                                      fontSize: { xs: '0.6rem', sm: '0.75rem' },
+                                      height: { xs: 18, sm: 20 },
+                                      px: 1.2,
+                                      backgroundColor: '#9c27b0',
+                                      color: 'white',
+                                      borderRadius: '8px',
+                                      fontWeight: 600,
+                                      letterSpacing: '0.5px',
+                                      boxShadow: '0 2px 8px rgba(156,39,176,0.12)',
                                       maxWidth: '100%',
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',

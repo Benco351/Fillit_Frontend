@@ -32,7 +32,7 @@ export interface RequestedShift {
   employeeId: number;
   availableShiftId: number;
   notes: string;
-  status: 'pending' | 'approved' | 'denied';
+  status: 'pending' | 'approved' | 'denied' | 'swapped';
 }
 
 

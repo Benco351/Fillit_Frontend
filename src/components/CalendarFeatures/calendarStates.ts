@@ -77,6 +77,8 @@ export const getShiftColor = (status: string): string => {
       return '#2196f3'; // Blue
     case 'denied':
       return '#f44336'; // Red
+    case 'swapped':
+      return '#9c27b0'; // Purple
     default:
       return '#757575'; // Grey
   }

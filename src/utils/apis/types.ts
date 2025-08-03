@@ -85,13 +85,13 @@ export const CreateRequestedShiftSchema = z.object({
 }).strict();
 
 export const UpdateRequestedShiftSchema = z.object({
-    status: z.enum(['pending', 'approved', 'denied']).optional(),
+    status: z.enum(['pending', 'approved', 'denied', 'swapped']).optional(),
     notes: z.string().optional()
 }).strict();
 
 export const RequestedShiftQuerySchema = z.object({
     request_employee_id: z.coerce.number().optional(),
-    request_status: z.enum(['pending', 'approved', 'denied']).optional(),
+    request_status: z.enum(['pending', 'approved', 'denied', 'swapped']).optional(),
 }).strict();
 
 export type CreateRequestedShiftDTO = z.infer<typeof CreateRequestedShiftSchema>;
@@ -104,7 +104,7 @@ export type RequestedShiftMapped = {
   employeeId: number;
   availableShiftId: number;
   notes: string;
-  status: 'pending' | 'approved' | 'denied';
+  status: 'pending' | 'approved' | 'denied' | 'swapped';
   availableShift?: {
     shift_date: string;
     shift_time_start: string;

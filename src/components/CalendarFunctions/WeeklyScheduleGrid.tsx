@@ -159,6 +159,20 @@ const WeeklyScheduleGrid: React.FC<WeeklyScheduleGridProps> = ({
                       }}
                     />
                   )}
+
+                  {status === 'swapped' && (
+                    <Chip
+                      label="Swapped"
+                      size="small"
+                      sx={{
+                        fontSize: { xs: '0.5rem', sm: '0.6rem' },
+                        height: { xs: 14, sm: 16 },
+                        backgroundColor: '#9c27b0',
+                        color: 'white',
+                        mt: 0.5
+                      }}
+                    />
+                  )}
                 </Box>
               );
             })}

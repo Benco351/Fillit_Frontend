@@ -5,7 +5,8 @@ export const ROUTES = {
   DASHBOARD: '/user-dashboard',
   ADMIN: '/admin-dashboard',
   SWAP: '/swap',
-  DEPARTMENTS: '/admin-dashboard/departments'
+  DEPARTMENTS: '/admin-dashboard/departments',
+  SHIFT_INFO: '/shift-info/:shiftId'
 } as const;
 
 export type AppRoutes = typeof ROUTES;

@@ -34,7 +34,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Button
           size="small"
           variant="contained"
-          onClick={() => onRequestShift(shift)}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering the card click
+            onRequestShift(shift);
+          }}
           disabled={requesting}
           sx={{
             ...buttonStyle, // Use new prop name
@@ -70,7 +73,8 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             size="small"
             variant="contained"
             color="error"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering the card click
               const request = requestedShifts.find(req => req.availableShiftId === shift.id);
               if (request?.id) {
                 handleDeleteRequestedShift(request.id, shift.id); // Pass availableShiftId

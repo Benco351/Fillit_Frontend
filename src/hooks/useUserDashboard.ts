@@ -261,7 +261,13 @@ export const useUserDashboard = (currentEmployee: Employee) => {
       if (isAssigned) return 'assigned';
       
       const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
-      if (requestedShift) return requestedShift.status;
+      if (requestedShift) {
+        // If the shift is swapped, treat it as available (user can request again)
+        if (requestedShift.status === 'swapped') {
+          return 'available';
+        }
+        return requestedShift.status;
+      }
       
       return 'available';
     };
