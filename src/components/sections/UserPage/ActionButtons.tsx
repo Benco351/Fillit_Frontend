@@ -22,6 +22,13 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   handleDeleteRequestedShift,
   buttonStyle = {} // Changed prop name
 }) => {
+  // Debug logging
+  console.log('ActionButtons for shift:', shift.id, {
+    status,
+    shift_slots_amount: shift.shift_slots_amount,
+    shift_slots_taken: shift.shift_slots_taken
+  });
+
   return (
     <Box sx={{ 
       mt: 1,
@@ -98,6 +105,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             {canceling ? 'Cancelling...' : 'Cancel Request'}
           </Button>
         </>
+      )}
+      {status === 'full' && (
+        <Chip
+          label="Full"
+          size="small"
+          sx={{ 
+            fontSize: '0.6rem', 
+            height: 16,
+            backgroundColor: '#757575',
+            color: 'white'
+          }}
+        />
       )}
     </Box>
   );

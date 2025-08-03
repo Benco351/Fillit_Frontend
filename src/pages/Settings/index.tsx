@@ -30,6 +30,13 @@ const glassButtonStyle = {
 
 const SettingsPage = () => {
   const navigate = useNavigate();
+  
+  const handleGoToDashboard = () => {
+    const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
+    const targetRoute = isAdmin ? ROUTES.ADMIN : ROUTES.DASHBOARD;
+    navigate(targetRoute);
+  };
+  
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh', background: 'rgba(255,255,255,0.7)' }}>
       <Paper elevation={3} sx={{ p: 5, borderRadius: 4, minWidth: 350, textAlign: 'center', background: 'rgba(255,255,255,0.85)', boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)' }}>
@@ -43,7 +50,7 @@ const SettingsPage = () => {
         <Button
           variant="contained"
           sx={glassButtonStyle}
-          onClick={() => navigate(ROUTES.DASHBOARD)}
+          onClick={handleGoToDashboard}
         >
           Go to Dashboard
         </Button>

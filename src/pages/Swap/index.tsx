@@ -38,6 +38,7 @@ import {
   respondToShiftSwapRequest,
   ShiftSwapRequest,
 } from '../../utils/apis/shiftSwapRequestApis';
+
 import { getDepartments } from '../../utils/apis/departmentApis';
 
 const getCurrentUser = () => {
@@ -435,6 +436,13 @@ const SwapPage: React.FC = () => {
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [requestsError, setRequestsError] = useState<string | null>(null);
   
+  // Shift swap log states
+  const [logDialogOpen, setLogDialogOpen] = useState(false);
+  const [allSwapRequests, setAllSwapRequests] = useState<ShiftSwapRequest[]>([]);
+  const [logLoading, setLogLoading] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
+  const [shiftDetails, setShiftDetails] = useState<{[key: number]: any}>({});
+  
   // Pagination and search states
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -453,6 +461,69 @@ const SwapPage: React.FC = () => {
       setRequestsError(err.message || 'Failed to fetch swap requests');
     } finally {
       setRequestsLoading(false);
+    }
+  };
+
+  const fetchAllSwapRequests = async () => {
+    setLogLoading(true);
+    setLogError(null);
+    try {
+      const currentUserId = Number(user.id);
+      const res = await listShiftSwapRequests(currentUserId);
+      const all: ShiftSwapRequest[] = res.data?.data || res.data || [];
+      // Sort by created_at in descending order (most recent first)
+      const sorted = all.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+      setAllSwapRequests(sorted);
+      
+      // Fetch shift details for all requests using the exact same method as employee cards
+      const shiftDetailsMap: {[key: number]: any} = {};
+      const mod = await import('../../utils/apis/assignedShiftApis');
+      
+      // Get all unique employee IDs from the requests
+      const employeeIds = new Set<number>();
+      sorted.forEach(request => {
+        employeeIds.add(request.requester_employee_id);
+        employeeIds.add(request.target_employee_id);
+      });
+      
+      // Fetch all shifts for all employees at once and apply the same mapping as employee cards
+      for (const employeeId of employeeIds) {
+        try {
+          const shiftsRes = await mod.getAssignedShifts({ assigned_employee_id: employeeId });
+          let shifts = shiftsRes.data?.data || shiftsRes.data || [];
+          
+          // Apply the exact same mapping as employee cards
+          shifts = shifts.map((shift: any) => ({
+            ...shift,
+            availableShift: {
+              ...shift.availableShift,
+              department_id:
+                shift.availableShift?.department_id ||
+                shift.availableShift?.department?.department_id ||
+                shift.department_id,
+              department_name: shift.availableShift?.department?.department_name,
+              department_address: shift.availableShift?.department?.department_address,
+            },
+          }));
+          
+          // Store each shift with its assigned_id as the key
+          shifts.forEach((shift: any) => {
+            shiftDetailsMap[shift.assigned_id] = shift;
+          });
+        } catch (err) {
+          console.error('Failed to fetch shifts for employee:', employeeId);
+        }
+      }
+      
+      setShiftDetails(shiftDetailsMap);
+    } catch (err: any) {
+      setLogError(err.message || 'Failed to fetch swap requests');
+    } finally {
+      setLogLoading(false);
     }
   };
 
@@ -714,8 +785,241 @@ const SwapPage: React.FC = () => {
                 ))}
               </Box>
             </Box>
+            
+            {/* Shift Swap Log Button */}
+            <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setLogDialogOpen(true);
+                  fetchAllSwapRequests();
+                }}
+                sx={{
+                  background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(0, 194, 140, 0.3)',
+                  borderRadius: '10px',
+                  color: '#00c28c',
+                  fontWeight: 600,
+                  px: 4,
+                  py: 1.5,
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 20px rgba(0, 194, 140, 0.3)',
+                  },
+                  transition: 'all 0.2s ease-in-out',
+                }}
+              >
+                View Complete Swap History
+              </Button>
+            </Box>
           </Box>
         </Container>
+        
+        {/* Shift Swap Log Dialog */}
+        <Dialog 
+          open={logDialogOpen} 
+          onClose={() => setLogDialogOpen(false)} 
+          maxWidth="lg" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              background: '#ffffff',
+              borderRadius: '12px',
+              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+            }
+          }}
+        >
+          <DialogTitle>
+            <Typography variant="h5" fontWeight={700} color="primary">
+              Shift Swap History
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Complete history of all swap requests
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            {logLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <CircularProgress color="primary" />
+              </Box>
+            )}
+            {logError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {logError}
+              </Alert>
+            )}
+            {!logLoading && !logError && allSwapRequests.length === 0 && (
+              <Typography align="center" sx={{ my: 4 }} color="text.secondary">
+                No swap requests found.
+              </Typography>
+            )}
+            {!logLoading && !logError && allSwapRequests.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                {allSwapRequests.map((request) => {
+                  const isRequester = request.requester_employee_id === Number(user.id);
+                  const isTarget = request.target_employee_id === Number(user.id);
+                  const otherEmployeeId = isRequester ? request.target_employee_id : request.requester_employee_id;
+                  const otherEmployee = employees.find(emp => emp.id === otherEmployeeId);
+                  
+                  return (
+                    <Paper
+                      key={request.id}
+                      sx={{
+                        p: 3,
+                        mb: 2,
+                        background: '#ffffff',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '12px',
+                        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+                        borderLeft: '4px solid',
+                        borderLeftColor: request.status === 'accepted' ? '#00c28c' : 
+                                        request.status === 'rejected' ? '#f44336' : 
+                                        request.status === 'cancelled' ? '#ff9800' : '#2196f3',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box>
+                          <Typography variant="h6" fontWeight={600} color="text.primary">
+                            {isRequester ? 'You requested a swap' : 'You received a swap request'}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            with {otherEmployee?.name || `Employee ID: ${otherEmployeeId}`}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              px: 2,
+                              py: 0.5,
+                              borderRadius: '8px',
+                              backgroundColor: request.status === 'accepted' ? '#00c28c' : 
+                                             request.status === 'rejected' ? '#f44336' : 
+                                             request.status === 'cancelled' ? '#ff9800' : '#2196f3',
+                              color: 'white',
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              fontSize: '0.75rem',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            {request.status}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', gap: 3, mb: 2, flexWrap: 'wrap' }}>
+                        <Box sx={{ flex: 1, minWidth: 250 }}>
+                          <Typography variant="subtitle2" color="primary" fontWeight={600}>
+                            {isRequester ? 'Your Shift' : 'Their Shift'}:
+                          </Typography>
+                          {(() => {
+                            const shiftId = isRequester ? request.requester_shift_id : request.target_shift_id;
+                            const shiftDetail = shiftDetails[shiftId];
+                            if (shiftDetail?.availableShift) {
+                              return (
+                                <Box sx={{ mt: 1 }}>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Date: {shiftDetail.availableShift.shift_date || 'N/A'}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Time: {shiftDetail.availableShift.shift_time_start || 'N/A'} - {shiftDetail.availableShift.shift_time_end || 'N/A'}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Department: {shiftDetail.availableShift.department_name || 'N/A'}
+                                  </Typography>
+                                  {shiftDetail.availableShift.department_address && (
+                                    <Typography variant="body2" color="text.secondary">
+                                      Address: {shiftDetail.availableShift.department_address}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              );
+                            }
+                            return (
+                              <Typography variant="body2" color="text.secondary">
+                                Shift details not available
+                              </Typography>
+                            );
+                          })()}
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 250 }}>
+                          <Typography variant="subtitle2" color="primary" fontWeight={600}>
+                            {isRequester ? 'Their Shift' : 'Your Shift'}:
+                          </Typography>
+                          {(() => {
+                            const shiftId = isRequester ? request.target_shift_id : request.requester_shift_id;
+                            const shiftDetail = shiftDetails[shiftId];
+                            if (shiftDetail?.availableShift) {
+                              return (
+                                <Box sx={{ mt: 1 }}>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Date: {shiftDetail.availableShift.shift_date || 'N/A'}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Time: {shiftDetail.availableShift.shift_time_start || 'N/A'} - {shiftDetail.availableShift.shift_time_end || 'N/A'}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Department: {shiftDetail.availableShift.department_name || 'N/A'}
+                                  </Typography>
+                                  {shiftDetail.availableShift.department_address && (
+                                    <Typography variant="body2" color="text.secondary">
+                                      Address: {shiftDetail.availableShift.department_address}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              );
+                            }
+                            return (
+                              <Typography variant="body2" color="text.secondary">
+                                Shift details not available
+                              </Typography>
+                            );
+                          })()}
+                        </Box>
+                      </Box>
+                      
+                      {request.message && (
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="subtitle2" color="primary" fontWeight={600}>
+                            Message:
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontStyle: 'italic' }} color="text.secondary">
+                            {request.message}
+                          </Typography>
+                        </Box>
+                      )}
+                      
+                      {request.response_message && (
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="subtitle2" color="primary" fontWeight={600}>
+                            Response:
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontStyle: 'italic' }} color="text.secondary">
+                            {request.response_message}
+                          </Typography>
+                        </Box>
+                      )}
+                      
+
+                    </Paper>
+                  );
+                })}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => setLogDialogOpen(false)}
+              variant="contained"
+              color="primary"
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
         
       </Box>
       <Footer />

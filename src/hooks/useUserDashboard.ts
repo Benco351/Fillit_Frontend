@@ -184,15 +184,20 @@ export const useUserDashboard = (currentEmployee: Employee) => {
       });
 
       if (availableResponse?.data && Array.isArray(availableResponse.data)) {
-        const mappedShifts = availableResponse.data.map((shift: any) => ({
-          id: shift.shift_id || shift.id,
-          date: shift.shift_date || shift.date,
-          start: shift.shift_time_start || shift.start,
-          end: shift.shift_time_end || shift.end,
-          shift_slots_amount: Number(shift.shift_slots_amount) ?? 1,
-          shift_slots_taken: Number(shift.shift_slots_taken) ?? 0,
-          department_id: shift.department_id || shift.department?.id,
-        }));
+        const mappedShifts = availableResponse.data.map((shift: any) => {
+          const slotsAmount = Number(shift.shift_slots_amount);
+          const slotsTaken = Number(shift.shift_slots_taken);
+          
+          return {
+            id: shift.shift_id || shift.id,
+            date: shift.shift_date || shift.date,
+            start: shift.shift_time_start || shift.start,
+            end: shift.shift_time_end || shift.end,
+            shift_slots_amount: isNaN(slotsAmount) ? 1 : slotsAmount,
+            shift_slots_taken: isNaN(slotsTaken) ? 0 : slotsTaken,
+            department_id: shift.department_id || shift.department?.id,
+          };
+        });
 
         setAvailableShifts(mappedShifts);
       } else {
@@ -239,11 +244,14 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     fetchShiftsForWeek();
   }, [fetchShiftsForWeek]);
 
-  // Single polling mechanism for all shifts
+  // Single polling mechanism for all shifts - only for non-admin users
   useEffect(() => {
+    // Disable polling for admin users since AdminDashboard has its own polling
+    if (isAdmin) return;
+    
     const interval = setInterval(fetchShiftsForWeek, POLLING_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchShiftsForWeek]);
+  }, [fetchShiftsForWeek, isAdmin]);
 
   // State for edit dialog
   const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState<boolean>(false);

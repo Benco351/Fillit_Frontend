@@ -5,6 +5,13 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  overflow-anchor: none;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-anchor: none;
 }
 
 code {

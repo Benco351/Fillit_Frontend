@@ -7,9 +7,10 @@ import {
 import { format } from 'date-fns';
 import { ArrowBack, LocationOn, Schedule, People, Business } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MainTheme } from '../../assets/themes/themes';
+import { MainTheme, swapPageTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
 import Navbar from '../../components/layout/userNavbar';
+import { ROUTES } from '../../routes/config/routes';
 import { getAvailableShiftById } from '../../utils/apis/availableShiftApis';
 import { getAssignedShifts } from '../../utils/apis/assignedShiftApis';
 import { getEmployees } from '../../utils/apis/employeeShiftApis';
@@ -120,14 +121,34 @@ const ShiftInfo: React.FC = () => {
   }, [shiftId]);
 
   const handleBack = () => {
-    navigate(-1);
+    // Check if user is admin and navigate to appropriate dashboard
+    const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
+    const targetRoute = isAdmin ? ROUTES.ADMIN : ROUTES.DASHBOARD;
+    
+    // Navigate to the appropriate dashboard with a smooth transition
+    navigate(targetRoute, { 
+      replace: false,
+      state: { fromShiftInfo: true }
+    });
+  };
+
+  // Prevent scroll jumping on component mount
+  useEffect(() => {
+    // Ensure the page starts at the top when entering shift info
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Determine background color based on user type
+  const getBackgroundColor = () => {
+    const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
+    return isAdmin ? swapPageTheme.adminBg : '#093039';
   };
 
   if (shiftInfo.loading) {
     return (
       <ThemeProvider theme={MainTheme}>
         <CssBaseline />
-        <Box sx={{ backgroundColor: '#093039', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ backgroundColor: getBackgroundColor(), minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <CircularProgress sx={{ color: '#00c28c' }} />
         </Box>
       </ThemeProvider>
@@ -138,7 +159,7 @@ const ShiftInfo: React.FC = () => {
     return (
       <ThemeProvider theme={MainTheme}>
         <CssBaseline />
-        <Box sx={{ backgroundColor: '#093039', minHeight: '100vh', py: 4, px: 2 }}>
+        <Box sx={{ backgroundColor: getBackgroundColor(), minHeight: '100vh', py: 4, px: 2 }}>
           <Container maxWidth="md">
             <Navbar />
             <Box sx={{ textAlign: 'center', mt: 8 }}>
@@ -174,8 +195,20 @@ const ShiftInfo: React.FC = () => {
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
-      <Box sx={{ backgroundColor: '#093039', minHeight: '100vh', py: 4, px: 2 }}>
-        <Container maxWidth={false} sx={{ px: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
+      <Box sx={{ 
+        backgroundColor: getBackgroundColor(), 
+        minHeight: '100vh', 
+        py: 4, 
+        px: 2,
+        scrollBehavior: 'smooth',
+        overflowAnchor: 'none'
+      }}>
+        <Container maxWidth={false} sx={{ 
+          px: { xs: 1, sm: 2, md: 3 }, 
+          width: '100%', 
+          maxWidth: '100%',
+          scrollBehavior: 'smooth'
+        }}>
           <Navbar />
 
           {/* Header */}

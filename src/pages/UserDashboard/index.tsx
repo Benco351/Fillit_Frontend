@@ -7,8 +7,8 @@ import Footer from '../../components/layout/Footer';
 import Navbar from '../../components/layout/userNavbar';
 import { createRequestedShift, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
-import {Employee, availableShiftsResponse, requestedShiftsResponse, assignedShiftsResponse, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
-import {employees} from '../../components/CalendarFeatures/calendarStates';
+import {Employee, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
+
 import { createEmployee, getEmployees, deleteEmployeeById } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
@@ -26,11 +26,28 @@ import { deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
 import { deleteAvailableShiftById } from '../../utils/apis/availableShiftApis';
 import { getDepartments } from '../../utils/apis/departmentApis';
 import InfoIcon from '@mui/icons-material/Info';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../routes/config/routes';
 
 const UserDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if user is admin and redirect to admin dashboard
+  useEffect(() => {
+    const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
+    if (isAdmin) {
+      navigate(ROUTES.ADMIN, { replace: true });
+    }
+  }, [navigate]);
+
+  // Scroll restoration effect
+  useEffect(() => {
+    // If coming from shift info, scroll to top smoothly
+    if (location.state?.fromShiftInfo) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [location.state]);
 
   // Current user  
 
@@ -59,6 +76,8 @@ const UserDashboard: React.FC = () => {
 
   const [requestingShifts, setRequestingShifts] = useState<number[]>([]); // Separate loading state for each shift request
   const [cancelingShifts, setCancelingShifts] = useState<number[]>([]); // Separate loading state for each shift cancellation
+  // Employees state
+  const [employees, setEmployees] = useState<Employee[]>([]);
   // Departments state
   const [departments, setDepartments] = useState<{ id: number; name: string; address?: string }[]>([]);
   // Department filter state
@@ -92,8 +111,32 @@ const UserDashboard: React.FC = () => {
         // Optionally handle error
       }
     };
+    const fetchEmployees = async () => {
+      try {
+        const employeesResponse = await getEmployees();
+        if (employeesResponse?.data && Array.isArray(employeesResponse.data)) {
+          setEmployees(employeesResponse.data.map((emp: any) => ({
+            id: emp.employee_id ?? emp.id,
+            name: emp.employee_name ?? emp.name,
+            email: emp.employee_email ?? emp.email,
+          })));
+        }
+      } catch (err) {
+        console.error('Error fetching employees:', err);
+      }
+    };
     fetchDepartments();
+    fetchEmployees();
   }, [currentWeekStart]);
+
+  // Prevent automatic scroll restoration on component mount
+  useEffect(() => {
+    // Only scroll to top if explicitly coming from shift info
+    if (location.state?.fromShiftInfo) {
+      // Clear the state to prevent repeated scrolling
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -156,9 +199,20 @@ const UserDashboard: React.FC = () => {
     }
   };
 
-  // Update the getShiftStatus function to handle swapped status
+  // Update the getShiftStatus function to handle swapped status and slot availability
   const getShiftStatus = (availableShiftId: number): string => {
     const requestedShift = requestedShifts.find(s => s.availableShiftId === availableShiftId);
+    const availableShift = availableShifts.find(s => s.id === availableShiftId);
+
+    // Debug logging
+    console.log('getShiftStatus for shift:', availableShiftId, {
+      availableShift,
+      shift_slots_amount: availableShift?.shift_slots_amount,
+      shift_slots_taken: availableShift?.shift_slots_taken,
+      requestedShift,
+      availableShiftsLength: availableShifts.length,
+      requestedShiftsLength: requestedShifts.length
+    });
 
     if (requestedShift) {
       // If the shift is denied, show it as "denied" for users
@@ -172,8 +226,47 @@ const UserDashboard: React.FC = () => {
       return requestedShift.status;
     }
 
+    // For multi-slot shifts, only mark as assigned if ALL slots are taken
     const isAssigned = assignedShifts.some(s => s.assigned_shift_id === availableShiftId);
-    return isAssigned ? 'assigned' : 'available';
+    if (isAssigned && availableShift) {
+      const slotsAmount = Number(availableShift.shift_slots_amount) || 1;
+      const slotsTaken = Number(availableShift.shift_slots_taken) || 0;
+      const availableSlots = isNaN(slotsAmount) || isNaN(slotsTaken) ? 1 : slotsAmount - slotsTaken;
+      
+      // Only mark as assigned if no slots are available
+      if (availableSlots <= 0) {
+        return 'assigned';
+      }
+    }
+
+    // Check if shift has available slots
+    if (availableShift) {
+      const slotsAmount = Number(availableShift.shift_slots_amount) || 1;
+      const slotsTaken = Number(availableShift.shift_slots_taken) || 0;
+      const availableSlots = isNaN(slotsAmount) || isNaN(slotsTaken) ? 1 : slotsAmount - slotsTaken;
+      
+      console.log('Slot check:', {
+        shift_slots_amount: slotsAmount,
+        shift_slots_taken: slotsTaken,
+        availableSlots,
+        hasAvailableSlots: availableSlots > 0,
+        type_slots_amount: typeof availableShift.shift_slots_amount,
+        type_slots_taken: typeof availableShift.shift_slots_taken,
+        raw_slots_amount: availableShift.shift_slots_amount,
+        raw_slots_taken: availableShift.shift_slots_taken,
+        isNaN_slots_amount: isNaN(slotsAmount),
+        isNaN_slots_taken: isNaN(slotsTaken),
+        isNaN_availableSlots: isNaN(availableSlots)
+      });
+      
+      // If no slots are available, mark as full
+      if (availableSlots <= 0) {
+        console.log('Shift is full, returning full status');
+        return 'full';
+      }
+    }
+
+    return 'available';
   };
 
   // Utility function to get assigned employee name
@@ -231,8 +324,20 @@ const UserDashboard: React.FC = () => {
     <ThemeProvider theme={MainTheme}>
       <AIChatPopup />
       <CssBaseline />
-      <Box sx={{ backgroundColor: '#093039', minHeight: '100vh', py: 4, px: 2 }}>
-        <Container maxWidth={false} sx={{ px: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
+      <Box sx={{ 
+        backgroundColor: '#093039', 
+        minHeight: '100vh', 
+        py: 4, 
+        px: 2,
+        scrollBehavior: 'smooth',
+        overflowAnchor: 'none'
+      }}>
+        <Container maxWidth={false} sx={{ 
+          px: { xs: 1, sm: 2, md: 3 }, 
+          width: '100%', 
+          maxWidth: '100%',
+          scrollBehavior: 'smooth'
+        }}>
           <Navbar />
 
           <Box sx={{ my: 3 }}>
@@ -515,9 +620,19 @@ const UserDashboard: React.FC = () => {
                         .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                         .map((shift, idx, arr) => {
                           const status = getShiftStatus(shift.id);
+                          
+                          // Debug logging for shift rendering
+                          console.log('Rendering shift:', shift.id, {
+                            shift,
+                            status,
+                            shift_slots_amount: shift.shift_slots_amount,
+                            shift_slots_taken: shift.shift_slots_taken
+                          });
+                          
                           const backgroundColor =
                             status === 'denied' ? '#f44336' :
                             status === 'pending' ? '#ff9800' :
+                            status === 'full' ? '#757575' :
                             getShiftColor(status);
 
                           return (
@@ -579,6 +694,18 @@ const UserDashboard: React.FC = () => {
                                   {shift.department_id && (
                                     <Typography variant="caption" sx={{ color: '#111', fontWeight: 500 }}>
                                       {departments.find(d => d.id === shift.department_id)?.name || 'Department'}
+                                    </Typography>
+                                  )}
+                                  {/* Display slot information */}
+                                  {shift.shift_slots_amount && (
+                                    <Typography variant="caption" sx={{ 
+                                      color: '#111', 
+                                      fontWeight: 500,
+                                      display: 'block',
+                                      mt: 0.5,
+                                      fontSize: { xs: '0.6rem', sm: '0.7rem' }
+                                    }}>
+                                      Slots: {shift.shift_slots_taken || 0}/{shift.shift_slots_amount}
                                     </Typography>
                                   )}
                                 </Box>
