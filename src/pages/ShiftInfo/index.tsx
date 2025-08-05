@@ -132,6 +132,12 @@ const ShiftInfo: React.FC = () => {
     });
   };
 
+  const handleEmployeeClick = (employeeId: number) => {
+    navigate(`${ROUTES.EMPLOYEE_INFO.replace(':employeeId', employeeId.toString())}`, {
+      state: { fromPage: window.location.pathname }
+    });
+  };
+
   // Prevent scroll jumping on component mount
   useEffect(() => {
     // Ensure the page starts at the top when entering shift info
@@ -367,12 +373,17 @@ const ShiftInfo: React.FC = () => {
                     {assignedEmployees.map((employee, index) => (
                       <Card
                         key={employee.id}
+                        onClick={() => handleEmployeeClick(employee.id)}
                         sx={{
                           backgroundColor: 'rgba(255, 255, 255, 0.08)',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
                           borderRadius: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease-in-out',
                           '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                           }
                         }}
                       >
@@ -393,29 +404,10 @@ const ShiftInfo: React.FC = () => {
                               <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600, fontSize: '1rem' }}>
                                 {employee.name}
                               </Typography>
-                              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
-                                {employee.email}
+                              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>
+                                Click to view details
                               </Typography>
-                              {(employee as EmployeeWithDetails).phone && (
-                                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8rem' }}>
-                                  {(employee as EmployeeWithDetails).phone}
-                                </Typography>
-                              )}
                             </Box>
-                            {(employee as EmployeeWithDetails).admin && (
-                              <Tooltip title="Administrator">
-                                <Chip
-                                  label="Admin"
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: '#ff9800',
-                                    color: 'white',
-                                    fontSize: '0.7rem',
-                                    height: 20,
-                                  }}
-                                />
-                              </Tooltip>
-                            )}
                           </Box>
                         </CardContent>
                       </Card>

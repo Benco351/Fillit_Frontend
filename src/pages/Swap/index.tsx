@@ -58,6 +58,7 @@ const getCurrentUser = () => {
 const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }> = ({ emp, refreshSwapRequests }) => {
   const theme = useTheme();
   const { commonButtonStyle } = useUserDashboard({ id: 0, name: '', email: '' });
+  const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assignedShifts, setAssignedShifts] = useState<any[]>([]);
   const [userShifts, setUserShifts] = useState<any[]>([]);
@@ -167,11 +168,18 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
     }
   };
 
+  const handleCardClick = () => {
+    navigate(`${ROUTES.EMPLOYEE_INFO.replace(':employeeId', emp.id.toString())}`, {
+      state: { fromPage: window.location.pathname }
+    });
+  };
+
   return (
     <>
 
       <Paper
         elevation={0}
+        onClick={handleCardClick}
         sx={{
           p: 3,
           minWidth: 260,
@@ -185,6 +193,7 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
           boxShadow: swapPageTheme.cardShadow,
           background: swapPageTheme.cardBg,
           transition: 'transform 0.2s, box-shadow 0.2s',
+          cursor: 'pointer',
           '&:hover': {
             transform: 'translateY(-4px) scale(1.03)',
             background: swapPageTheme.cardHover,
@@ -214,10 +223,7 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
           {emp.name}
         </Typography>
         <Typography variant="body2" style={{ color: '#b0b7be' }} align="center">
-          Email: {emp.email || 'N/A'}
-        </Typography>
-        <Typography variant="body2" color="primary" fontWeight={500} align="center">
-          Role: {emp.admin ? 'Admin' : 'User'}
+          Click to view details
         </Typography>
         <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
           {/* <IconButton
@@ -246,7 +252,10 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
               minWidth: 120,
               borderRadius: 3,
             }}
-            onClick={handleRequestSwap}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRequestSwap();
+            }}
           >
             Request Swap
           </Button>
