@@ -34,6 +34,8 @@ const SignUpSchema = z
     password:        z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
     code:            z.string().optional(),   // 6-digit e-mail code
+    organizationId:  z.coerce.number({ invalid_type_error: 'Organization ID must be a number' })
+                       .int('Organization ID must be an integer'),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
@@ -91,6 +93,7 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
         email:    data.email,
         phone:    data.phone,
         password: data.password,
+        organization_id: data.organizationId,
       });
       const id = createRes.data.data.employee_id;
       // Check if the employee is admin from the response
@@ -238,6 +241,21 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
                       label="Email" type="email" fullWidth {...register('email')}
                       error={!!errors.email} helperText={errors.email?.message}
                       sx={textFieldStyles}
+                    />
+                    <TextField
+                      label="Organization ID" type="number" fullWidth
+                      {...register('organizationId')}
+                      error={!!errors.organizationId}
+                      helperText={errors.organizationId?.message}
+                      sx={{
+                        ...textFieldStyles,
+                        '& input[type=number]': { MozAppearance: 'textfield' },
+                        '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+                          WebkitAppearance: 'none',
+                          margin: 0,
+                        },
+                      }}
+                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', min: 1 }}
                     />
                     <TextField
                       label="Phone Number" type="tel" fullWidth {...register('phone')}

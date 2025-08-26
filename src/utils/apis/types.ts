@@ -59,6 +59,7 @@ export const CreateEmployeeSchema = z.object({
     email: z.string().email(),
     password: z.string().min(1),
     phone: z.string().optional(),
+    organization_id: z.coerce.number().optional(),
 }).strict();
 
 export const UpdateEmployeeSchema = z.object({

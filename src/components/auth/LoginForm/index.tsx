@@ -34,8 +34,10 @@ import { se } from 'date-fns/locale';
    Zod validation schemas
    ──────────────────────────────────────────────────────────── */
 const LoginSchema = z.object({
-  email:    z.string().email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email:           z.string().email('Please enter a valid email address'),
+  password:        z.string().min(1, 'Password is required'),
+  organizationId:  z.coerce.number({ invalid_type_error: 'Organization ID must be a number' })
+                    .int('Organization ID must be an integer'),
 });
 
 const ResetRequestSchema = z.object({
@@ -125,6 +127,7 @@ const LoginForm: React.FC = () => {
         const response = await api.post('/api/login', {
           email: data.email,
           password: data.password,
+          organization_id: data.organizationId,
         });
         // Expecting response.data to have employee info and admin status
         const employee = response.data.data;
@@ -251,6 +254,24 @@ const LoginForm: React.FC = () => {
                     error={!!fieldError.password}
                     helperText={fieldError.password?.message}
                     sx={textFieldStyles}
+                  />
+                )}
+
+                {mode === 'login' && (
+                  <TextField
+                    label="Organization ID" type="number" fullWidth variant="outlined"
+                    {...register('organizationId')}
+                    error={!!fieldError.organizationId}
+                    helperText={fieldError.organizationId?.message}
+                    sx={{
+                      ...textFieldStyles,
+                      '& input[type=number]': { MozAppearance: 'textfield' },
+                      '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+                        WebkitAppearance: 'none',
+                        margin: 0,
+                      },
+                    }}
+                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', min: 1 }}
                   />
                 )}
 

@@ -89,6 +89,15 @@ const Navbar = () => {
               ) : (
                 <Box sx={{ display: 'flex', gap: 3 }}>
                   <Button
+                    variant="outlined"
+                    color="primary"
+                    sx={{ ml: 2 }}
+                    component={RouterLink}
+                    to={ROUTES.ORG_REGISTER}
+                  >
+                    Register Organization
+                  </Button>
+                  <Button
                     variant="contained"
                     color="primary"
                     sx={{ ml: 2 }}
