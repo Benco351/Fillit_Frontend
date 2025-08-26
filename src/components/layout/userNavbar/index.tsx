@@ -102,6 +102,18 @@ const Navbar = () => {
         </>
       ) : (
         <Box sx={{ display: 'flex', gap: 2 }}>
+
+          {/* Announcments Button */}
+          
+          <Button
+            variant="contained"
+            onClick={() => navigate(ROUTES.SWAP)}
+            sx={glassButtonStyle}
+          >
+            Announcments
+          </Button>
+          
+
           <Button
             variant="contained"
             onClick={handleHome}
