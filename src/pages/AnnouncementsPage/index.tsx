@@ -54,6 +54,10 @@ const AnnouncementsPage: React.FC = () => {
     setAnnouncementText('');
   };
 
+  const handleDelete = (id: number) => {
+    setAnnouncements(announcements.filter(a => a.id !== id));
+  };
+
   return (
     <ThemeProvider theme={MainTheme}>
       <CssBaseline />
@@ -155,12 +159,24 @@ const AnnouncementsPage: React.FC = () => {
                         background: swapPageTheme.cardBg,
                         border: swapPageTheme.cardBorder,
                         color: swapPageTheme.unselectedText,
+                        position: 'relative',
                       }}
                     >
                       <Typography variant="body1" sx={{ mb: 1 }}>{a.text}</Typography>
                       <Typography variant="caption" sx={{ color: '#b0b7be' }}>
                         Posted by {a.author} on {a.datetime}
                       </Typography>
+                      {a.author === user.name && (
+                        <Button
+                          size="small"
+                          color="error"
+                          variant="outlined"
+                          sx={{ position: 'absolute', top: 8, right: 8, minWidth: 0, px: 1, py: 0.5 }}
+                          onClick={() => handleDelete(a.id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </Paper>
                   ))}
                 </Box>
