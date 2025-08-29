@@ -5,7 +5,7 @@ import {
   AvailableShiftQueryDTO,
 } from './types'; // Adjust the import path as necessary
 
-export const createAvailableShift = async (data: CreateAvailableShiftDTO): Promise<any> => {
+export const createAvailableShift = async (data: Omit<CreateAvailableShiftDTO, 'organization_id'>): Promise<any> => {
   try {
     const response = await api.post('/api/available-shifts', data);
     
@@ -38,7 +38,7 @@ export const getAvailableShiftById = async (id: number) => {
   }
 };
 
-export const getAvailableShifts = async (params: AvailableShiftQueryDTO = {}) => {
+export const getAvailableShifts = async (params: Partial<AvailableShiftQueryDTO> = {}) => {
   try {
     const response = await api.get('/api/available-shifts', { params });
   

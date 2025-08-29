@@ -17,7 +17,7 @@ export const updateEmployeeById = async (id: number, data: UpdateEmployeeDTO) =>
     }
 };
 
-export const getEmployees = async (params: EmployeeQueryDTO = {}) => {
+export const getEmployees = async (params: Partial<EmployeeQueryDTO> = {}) => {
     try {
         const response = await api.get('/api/employees', { params });
 
@@ -47,7 +47,7 @@ export const getEmployeeById = async (id: number) => {
     }
 };
 
-export const createEmployee = async (data: CreateEmployeeDTO) => {
+export const createEmployee = async (data: Omit<CreateEmployeeDTO, 'organization_id'>) => {
     try {
         const response = await api.post('/api/employees', data);
 

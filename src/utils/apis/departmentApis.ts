@@ -15,7 +15,7 @@ function mapDepartment(dept: any) {
 }
 
 // Get all departments (with optional query)
-export const getDepartments = async (params: DepartmentQueryDTO = {}) => {
+export const getDepartments = async (params: Partial<DepartmentQueryDTO> = {}) => {
   try {
     const response = await api.get('/api/departments', { params });
     if (!response.data || !Array.isArray(response.data.data)) {
@@ -49,7 +49,7 @@ export const getDepartmentById = async (id: number) => {
 };
 
 // Create a new department
-export const createDepartment = async (data: CreateDepartmentDTO) => {
+export const createDepartment = async (data: Omit<CreateDepartmentDTO, 'organization_id'>) => {
   try {
     const response = await api.post('/api/departments', data);
     if (!response.data || !response.data.data) {

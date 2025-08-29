@@ -65,7 +65,7 @@ export const getAssignedShiftById = async (id: number) => { //done
     }
 };
 
-export const getAssignedShifts = async (params: AssignedShiftQueryDTO = {}) => {
+export const getAssignedShifts = async (params: Partial<AssignedShiftQueryDTO> = {}) => {
     try {
         const response = await api.get('/api/assigned-shifts', { params });
 

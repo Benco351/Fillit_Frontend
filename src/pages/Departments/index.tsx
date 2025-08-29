@@ -57,7 +57,7 @@ const Departments: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateDepartmentDTO>({ name: '', address: '' });
+  const [createForm, setCreateForm] = useState<Omit<CreateDepartmentDTO, 'organization_id'>>({ name: '', address: '' });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<UpdateDepartmentDTO>({ name: '', address: '' });
   const [actionLoading, setActionLoading] = useState<number | null>(null);

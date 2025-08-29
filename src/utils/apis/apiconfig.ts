@@ -6,6 +6,26 @@ import axios, { InternalAxiosRequestConfig } from 'axios';
 import { fetchAuthSession } from '@aws-amplify/auth';
 
 /* helper – fetch token once per request --------------------------------------------------- */
+function getOrganizationIdFromSession(): number | undefined {
+  try {
+    const raw = typeof window !== 'undefined' ? sessionStorage.getItem('organizationId') : null;
+    if (!raw) return undefined;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function shouldAttachOrganizationId(url?: string): boolean {
+  if (!url) return false;
+  // Only attach for our backend API routes, excluding organization creation/listing
+  const path = url.startsWith('http') ? new URL(url).pathname : url;
+  if (!path.startsWith('/api/')) return url.startsWith('/auth/'); // allow auth endpoints
+  if (path.startsWith('/api/organizations')) return false;
+  return true;
+}
+
 async function attachIdToken(config: InternalAxiosRequestConfig) {
   try {
     const session = await fetchAuthSession();
@@ -26,6 +46,31 @@ async function attachIdToken(config: InternalAxiosRequestConfig) {
     }
   } catch (err) {
     console.error('Error fetching auth session:', err);
+  }
+
+  // Attach organization_id to requests unless already provided
+  try {
+    const method = (config.method || 'get').toLowerCase();
+    const shouldAttach = shouldAttachOrganizationId(config.url || '');
+    if (shouldAttach) {
+      const orgId = getOrganizationIdFromSession();
+      if (orgId !== undefined) {
+        if (method === 'get') {
+          config.params = { organization_id: orgId, ...(config.params || {}) };
+        } else if (method === 'delete') {
+          // Support both body and query; prefer query params
+          config.params = { organization_id: orgId, ...(config.params || {}) };
+        } else if (method === 'post' || method === 'put' || method === 'patch') {
+          if (typeof config.data === 'object' && config.data !== null) {
+            config.data = { organization_id: orgId, ...config.data };
+          } else {
+            config.data = { organization_id: orgId };
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // best-effort; do not block request
   }
   return config;
 }

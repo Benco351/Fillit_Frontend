@@ -2,8 +2,7 @@ import { api } from './apiconfig'; // Adjust the import path as necessary
 import { 
   CreateRequestedShiftDTO, 
   UpdateRequestedShiftDTO, 
-  RequestedShiftQueryDTO, 
-  RequestedShiftMapped
+  RequestedShiftQueryDTO
 } from './types'; // Import types from types.ts
 
 interface RequestedShiftResponse {
@@ -23,7 +22,24 @@ interface RequestedShiftResponse {
   };
 }
 
-export const createRequestedShift = async (data: CreateRequestedShiftDTO) => {
+export interface RequestedShiftMapped {
+  id: number;
+  employeeId: number;
+  availableShiftId: number;
+  notes: string;
+  status: 'pending' | 'approved' | 'denied' | 'swapped';
+  availableShift?: {
+    shift_date: string;
+    shift_time_start: string;
+    shift_time_end: string;
+  };
+  employee?: {
+    employee_name: string;
+    employee_email: string;
+  };
+}
+
+export const createRequestedShift = async (data: Omit<CreateRequestedShiftDTO, 'organization_id'>) => {
   try {
     //console.log('Request payload for createRequestedShift:', data); // Log the request payload
     const response = await api.post<{ status: string; message: string; data: RequestedShiftResponse }>('/api/requested-shifts', {
@@ -69,7 +85,7 @@ export const getRequestedShiftById = async (id: number ) => { //??
   }
 };
 
-export const getRequestedShifts = async (params: RequestedShiftQueryDTO = {}, isAdmin?: boolean) => {
+export const getRequestedShifts = async (params: Partial<RequestedShiftQueryDTO> = {}, isAdmin?: boolean) => {
   try {
     // If admin, fetch all requested shifts (ignore params)
     const apiParams = isAdmin ? {} : {

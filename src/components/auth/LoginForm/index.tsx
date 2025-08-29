@@ -134,6 +134,7 @@ const LoginForm: React.FC = () => {
         const customEmployeeId = employee.employee_id;
         const isAdmin = employee.employee_admin;
         // Save customEmployeeId and isAdmin in sessionStorage
+        sessionStorage.setItem('organizationId', String(data.organizationId));
         sessionStorage.setItem('customEmployeeId', customEmployeeId);
         sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
         sessionStorage.setItem('name', employee.employee_name);

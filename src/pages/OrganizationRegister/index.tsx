@@ -65,23 +65,15 @@ const OrganizationRegister: React.FC = () => {
       if (!orgId) throw new Error('Organization creation failed');
       setCreatedOrgId(orgId);
 
-      // 2. Create admin user (without employee_admin flag)
+      // 2. Create initial admin user in a single call
       setAdminLoading(true);
-      const userRes = await api.post('/auth/sign-up', {
+      await api.post('/auth/sign-up', {
         name: data.adminName,
         email: data.adminEmail,
         phone: data.adminPhone,
         password: data.adminPassword,
         organization_id: orgId,
-      });
-
-      // 3. Get the employee_id from the signup response and make them admin
-      const userData = userRes?.data?.data || {};
-      const employeeId = userData.employee_id || userData.id;
-      if (!employeeId) throw new Error('Employee ID not found in signup response');
-
-      await api.put(`/api/employees/${employeeId}`, {
-        admin: true,
+        initial: true,
       });
 
       setSuccess('Organization and admin account created successfully');
@@ -255,3 +247,5 @@ const OrganizationRegister: React.FC = () => {
 };
 
 export default OrganizationRegister;
+
+
