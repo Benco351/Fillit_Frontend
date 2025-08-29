@@ -13,6 +13,7 @@ import SwapPage from '../pages/Swap';
 import Departments from '../pages/Departments';
 import ShiftInfo from '../pages/ShiftInfo';
 import EmployeeInfo from '../pages/EmployeeInfo';
+import AnnouncementsPage from '../pages/AnnouncementsPage';
 
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -90,11 +91,10 @@ const AppRoutes: React.FC = () => (
       <Route path={ROUTES.SHIFT_INFO} element={<ShiftInfo />} />
       <Route path={ROUTES.EMPLOYEE_INFO} element={<EmployeeInfo />} />
       <Route path="/settings" element={<SettingsPage />} />
+
+    
+      <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementsPage/>} />
       
-      {/*
-      
-         <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementPage/>} />
-      */}
 
       {/* sign-out helper */}
       <Route path="/logout" element={<Logout />} />

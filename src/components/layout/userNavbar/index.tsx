@@ -107,7 +107,7 @@ const Navbar = () => {
           
           <Button
             variant="contained"
-            onClick={() => navigate(ROUTES.SWAP)}
+            onClick={() => navigate(ROUTES.ANNOUNCEMENTS)}
             sx={glassButtonStyle}
           >
             Announcments
