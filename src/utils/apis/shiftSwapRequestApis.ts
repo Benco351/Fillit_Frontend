@@ -23,15 +23,21 @@ export async function createShiftSwapRequest(payload: {
   message?: string;
 }) {
   // Backend expects POST to /api/shift-swap-requests/
-  const response = await api.post('/api/shift-swap-requests/', payload);
+  const rawOrgId = sessionStorage.getItem('organizationId');
+  const organization_id = rawOrgId && !isNaN(Number(rawOrgId)) ? Number(rawOrgId) : undefined;
+  if (organization_id === undefined) throw new Error('Organization ID is not set or invalid');
+  const response = await api.post('/api/shift-swap-requests/', { ...payload, organization_id });
   if (response.status !== 201) throw new Error('Failed to create shift swap request');
   return response.data; // Backend returns the created object directly
 }
 
 // 2. List Shift Swap Requests
 export async function listShiftSwapRequests(employeeId?: number) {
-  // Backend expects GET to /api/shift-swap-requests?employee_id=xxx
-  const params = employeeId ? { employee_id: employeeId } : undefined;
+  // Backend expects GET to /api/shift-swap-requests?employee_id=xxx&organization_id=yyy
+  const rawOrgId = sessionStorage.getItem('organizationId');
+  const organization_id = rawOrgId && !isNaN(Number(rawOrgId)) ? Number(rawOrgId) : undefined;
+  if (organization_id === undefined) throw new Error('Organization ID is not set or invalid');
+  const params = employeeId ? { employee_id: employeeId, organization_id: organization_id } : { organization_id };
   const response = await api.get('/api/shift-swap-requests', { params });
   if (response.status !== 200) throw new Error('Failed to fetch shift swap requests');
   return response.data; // Backend returns an array of objects
@@ -43,7 +49,10 @@ export async function respondToShiftSwapRequest(
   payload: { status: 'accepted' | 'rejected' | 'cancelled'; message?: string }
 ) {
   // Backend expects POST to /api/shift-swap-requests/:id/respond
-  const response = await api.post(`/api/shift-swap-requests/${id}/respond`, payload);
+  const rawOrgId = sessionStorage.getItem('organizationId');
+  const organization_id = rawOrgId && !isNaN(Number(rawOrgId)) ? Number(rawOrgId) : undefined;
+  if (organization_id === undefined) throw new Error('Organization ID is not set or invalid');
+  const response = await api.post(`/api/shift-swap-requests/${id}/respond`, { ...payload, organization_id });
   if (response.status !== 200) throw new Error('Failed to respond to shift swap request');
   return response.data; // Backend returns the updated object
 } 

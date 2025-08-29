@@ -37,7 +37,8 @@ const LoginSchema = z.object({
   email:           z.string().email('Please enter a valid email address'),
   password:        z.string().min(1, 'Password is required'),
   organizationId:  z.coerce.number({ invalid_type_error: 'Organization ID must be a number' })
-                    .int('Organization ID must be an integer'),
+                    .int('Organization ID must be an integer')
+                    .min(1, 'Organization ID must be a positive integer'),
 });
 
 const ResetRequestSchema = z.object({
@@ -86,6 +87,7 @@ const LoginForm: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<AnyFormData>({
     resolver: zodResolver(schema as z.ZodType<AnyFormData>),  // ← cast added
   });
@@ -124,17 +126,35 @@ const LoginForm: React.FC = () => {
         // --- END Cognito logic ---
 
         // Use backend API for login
-        const response = await api.post('/api/login', {
-          email: data.email,
-          password: data.password,
-          organization_id: data.organizationId,
-        });
+        // Validate organizationId
+        const orgId = Number(data.organizationId);
+        if (!orgId || isNaN(orgId) || orgId <= 0) {
+          throw new Error('A valid organization ID is required to login.');
+        }
+        let response;
+        try {
+          response = await api.post('/api/login', {
+            email: data.email,
+            password: data.password,
+            organization_id: orgId,
+          });
+        } catch (err: any) {
+          // If backend returns invalid organization error, show on field
+          const backendMsg = err?.response?.data?.message;
+          if (backendMsg && backendMsg.toLowerCase().includes('invalid organization id')) {
+            setAuthError(null);
+            setError('organizationId', { type: 'manual', message: 'Invalid organization ID' });
+            setLoading(false);
+            return;
+          }
+          throw err;
+        }
         // Expecting response.data to have employee info and admin status
         const employee = response.data.data;
         const customEmployeeId = employee.employee_id;
         const isAdmin = employee.employee_admin;
         // Save customEmployeeId and isAdmin in sessionStorage
-        sessionStorage.setItem('organizationId', String(data.organizationId));
+        sessionStorage.setItem('organizationId', String(orgId));
         sessionStorage.setItem('customEmployeeId', customEmployeeId);
         sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
         sessionStorage.setItem('name', employee.employee_name);
@@ -174,15 +194,22 @@ const LoginForm: React.FC = () => {
         setAuthError('Password reset is not available. Please contact your administrator.');
       }
     } catch (err: unknown) {
-      console.error('Auth flow error', err);
-      if (axios.isAxiosError(err) && err.response?.data?.message) {
-        setAuthError(err.response.data.message);
+      // Show organization ID error on field if backend returns 401 with relevant message
+      if (axios.isAxiosError(err)) {
+        const backendMsg = err.response?.data?.message;
+        const status = err.response?.status;
+        if (status === 401 && backendMsg && backendMsg.toLowerCase().includes('invalid organization id')) {
+          setAuthError(null);
+          setError('organizationId', { type: 'manual', message: 'Invalid organization ID' });
+          setLoading(false);
+          return;
+        }
+        setAuthError(backendMsg || 'Authentication failed');
       } else if (err instanceof Error) {
         setAuthError(err.message);
       } else {
         setAuthError('Authentication failed');
       }
-    } finally {
       setLoading(false);
     }
   };

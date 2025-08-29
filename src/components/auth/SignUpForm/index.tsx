@@ -86,6 +86,11 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
   setLoading(true);
 
   try {
+    // Validate organizationId
+    const orgId = Number(data.organizationId);
+    if (!orgId || isNaN(orgId) || orgId <= 0) {
+      throw new Error('A valid organization ID is required to sign up.');
+    }
     /* STEP 1 — persist user to your DB and grab the new employeeId */
     if (!awaitingCode) {
       const createRes = await api.post('/auth/sign-up', {
@@ -93,7 +98,7 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
         email:    data.email,
         phone:    data.phone,
         password: data.password,
-        organization_id: data.organizationId,
+        organization_id: orgId,
         initial: false,
       });
       const id = createRes.data.data.employee_id;
