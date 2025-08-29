@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import {
   Box,
   Container,
@@ -13,7 +14,7 @@ import {
 } from '@mui/material';
 import { LoginTheme } from '../../assets/themes/themes';
 import { api } from '../../utils/apis/apiconfig';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,13 +36,11 @@ const OrgAdminSchema = z.object({
 type OrgAdminFormType = z.infer<typeof OrgAdminSchema>;
 
 const OrganizationRegister: React.FC = () => {
-  const [orgLoading, setOrgLoading] = useState(false);
-  const [adminLoading, setAdminLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [createdOrgId, setCreatedOrgId] = useState<number | null>(null);
+  const [createdOrgId, setCreatedOrgId] = useState<string | null>(null);
 
-  const navigate = useNavigate();
 
   const {
     register,
@@ -51,42 +50,38 @@ const OrganizationRegister: React.FC = () => {
   } = useForm<OrgAdminFormType>({ resolver: zodResolver(OrgAdminSchema) });
 
   const onSubmit = async (data: OrgAdminFormType) => {
-    setOrgLoading(true);
+    setLoading(true);
     setError(null);
     setSuccess(null);
     setCreatedOrgId(null);
     try {
-      // 1. Create organization
-      const orgRes = await api.post('/api/organizations', {
-        name: data.orgName,
-      });
-      const orgData = orgRes?.data?.data || {};
-      const orgId = orgData.organization_id;
+      // Send all organization and admin info in one request
+      const payload = {
+        organization: {
+          name: data.orgName,
+        },
+        admin: {
+          name: data.adminName,
+          email: data.adminEmail,
+          phone: data.adminPhone,
+          password: data.adminPassword,
+        },
+      };
+      const res = await api.post('/api/organization', payload);
+      const responseData = res?.data?.data || {};
+      const orgId = responseData.organization_id || responseData.orgId || responseData.id;
       if (!orgId) throw new Error('Organization creation failed');
       setCreatedOrgId(orgId);
-
-      // 2. Create initial admin user in a single call
-      setAdminLoading(true);
-      await api.post('/auth/sign-up', {
-        name: data.adminName,
-        email: data.adminEmail,
-        phone: data.adminPhone,
-        password: data.adminPassword,
-        organization_id: orgId,
-        initial: true,
-      });
-
       setSuccess('Organization and admin account created successfully');
       reset();
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
         err?.message ||
-        'Failed to register organization or admin'
+        'Failed to register organization and admin'
       );
     } finally {
-      setOrgLoading(false);
-      setAdminLoading(false);
+      setLoading(false);
     }
   };
 
@@ -137,7 +132,7 @@ const OrganizationRegister: React.FC = () => {
             >
               Register Organization
             </Typography>
-            <Typography variant="body1" align="center" sx={{ mb: 3 }}>
+            <Typography variant="body1" align="center" sx={{ mb: 3, color: '#fff' }}>
               Create your organization and the first admin account to start using Fillit.
             </Typography>
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -153,9 +148,12 @@ const OrganizationRegister: React.FC = () => {
               />
 
               {/* Admin user fields */}
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
-                Admin Account Details
-              </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
+                  <AdminPanelSettingsIcon sx={{ color: '#d8d8c5', fontSize: 32, mr: 1 }} />
+                  <Typography variant="subtitle1" sx={{ color: '#d8d8c5', fontWeight: 600 }}>
+                    Admin Account Details
+                  </Typography>
+                </Box>
               <TextField
                 label="Full Name"
                 fullWidth
@@ -210,10 +208,10 @@ const OrganizationRegister: React.FC = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
-                disabled={orgLoading || adminLoading}
+                disabled={loading}
                 sx={{ py: 1.5 }}
               >
-                {(orgLoading || adminLoading)
+                {loading
                   ? <CircularProgress size={22} color="inherit" />
                   : 'Register Organization & Admin'}
               </Button>
@@ -247,5 +245,3 @@ const OrganizationRegister: React.FC = () => {
 };
 
 export default OrganizationRegister;
-
-
