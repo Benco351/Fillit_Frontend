@@ -16,6 +16,7 @@ import EmployeeInfo from '../pages/EmployeeInfo';
 
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Announcement } from '@mui/icons-material';
 
 /* ── tiny component that logs out then redirects ─────────── */
 function Logout() {
@@ -89,6 +90,11 @@ const AppRoutes: React.FC = () => (
       <Route path={ROUTES.SHIFT_INFO} element={<ShiftInfo />} />
       <Route path={ROUTES.EMPLOYEE_INFO} element={<EmployeeInfo />} />
       <Route path="/settings" element={<SettingsPage />} />
+      
+      {/*
+      
+         <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementPage/>} />
+      */}
 
       {/* sign-out helper */}
       <Route path="/logout" element={<Logout />} />
