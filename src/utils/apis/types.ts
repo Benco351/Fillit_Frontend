@@ -172,3 +172,39 @@ export const DepartmentQuerySchema = z.object({
 export type CreateDepartmentDTO = z.infer<typeof CreateDepartmentSchema>;
 export type UpdateDepartmentDTO = z.infer<typeof UpdateDepartmentSchema>;
 export type DepartmentQueryDTO = z.infer<typeof DepartmentQuerySchema>;
+
+/* ---------- Announcement Types ---------- */
+export const CreateAnnouncementSchema = z.object({
+    title: z.string().nonempty(),
+    content: z.string().nonempty(),
+}).strict();
+
+export const UpdateAnnouncementSchema = z.object({
+    title: z.string().optional(),
+    content: z.string().optional(),
+}).strict();
+
+export const AnnouncementQuerySchema = z.object({
+    author_id: z.coerce.number().optional(),
+    created_at_start: z.coerce.date().optional(),
+    created_at_end: z.coerce.date().optional(),
+}).strict();
+
+export type CreateAnnouncementDTO = z.infer<typeof CreateAnnouncementSchema>;
+export type UpdateAnnouncementDTO = z.infer<typeof UpdateAnnouncementSchema>;
+export type AnnouncementQueryDTO = z.infer<typeof AnnouncementQuerySchema>;
+
+// Mapped type for announcement responses
+export type AnnouncementMapped = {
+  announcement_id: number;
+  author_id: number;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  Employee?: {
+    employee_id: number;
+    employee_name: string;
+    employee_email: string;
+  };
+};

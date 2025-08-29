@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -7,11 +7,19 @@ import {
   ThemeProvider,
   CssBaseline,
   Container,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { MainTheme, swapPageTheme } from '../../assets/themes/themes';
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import Navbar from '../../components/layout/userNavbar';
 import Footer from '../../components/layout/Footer';
+import { 
+  createAnnouncement, 
+  getAnnouncements, 
+  deleteAnnouncementById 
+} from '../../utils/apis/Announcements';
+import { AnnouncementMapped } from '../../utils/apis/types';
 
 const getCurrentUser = () => {
   const name = sessionStorage.getItem('name');
@@ -26,40 +34,122 @@ const getCurrentUser = () => {
   };
 };
 
-interface Announcement {
-  id: number;
-  text: string;
-  author: string;
-  datetime: string;
-}
-
 const AnnouncementsPage: React.FC = () => {
   const user = getCurrentUser();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcements, setAnnouncements] = useState<AnnouncementMapped[]>([]);
   const [editorHtml, setEditorHtml] = useState('');
+  const [titleText, setTitleText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [posting, setPosting] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
   const editorRef = React.useRef<HTMLDivElement>(null);
+  const titleRef = React.useRef<HTMLDivElement>(null);
 
-  const handlePost = () => {
-    const text = editorHtml.trim();
-    if (!text || !editorRef.current) return;
-    const now = new Date();
-    setAnnouncements([
-      {
-        id: Date.now(),
-        text: editorRef.current.innerHTML,
-        author: user.name,
-        datetime: now.toLocaleString(),
-      },
-      ...announcements,
-    ]);
-    setEditorHtml('');
-    if (editorRef.current) {
-      editorRef.current.innerHTML = '';
+  // Fetch announcements on component mount
+  useEffect(() => {
+    fetchAnnouncements(); // Enable this to test the endpoint
+  }, []);
+
+  const fetchAnnouncements = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getAnnouncements();
+      console.log('Fetch announcements response:', response);
+      setAnnouncements(response.data || []);
+    } catch (err: any) {
+      console.error('Fetch announcements error:', err);
+      console.error('Error response:', err.response);
+      // Handle 404 specifically
+      if (err.response?.status === 404) {
+        console.log('Announcements endpoint not found - backend not ready yet');
+        setAnnouncements([]); // Set empty array instead of showing error
+      } else {
+        setError(err.message || 'Failed to fetch announcements');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = (id: number) => {
-    setAnnouncements(announcements.filter(a => a.id !== id));
+  const handlePost = async () => {
+    const text = editorHtml.trim();
+    const title = titleText.trim();
+    if (!text || !editorRef.current) return;
+
+    setPosting(true);
+    setError(null);
+
+    try {
+      const payload = {
+        title: title || 'Untitled',
+        content: text, // Use the plain text as content/body
+      };
+
+      console.log('Posting announcement with payload:', payload);
+      const response = await createAnnouncement(payload);
+      console.log('Create announcement response:', response);
+
+      // Clear form
+      setEditorHtml('');
+      setTitleText('');
+      if (editorRef.current) {
+        editorRef.current.innerHTML = '';
+      }
+      if (titleRef.current) {
+        titleRef.current.innerHTML = '';
+      }
+
+      // Refresh announcements
+      await fetchAnnouncements();
+    } catch (err: any) {
+      console.error('Post announcement error:', err);
+      console.error('Error response:', err.response);
+      
+      // Handle validation errors from backend
+      const errors = err.response?.data?.errors;
+      if (Array.isArray(errors)) {
+        const errorMsg = errors.map((e: any) => `${e.path?.join('.') || 'field'}: ${e.message}`).join('; ');
+        setError(`Validation error: ${errorMsg}`);
+      } else if (err.response?.status === 404) {
+        setError(`Announcement endpoint not found. Expected: /api/announcements, Status: ${err.response.status}`);
+      } else {
+        setError(`Failed to create announcement: ${err.response?.data?.message || err.message}`);
+      }
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeletingIds(prev => [...prev, id]);
+    try {
+      console.log('Deleting announcement with ID:', id);
+      await deleteAnnouncementById(id);
+      console.log('Announcement deleted successfully');
+      
+      // Remove from local state immediately for better UX
+      setAnnouncements(prev => prev.filter(a => a.announcement_id !== id));
+      
+      // Optionally refresh announcements from server
+      // await fetchAnnouncements();
+      
+      setError(null); // Clear any previous errors
+    } catch (err: any) {
+      console.error('Delete announcement error:', err);
+      console.error('Delete error response:', err.response);
+      
+      if (err.response?.status === 404) {
+        setError('Delete feature is not available yet - backend endpoint not configured');
+      } else if (err.response?.status === 403) {
+        setError('You do not have permission to delete this announcement');
+      } else {
+        setError(`Failed to delete announcement: ${err.response?.data?.message || err.message}`);
+      }
+    } finally {
+      setDeletingIds(prev => prev.filter(deleteId => deleteId !== id));
+    }
   };
 
   // Formatting commands for contenteditable
@@ -86,6 +176,11 @@ const AnnouncementsPage: React.FC = () => {
         selection.addRange(range);
       }
     }
+  };
+
+  // Handle title input
+  const handleTitleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    setTitleText(e.currentTarget.textContent || '');
   };
 
   return (
@@ -128,8 +223,64 @@ const AnnouncementsPage: React.FC = () => {
                 <Typography color="primary">Role: {user.admin ? 'Admin' : 'User'}</Typography>
               </Paper>
             </Box>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+                {error}
+              </Alert>
+            )}
             {/* Announcement Input */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4, direction: 'ltr' }}>
+              {/* Title Input */}
+              <Box
+                sx={{
+                  width: { xs: '100%', sm: 700 },
+                  background: 'linear-gradient(135deg, rgba(0,194,140,0.05), rgba(0,194,140,0.1))',
+                  borderRadius: 2,
+                  border: '1.5px solid rgba(0,194,140,0.2)',
+                  mb: 2,
+                  position: 'relative',
+                }}
+              >
+                <div
+                  ref={titleRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  dir="ltr"
+                  lang="en"
+                  style={{
+                    outline: 'none',
+                    border: 'none',
+                    width: '100%',
+                    color: 'white',
+                    fontSize: 22,
+                    fontWeight: 600,
+                    fontFamily: 'inherit',
+                    background: 'transparent',
+                    padding: '16px 20px',
+                    direction: 'ltr',
+                    textAlign: 'left',
+                    minHeight: 28,
+                  }}
+                  onInput={handleTitleInput}
+                />
+                {!titleText && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      left: 20,
+                      top: 16,
+                      color: 'rgba(255,255,255,0.5)',
+                      fontSize: 22,
+                      fontWeight: 600,
+                      fontFamily: 'inherit',
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}
+                  >
+                    Announcement Title...
+                  </span>
+                )}
+              </Box>
               {/* Toolbar */}
               <Box
                 sx={{
@@ -295,7 +446,7 @@ const AnnouncementsPage: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={handlePost}
-                disabled={!editorHtml.replace(/<(.|\n)*?>/g, '').trim()}
+                disabled={!editorHtml.replace(/<(.|\n)*?>/g, '').trim() || posting}
                 sx={{
                   px: 5,
                   py: 1.7,
@@ -305,7 +456,7 @@ const AnnouncementsPage: React.FC = () => {
                   boxShadow: '0 2px 12px rgba(0,194,140,0.13)'
                 }}
               >
-                Post
+                {posting ? <CircularProgress size={20} color="inherit" /> : 'Post'}
               </Button>
             </Box>
             {/* Announcements List */}
@@ -313,46 +464,84 @@ const AnnouncementsPage: React.FC = () => {
               <Typography variant="h5" fontWeight={600} align="center" gutterBottom style={{ color: swapPageTheme.unselectedText }}>
                 Announcements
               </Typography>
-              {announcements.length === 0 ? (
+              {loading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <CircularProgress color="primary" />
+                </Box>
+              )}
+              {!loading && announcements.length === 0 && (
                 <Typography align="center" sx={{ mt: 4 }} style={{ color: '#b0b7be' }}>
                   No announcements yet.
                 </Typography>
-              ) : (
+              )}
+              {!loading && announcements.length > 0 && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                  {announcements.map(a => (
-                    <Paper
-                      key={a.id}
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        background: swapPageTheme.cardBg,
-                        border: swapPageTheme.cardBorder,
-                        color: swapPageTheme.unselectedText,
-                        position: 'relative',
-                      }}
-                    >
-                      <Typography
-                        variant="body1"
-                        sx={{ mb: 1 }}
-                        component="div"
-                        dangerouslySetInnerHTML={{ __html: a.text }}
-                      />
-                      <Typography variant="caption" sx={{ color: '#b0b7be' }}>
-                        Posted by {a.author} on {a.datetime}
-                      </Typography>
-                      {a.author === user.name && (
+                  {announcements.map(a => {
+                    // Fallback for body/content
+                    const announcementBody = a.content || (a as any).body || '';
+                    // Fallback for date
+                    let dateString = a.created_at || a.updated_at || '';
+                    let dateDisplay = 'Invalid date';
+                    if (dateString && !isNaN(Date.parse(dateString))) {
+                      dateDisplay = new Date(dateString).toLocaleString();
+                    }
+                    return (
+                      <Paper
+                        key={a.announcement_id}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          background: swapPageTheme.cardBg,
+                          border: swapPageTheme.cardBorder,
+                          color: swapPageTheme.unselectedText,
+                          position: 'relative',
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 700, color: 'primary.main' }}>
+                          {a.title || 'Untitled'}
+                        </Typography>
+                        {announcementBody && (
+                          <Typography
+                            variant="body1"
+                            sx={{ mb: 1 }}
+                            component="div"
+                            dangerouslySetInnerHTML={{ __html: announcementBody }}
+                          />
+                        )}
+                        <Typography variant="caption" sx={{ color: '#b0b7be' }}>
+                          Posted by {a.Employee?.employee_name || 'Unknown'} on {dateDisplay}
+                        </Typography>
+                        {/* Always show delete button */}
                         <Button
                           size="small"
                           color="error"
                           variant="outlined"
-                          sx={{ position: 'absolute', top: 8, right: 8, minWidth: 0, px: 1, py: 0.5 }}
-                          onClick={() => handleDelete(a.id)}
+                          disabled={deletingIds.includes(a.announcement_id)}
+                          sx={{ 
+                            position: 'absolute', 
+                            top: 8, 
+                            right: 8, 
+                            minWidth: 0, 
+                            px: 1, 
+                            py: 0.5,
+                            '&:disabled': {
+                              opacity: 0.6,
+                            }
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(a.announcement_id);
+                          }}
                         >
-                          Delete
+                          {deletingIds.includes(a.announcement_id) ? (
+                            <CircularProgress size={14} sx={{ color: '#f44336' }} />
+                          ) : (
+                            'Delete'
+                          )}
                         </Button>
-                      )}
-                    </Paper>
-                  ))}
+                      </Paper>
+                    );
+                  })}
                 </Box>
               )}
             </Box>
