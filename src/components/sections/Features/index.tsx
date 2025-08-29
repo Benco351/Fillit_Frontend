@@ -29,21 +29,21 @@ const features = [
     title: "AI Assistant",
     description: "Get intelligent scheduling recommendations and shift suggestions from our AI-powered assistant."
   },
-  {
-    icon: <Map fontSize="large" color="primary" />,
-    title: "Location Mapping",
-    description: "View and select shift locations with our integrated Google Maps feature."
-  },
+  // {
+  //   icon: <Map fontSize="large" color="primary" />,
+  //   title: "Location Mapping",
+  //   description: "View and select shift locations with our integrated Google Maps feature."
+  // },
   {
     icon: <Notifications fontSize="large" color="primary" />,
     title: "Push Notifications",
     description: "Stay updated with instant alerts about schedule changes and shift reminders."
   },
-  {
-    icon: <Chat fontSize="large" color="primary" />,
-    title: "Integrated Chat",
-    description: "Communicate seamlessly with P2P and group chats for quick team coordination and updates."
-  },
+  // {
+  //   icon: <Chat fontSize="large" color="primary" />,
+  //   title: "Integrated Chat",
+  //   description: "Communicate seamlessly with P2P and group chats for quick team coordination and updates."
+  // },
 ];
 
 //////////

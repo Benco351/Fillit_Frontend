@@ -99,7 +99,7 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
         phone:    data.phone,
         password: data.password,
         organization_id: orgId,
-        initial: false,
+        // initial: false,
       });
       const id = createRes.data.data.employee_id;
       // Check if the employee is admin from the response
