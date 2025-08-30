@@ -83,6 +83,7 @@ const AnnouncementsPage: React.FC = () => {
 
     try {
       const payload = {
+        author_id: parseInt(user.id, 10), // Ensure it's a number
         title: title || 'Untitled',
         content: text, // Use the plain text as content/body
       };

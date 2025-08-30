@@ -175,13 +175,15 @@ export type DepartmentQueryDTO = z.infer<typeof DepartmentQuerySchema>;
 
 /* ---------- Announcement Types ---------- */
 export const CreateAnnouncementSchema = z.object({
+    author_id: z.coerce.number(),
     title: z.string().nonempty(),
     content: z.string().nonempty(),
+
 }).strict();
 
 export const UpdateAnnouncementSchema = z.object({
-    title: z.string().optional(),
-    content: z.string().optional(),
+    title: z.string(),
+    content: z.string(),
 }).strict();
 
 export const AnnouncementQuerySchema = z.object({
