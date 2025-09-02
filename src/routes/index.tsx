@@ -36,7 +36,7 @@ const AppRoutes: React.FC = () => (
       {/* private */}
 
       {/* protected */}
-      {/*
+      
       <Route
         path={ROUTES.DASHBOARD}
         element={
@@ -57,12 +57,12 @@ const AppRoutes: React.FC = () => (
 
       <Route
         path={ROUTES.SWAP}
-        // element={
-        //   <ProtectedRoute redirectTo={ROUTES.LOGIN}>
-        //     <SwapPage />
-        //   </ProtectedRoute>
-        // }
-        element={<SwapPage />}
+        element={
+          <ProtectedRoute redirectTo={ROUTES.LOGIN}>
+            <SwapPage />
+          </ProtectedRoute>
+        }
+        // element={<SwapPage />}
       />
 
       <Route
@@ -82,7 +82,7 @@ const AppRoutes: React.FC = () => (
           </ProtectedRoute>
         }
       />
-      */}
+     
       <Route path={ROUTES.DASHBOARD} element={<UserDashboard />} />
       <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
       <Route path={ROUTES.SWAP} element={<SwapPage />} />

@@ -17,28 +17,27 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
 
-// import {
-//   signIn,
-//   fetchAuthSession,
-//   resetPassword,
-//   confirmResetPassword,
-//   fetchUserAttributes,
-//   signOut, // add this import
-// } from '@aws-amplify/auth';
+import {
+  signIn,
+  fetchAuthSession,
+  fetchUserAttributes,
+  confirmResetPassword,
+  resetPassword,
+} from '@aws-amplify/auth';
 import { LoginTheme } from '../../../assets/themes/themes';
 import axios from 'axios';
 import { api } from '../../../utils/apis/apiconfig';
-import { se } from 'date-fns/locale';
+
 
 /* ────────────────────────────────────────────────────────────
    Zod validation schemas
    ──────────────────────────────────────────────────────────── */
 const LoginSchema = z.object({
-  email:           z.string().email('Please enter a valid email address'),
-  password:        z.string().min(1, 'Password is required'),
-  organizationId:  z.coerce.number({ invalid_type_error: 'Organization ID must be a number' })
-                    .int('Organization ID must be an integer')
-                    .min(1, 'Organization ID must be a positive integer'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+  organizationId: z.coerce.number({ invalid_type_error: 'Organization ID must be a number' })
+    .int('Organization ID must be an integer')
+    .min(1, 'Organization ID must be a positive integer'),
 });
 
 const ResetRequestSchema = z.object({
@@ -46,17 +45,17 @@ const ResetRequestSchema = z.object({
 });
 
 const ResetConfirmSchema = z.object({
-  code:               z.string().length(6, '6-digit code'),
-  newPassword:        z.string().min(8, 'Password must be at least 8 characters'),
+  code: z.string().length(6, '6-digit code'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
   confirmNewPassword: z.string(),
 }).refine((d) => d.newPassword === d.confirmNewPassword, {
   message: 'Passwords do not match',
   path: ['confirmNewPassword'],
 });
 
-type LoginFormData        = z.infer<typeof LoginSchema>;
-type ResetRequestData     = z.infer<typeof ResetRequestSchema>;
-type ResetConfirmData     = z.infer<typeof ResetConfirmSchema>;
+type LoginFormData = z.infer<typeof LoginSchema>;
+type ResetRequestData = z.infer<typeof ResetRequestSchema>;
+type ResetConfirmData = z.infer<typeof ResetConfirmSchema>;
 
 type Mode = 'login' | 'resetRequest' | 'resetConfirm';
 type AnyFormData = LoginFormData | ResetRequestData | ResetConfirmData;
@@ -66,19 +65,20 @@ type AnyFormData = LoginFormData | ResetRequestData | ResetConfirmData;
    ──────────────────────────────────────────────────────────── */
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
+  const [emailForReset, setEmail] = useState('');
 
-  const [mode, setMode]               = useState<Mode>('login');
-  const [emailForReset, setEmail]     = useState('');
-  const [loading, setLoading]         = useState(false);
-  const [authError, setAuthError]     = useState<string | null>(null);
-  const [snackOpen, setSnackOpen]     = useState(false);
+  const [mode, setMode] = useState<Mode>('login');
+  // Removed unused emailForReset and setEmail
+  const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [snackOpen, setSnackOpen] = useState(false);
 
   /* pick schema per mode */
   const schema = useMemo(() => {
     switch (mode) {
       case 'resetRequest': return ResetRequestSchema;
       case 'resetConfirm': return ResetConfirmSchema;
-      default:             return LoginSchema;
+      default: return LoginSchema;
     }
   }, [mode]);
 
@@ -103,26 +103,26 @@ const LoginForm: React.FC = () => {
       if (mode === 'login') {
         const data = form as LoginFormData;
         // --- Cognito signIn logic commented out ---
-        // const result = await signIn({
-        //   username: data.email,
-        //   password: data.password,
-        // });
-        // if (!result.isSignedIn) {
-        //   throw new Error(`Unexpected next step: ${result.nextStep.signInStep}`);
-        // }
-        // const session = await fetchAuthSession();
-        // const token = session.tokens?.accessToken;
-        // if (!token) throw new Error('Unable to retrieve access token');
-        // const attributes = await fetchUserAttributes();
-        // let customEmployeeId: string | undefined = undefined;
-        // if (Array.isArray(attributes)) {
-        //   customEmployeeId = attributes.find(attr => attr.Name === 'custom:employeeId')?.Value;
-        // } else if (typeof attributes === 'object' && attributes !== null && 'custom:employeeId' in attributes) {
-        //   customEmployeeId = (attributes as Record<string, string>)['custom:employeeId'];
-        // }
-        // if (!customEmployeeId) {
-        //   throw new Error('Unable to retrieve custom employee ID');
-        // }
+        const result = await signIn({
+          username: data.email,
+          password: data.password,
+        });
+        if (!result.isSignedIn) {
+          throw new Error(`Unexpected next step: ${result.nextStep.signInStep}`);
+        }
+        const session = await fetchAuthSession();
+        const token = session.tokens?.accessToken;
+        if (!token) throw new Error('Unable to retrieve access token');
+        const attributes = await fetchUserAttributes();
+        let cognitoEmployeeId: string | undefined = undefined;
+        if (Array.isArray(attributes)) {
+          cognitoEmployeeId = attributes.find(attr => attr.Name === 'custom:employeeId')?.Value;
+        } else if (typeof attributes === 'object' && attributes !== null && 'custom:employeeId' in attributes) {
+          cognitoEmployeeId = (attributes as Record<string, string>)['custom:employeeId'];
+        }
+        if (!cognitoEmployeeId) {
+          throw new Error('Unable to retrieve custom employee ID');
+        }
         // --- END Cognito logic ---
 
         // Use backend API for login
@@ -151,11 +151,11 @@ const LoginForm: React.FC = () => {
         }
         // Expecting response.data to have employee info and admin status
         const employee = response.data.data;
-        const customEmployeeId = employee.employee_id;
+        const apiEmployeeId = employee.employee_id;
         const isAdmin = employee.employee_admin;
-        // Save customEmployeeId and isAdmin in sessionStorage
+        // Save apiEmployeeId and isAdmin in sessionStorage
         sessionStorage.setItem('organizationId', String(orgId));
-        sessionStorage.setItem('customEmployeeId', customEmployeeId);
+        sessionStorage.setItem('customEmployeeId', apiEmployeeId);
         sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
         sessionStorage.setItem('name', employee.employee_name);
         sessionStorage.setItem('email', employee.employee_email);
@@ -168,28 +168,28 @@ const LoginForm: React.FC = () => {
       /* 2 ► forgot-password: request code */
       else if (mode === 'resetRequest') {
         // --- Cognito resetPassword logic commented out ---
-        // const data = form as ResetRequestData;
-        // const { nextStep } = await resetPassword({ username: data.email });
-        // if (nextStep.resetPasswordStep !== 'CONFIRM_RESET_PASSWORD_WITH_CODE') {
-        //   throw new Error('Unexpected reset-password step');
-        // }
-        // setEmail(data.email);
-        // reset();
-        // setMode('resetConfirm');
+        const data = form as ResetRequestData;
+        const { nextStep } = await resetPassword({ username: data.email });
+        if (nextStep.resetPasswordStep !== 'CONFIRM_RESET_PASSWORD_WITH_CODE') {
+          throw new Error('Unexpected reset-password step');
+        }
+        setEmail(data.email);
+        reset();
+        setMode('resetConfirm');
         // --- END Cognito logic ---
         setAuthError('Password reset is not available. Please contact your administrator.');
       }
       /* 3 ► forgot-password: confirm code */
       else if (mode === 'resetConfirm') {
         // --- Cognito confirmResetPassword logic commented out ---
-        // const data = form as ResetConfirmData;
-        // await confirmResetPassword({
-        //   username:         emailForReset,
-        //   confirmationCode: data.code,
-        //   newPassword:      data.newPassword,
-        // });
-        // setSnackOpen(true);
-        // setTimeout(() => navigate('/login', { replace: true }), 2000);
+        const data = form as ResetConfirmData;
+        await confirmResetPassword({
+          username:         emailForReset,
+          confirmationCode: data.code,
+          newPassword:      data.newPassword,
+        });
+        setSnackOpen(true);
+        setTimeout(() => navigate('/login', { replace: true }), 2000);
         // --- END Cognito logic ---
         setAuthError('Password reset is not available. Please contact your administrator.');
       }
@@ -257,7 +257,7 @@ const LoginForm: React.FC = () => {
             <Typography variant="h4" align="center" gutterBottom
               sx={{ fontWeight: 700, color: 'primary.main' }}
             >
-              {mode === 'login'        && 'Login'}
+              {mode === 'login' && 'Login'}
               {mode === 'resetRequest' && 'Forgot password'}
               {mode === 'resetConfirm' && 'Reset password'}
             </Typography>
@@ -341,12 +341,12 @@ const LoginForm: React.FC = () => {
                   sx={{ py: 1.5 }}
                 >
                   {loading
-                    ? mode === 'login'        ? 'Signing in…'
-                    : mode === 'resetRequest' ? 'Sending code…'
-                    :                             'Resetting…'
-                    : mode === 'login'        ? 'Login'
-                    : mode === 'resetRequest' ? 'Send reset code'
-                    :                             'Set new password'}
+                    ? mode === 'login' ? 'Signing in…'
+                      : mode === 'resetRequest' ? 'Sending code…'
+                        : 'Resetting…'
+                    : mode === 'login' ? 'Login'
+                      : mode === 'resetRequest' ? 'Send reset code'
+                        : 'Set new password'}
                 </Button>
               </Stack>
             </form>
