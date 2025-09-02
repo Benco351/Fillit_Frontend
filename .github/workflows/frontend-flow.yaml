@@ -1,0 +1,68 @@
+name: Frontend - Lint & Amplify Build
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - '/**'
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  precheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify secrets for Amplify
+        env:
+          KEYS:  >-
+            AWS_ACCESS_KEY_ID
+            AWS_SECRET_ACCESS_KEY
+            AWS_SESSION_TOKEN
+            ECR_REPO_URI
+            EB_S3_BUCKET
+            DB_PASSWORD
+            EB_APP_NAME
+            EB_ENV_NAME
+            AMPLIFY_APP_ID
+          VARS:  >-
+            AMPLIFY_APP_BRANCH
+        run: |
+          for v in $KEYS; do
+            [ -z "${{ secrets[$v] }}" ] && \
+              { echo "::error::$v is missing"; exit 1; }
+          done
+          for v in $VARS; do
+            [ -z "${{ vars[$v] }}" ] && \
+              { echo "::error::$v is missing"; exit 1; }
+          done
+
+  build:
+    needs: precheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Fillit_Frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+      - run: npm run lint
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      # Kick off a RELEASE job for the specified branch
+      - name: Trigger Amplify build
+        run: |
+          aws amplify start-job \
+            --app-id      "${{ secrets.AMPLIFY_APP_ID }}" \
+            --branch-name "${{ vars.AMPLIFY_APP_BRANCH }}" \
+            --job-type    RELEASE

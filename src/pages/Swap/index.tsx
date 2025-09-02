@@ -269,7 +269,7 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
           {!loading && !error && (
             <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
               <Box sx={{ flex: 1, minWidth: 220 }}>
-                <Typography variant="subtitle1" color="primary" gutterBottom align="center">{emp.name}'s Shifts</Typography>
+                <Typography variant="subtitle1" color="primary" gutterBottom align="center">{emp.name}s Shifts</Typography>
                 {assignedShifts.length === 0 ? (
                   <Typography align="center">No assigned shifts found.</Typography>
                 ) : (
@@ -538,6 +538,7 @@ const SwapPage: React.FC = () => {
   };
 
   // Use a ref for refreshSwapRequests to avoid window assignment
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const refreshSwapRequests = useRef(() => {});
   refreshSwapRequests.current = fetchSwapRequests;
 
