@@ -15,7 +15,7 @@ const features = [
   },
   {
     icon: <CheckCircleSharp fontSize="large" color="primary" />,
-    title: "ChatGPT Integration",
+    title: "AI Integration",
     description: "View and manage shifts with our interactive calendar that displays dates, hours, and employee assignments."
   },
   
