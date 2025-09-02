@@ -178,6 +178,7 @@ export const CreateAnnouncementSchema = z.object({
     author_id: z.coerce.number(),
     title: z.string().nonempty(),
     content: z.string().nonempty(),
+    start_date: z.coerce.date(),
 
 }).strict();
 
@@ -202,7 +203,7 @@ export type AnnouncementMapped = {
   author_id: number;
   title: string;
   content: string;
-  created_at: string;
+  start_date: string;
   updated_at: string;
   Employee?: {
     employee_id: number;

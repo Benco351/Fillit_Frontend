@@ -8,7 +8,8 @@ export const ROUTES = {
   DEPARTMENTS: '/admin-dashboard/departments',
   SHIFT_INFO: '/shift-info/:shiftId',
   EMPLOYEE_INFO: '/employee-info/:employeeId',
-  ANNOUNCEMENTS: '/announcements'
+  ANNOUNCEMENTS: '/announcements',
+  USER_ANNOUNCEMENTS: '/user-announcements',
 } as const;
 
 export type AppRoutes = typeof ROUTES;

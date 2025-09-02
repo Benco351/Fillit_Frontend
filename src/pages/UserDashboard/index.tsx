@@ -4,7 +4,7 @@ import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogCo
 import { format} from 'date-fns';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
-import Navbar from '../../components/layout/userNavbar';
+import AdminNavbar from '../../components/layout/AdminNavbar';
 import { createRequestedShift, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
@@ -386,7 +386,7 @@ const UserDashboard: React.FC = () => {
           maxWidth: '100%',
           scrollBehavior: 'smooth'
         }}>
-          <Navbar />
+          <AdminNavbar />
 
           <Box sx={{ my: 3 }}>
             {/* Title Box */}

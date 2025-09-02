@@ -14,7 +14,7 @@ import Departments from '../pages/Departments';
 import ShiftInfo from '../pages/ShiftInfo';
 import EmployeeInfo from '../pages/EmployeeInfo';
 import AnnouncementsPage from '../pages/AnnouncementsPage';
-
+import AnnouncementsUserPage from '../pages/AnnouncementsUserPage';
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Announcement } from '@mui/icons-material';
@@ -94,6 +94,7 @@ const AppRoutes: React.FC = () => (
 
     
       <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementsPage/>} />
+      <Route path={ROUTES.USER_ANNOUNCEMENTS} element={<AnnouncementsUserPage/>} />
       
 
       {/* sign-out helper */}

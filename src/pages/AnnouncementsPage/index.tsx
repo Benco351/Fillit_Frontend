@@ -86,6 +86,7 @@ const AnnouncementsPage: React.FC = () => {
         author_id: parseInt(user.id, 10), // Ensure it's a number
         title: title || 'Untitled',
         content: text, // Use the plain text as content/body
+        start_date: new Date(), // Add the required property
       };
 
       console.log('Posting announcement with payload:', payload);
@@ -481,7 +482,7 @@ const AnnouncementsPage: React.FC = () => {
                     // Fallback for body/content
                     const announcementBody = a.content || (a as any).body || '';
                     // Fallback for date
-                    let dateString = a.created_at || a.updated_at || '';
+                    let dateString = a.start_date || a.updated_at || '';
                     let dateDisplay = 'Invalid date';
                     if (dateString && !isNaN(Date.parse(dateString))) {
                       dateDisplay = new Date(dateString).toLocaleString();
