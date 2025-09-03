@@ -19,11 +19,15 @@ function getOrganizationIdFromSession(): number | undefined {
 
 function shouldAttachOrganizationId(url?: string): boolean {
   if (!url) return false;
-  // Only attach for our backend API routes, excluding organization creation/listing
   const path = url.startsWith('http') ? new URL(url).pathname : url;
-  if (!path.startsWith('/api/')) return url.startsWith('/auth/'); // allow auth endpoints
+  // Never attach for this auth endpoint (does not accept organization_id)
+  if (path.startsWith('/auth/add-to-group')) return false;
+  // Exclude organization creation/listing
   if (path.startsWith('/api/organizations')) return false;
-  return true;
+  // Attach for other API routes under /api/
+  if (path.startsWith('/api/')) return true;
+  // Default: do not attach
+  return false;
 }
 
 async function attachIdToken(config: InternalAxiosRequestConfig) {
