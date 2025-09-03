@@ -38,7 +38,8 @@ export const UpdateAvailableShiftSchema = z.object({
     end: z.string().time().optional(),
     shift_slots_amount: z.coerce.number().int().min(1).optional(), // Added field
     department_id: z.coerce.number().optional(),
-    // organization_id intentionally not updatable
+    // organization_id accepted for scoping but ignored for update
+    organization_id: z.coerce.number().optional(),
 }).strict();
 
 export const AvailableShiftQuerySchema = z.object({
@@ -65,8 +66,8 @@ export const CreateEmployeeSchema = z.object({
     email: z.string().email(),
     password: z.string().min(1),
     phone: z.string().optional(),
-    organization_id: z.coerce.number(),
-    initial: z.boolean().optional(),
+    organization_id: z.coerce.number().optional(),
+    admin: z.boolean().optional(),
 }).strict();
 
 export const UpdateEmployeeSchema = z.object({
@@ -75,6 +76,7 @@ export const UpdateEmployeeSchema = z.object({
     password: z.string().optional(),
     admin: z.boolean().optional(),
     phone: z.string().optional(),
+    organization_id: z.coerce.number().optional(),
 }).strict();
 
 export const EmployeeQuerySchema = z.object({
@@ -83,6 +85,7 @@ export const EmployeeQuerySchema = z.object({
 }).strict();
 
 export type CreateEmployeeDTO = z.infer<typeof CreateEmployeeSchema>;
+// Now CreateEmployeeDTO includes optional admin property
 export type UpdateEmployeeDTO = z.infer<typeof UpdateEmployeeSchema>;
 export type EmployeeQueryDTO = z.infer<typeof EmployeeQuerySchema>;
 
@@ -96,7 +99,8 @@ export const CreateRequestedShiftSchema = z.object({
 
 export const UpdateRequestedShiftSchema = z.object({
     status: z.enum(['pending', 'approved', 'denied', 'swapped']).optional(),
-    notes: z.string().optional()
+    notes: z.string().optional(),
+    organization_id: z.coerce.number().optional(),
 }).strict();
 
 export const RequestedShiftQuerySchema = z.object({
@@ -160,6 +164,7 @@ export const CreateDepartmentSchema = z.object({
 export const UpdateDepartmentSchema = z.object({
     name: z.string().nonempty().optional(),
     address: z.string().optional(),
+    organization_id: z.coerce.number().optional(),
 }).strict();
 
 export const DepartmentQuerySchema = z.object({
@@ -172,48 +177,17 @@ export type CreateDepartmentDTO = z.infer<typeof CreateDepartmentSchema>;
 export type UpdateDepartmentDTO = z.infer<typeof UpdateDepartmentSchema>;
 export type DepartmentQueryDTO = z.infer<typeof DepartmentQuerySchema>;
 
-/* ---------- Announcement Types ---------- */
-export const CreateAnnouncementSchema = z.object({
-    author_id: z.coerce.number(),
-    title: z.string().nonempty(),
-    content: z.string().nonempty(),
-    start_date: z.coerce.date(),
-
-}).strict();
-
-export const UpdateAnnouncementSchema = z.object({
-    title: z.string(),
-    content: z.string(),
-}).strict();
-
-export const AnnouncementQuerySchema = z.object({
-    author_id: z.coerce.number().optional(),
-    created_at_start: z.coerce.date().optional(),
-    created_at_end: z.coerce.date().optional(),
-}).strict();
-
-export type CreateAnnouncementDTO = z.infer<typeof CreateAnnouncementSchema>;
-export type UpdateAnnouncementDTO = z.infer<typeof UpdateAnnouncementSchema>;
-export type AnnouncementQueryDTO = z.infer<typeof AnnouncementQuerySchema>;
-
-// Mapped type for announcement responses
-export type AnnouncementMapped = {
-  announcement_id: number;
-  author_id: number;
-  title: string;
-  content: string;
-  start_date: string;
-  updated_at: string;
-  Employee?: {
-    employee_id: number;
-    employee_name: string;
-    employee_email: string;
-  };
-};
-
 /* ---------- Organization Types ---------- */
 export const CreateOrganizationSchema = z.object({
-    name: z.string().nonempty(),
+    organization: z.object({
+        name: z.string().nonempty(),
+    }),
+    admin: z.object({
+        name: z.string().nonempty(),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        password: z.string().min(1),
+    })
 }).strict();
 
 export const OrganizationQuerySchema = z.object({
@@ -223,3 +197,25 @@ export const OrganizationQuerySchema = z.object({
 
 export type CreateOrganizationDTO = z.infer<typeof CreateOrganizationSchema>;
 export type OrganizationQueryDTO = z.infer<typeof OrganizationQuerySchema>;
+
+/* ---------- Announcement Types ---------- */
+export const CreateAnnouncementSchema = z.object({
+    author_id: z.coerce.number(),
+    title: z.string().nonempty(),
+    content: z.string().nonempty(),
+    start_date: z.coerce.date().optional(), // Allow start_date to be provided
+}).strict();
+
+export const UpdateAnnouncementSchema = z.object({
+    title: z.string().min(1).optional(),
+    content: z.string().min(1).optional(),
+}).strict();
+
+export const AnnouncementQuerySchema = z.object({
+    title: z.string().optional(),
+    author_id: z.coerce.number().optional(),
+}).strict();
+
+export type CreateAnnouncementDTO = z.infer<typeof CreateAnnouncementSchema>;
+export type UpdateAnnouncementDTO = z.infer<typeof UpdateAnnouncementSchema>;
+export type AnnouncementQueryDTO = z.infer<typeof AnnouncementQuerySchema>;
