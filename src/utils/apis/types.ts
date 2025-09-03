@@ -204,18 +204,34 @@ export const CreateAnnouncementSchema = z.object({
     title: z.string().nonempty(),
     content: z.string().nonempty(),
     start_date: z.coerce.date().optional(), // Allow start_date to be provided
+    organization_id: z.coerce.number(),
 }).strict();
 
 export const UpdateAnnouncementSchema = z.object({
     title: z.string().min(1).optional(),
     content: z.string().min(1).optional(),
+    // organization_id accepted for scoping but ignored for update
+    organization_id: z.coerce.number().optional(),
 }).strict();
 
 export const AnnouncementQuerySchema = z.object({
     title: z.string().optional(),
     author_id: z.coerce.number().optional(),
+    organization_id: z.coerce.number(),
 }).strict();
 
 export type CreateAnnouncementDTO = z.infer<typeof CreateAnnouncementSchema>;
 export type UpdateAnnouncementDTO = z.infer<typeof UpdateAnnouncementSchema>;
 export type AnnouncementQueryDTO = z.infer<typeof AnnouncementQuerySchema>;
+
+/* ---------- Announcement Response Shape ---------- */
+export type AnnouncementMapped = {
+    announcement_id: number;
+    title: string;
+    content?: string;
+    start_date?: string;
+    updated_at?: string;
+    Employee?: {
+        employee_name?: string;
+    } | null;
+};

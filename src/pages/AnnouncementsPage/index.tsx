@@ -55,7 +55,9 @@ const AnnouncementsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getAnnouncements();
+      const orgIdStr = sessionStorage.getItem('organizationId');
+      const orgId = orgIdStr ? Number(orgIdStr) : undefined;
+      const response = await getAnnouncements({ organization_id: Number(orgId), title: undefined, author_id: undefined } as any);
       console.log('Fetch announcements response:', response);
       setAnnouncements(response.data || []);
     } catch (err: any) {
@@ -82,11 +84,14 @@ const AnnouncementsPage: React.FC = () => {
     setError(null);
 
     try {
+      const orgIdStr = sessionStorage.getItem('organizationId');
+      const organizationId = orgIdStr ? Number(orgIdStr) : undefined;
       const payload = {
         author_id: parseInt(user.id, 10), // Ensure it's a number
         title: title || 'Untitled',
         content: text, // Use the plain text as content/body
         start_date: new Date(), // Add the required property
+        organization_id: Number(organizationId),
       };
 
       console.log('Posting announcement with payload:', payload);
@@ -128,7 +133,9 @@ const AnnouncementsPage: React.FC = () => {
     setDeletingIds(prev => [...prev, id]);
     try {
       console.log('Deleting announcement with ID:', id);
-      await deleteAnnouncementById(id);
+      const orgIdStr = sessionStorage.getItem('organizationId');
+      const orgId = orgIdStr ? Number(orgIdStr) : undefined;
+      await deleteAnnouncementById(id, Number(orgId));
       console.log('Announcement deleted successfully');
       
       // Remove from local state immediately for better UX
@@ -191,7 +198,8 @@ const AnnouncementsPage: React.FC = () => {
       <Box sx={{
         backgroundColor: user.admin ? swapPageTheme.adminBg : '#093039',
         minHeight: '100vh',
-        py: 4,
+        pt: 4,
+        pb: 0,
         px: 2,
         direction: 'ltr',
       }}>
@@ -204,7 +212,7 @@ const AnnouncementsPage: React.FC = () => {
               padding: { xs: 2, sm: 3, md: 4 },
               backgroundColor: swapPageTheme.mainBg,
               boxShadow: swapPageTheme.mainBoxShadow,
-              margin: '24px 0',
+              margin: '24px 0 0',
               transform: 'translateZ(0)',
               willChange: 'transform',
               direction: 'ltr',
@@ -549,8 +557,8 @@ const AnnouncementsPage: React.FC = () => {
             </Box>
           </Box>
         </Container>
-        <Footer />
       </Box>
+      <Footer />
     </ThemeProvider>
   );
 };

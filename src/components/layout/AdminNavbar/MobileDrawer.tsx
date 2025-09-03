@@ -42,6 +42,11 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to={isAdmin ? ROUTES.ANNOUNCEMENTS : ROUTES.USER_ANNOUNCEMENTS} onClick={onClose}>
+                <ListItemText primary="Announcements" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
               <ListItemButton onClick={onClose}>
                 <ListItemText primary="Settings" />
               </ListItemButton>

@@ -96,7 +96,14 @@ const AppRoutes: React.FC = () => (
       <Route path="/settings" element={<SettingsPage />} />
 
     
-      <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementsPage/>} />
+      <Route
+        path={ROUTES.ANNOUNCEMENTS}
+        element={
+          <AdminOnly>
+            <AnnouncementsPage/>
+          </AdminOnly>
+        }
+      />
       <Route path={ROUTES.USER_ANNOUNCEMENTS} element={<AnnouncementsUserPage/>} />
       
 
@@ -110,3 +117,9 @@ const AppRoutes: React.FC = () => (
 );
 
 export default AppRoutes;
+
+/* Simple admin-only guard based on sessionStorage */
+function AdminOnly({ children }: { children: React.ReactElement }) {
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
+  return isAdmin ? children : <Navigate to={ROUTES.USER_ANNOUNCEMENTS} replace />;
+}

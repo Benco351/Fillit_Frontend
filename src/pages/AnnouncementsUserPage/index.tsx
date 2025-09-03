@@ -50,7 +50,9 @@ const AnnouncementsUserPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getAnnouncements();
+      const orgIdStr = sessionStorage.getItem('organizationId');
+      const orgId = orgIdStr ? Number(orgIdStr) : undefined;
+      const response = await getAnnouncements({ organization_id: Number(orgId), title: undefined, author_id: undefined } as any);
       console.log('Fetch announcements response:', response);
       setAnnouncements(response.data || []);
     } catch (err: any) {
@@ -72,7 +74,9 @@ const AnnouncementsUserPage: React.FC = () => {
     setDeletingIds(prev => [...prev, id]);
     try {
       console.log('Deleting announcement with ID:', id);
-      await deleteAnnouncementById(id);
+      const orgIdStr = sessionStorage.getItem('organizationId');
+      const orgId = orgIdStr ? Number(orgIdStr) : undefined;
+      await deleteAnnouncementById(id, Number(orgId));
       console.log('Announcement deleted successfully');
       
       // Remove from local state immediately for better UX
@@ -104,7 +108,8 @@ const AnnouncementsUserPage: React.FC = () => {
       <Box sx={{
         backgroundColor: user.admin ? swapPageTheme.adminBg : '#093039',
         minHeight: '100vh',
-        py: 4,
+        pt: 4,
+        pb: 0,
         px: 2,
         direction: 'ltr',
       }}>
@@ -117,14 +122,14 @@ const AnnouncementsUserPage: React.FC = () => {
               padding: { xs: 2, sm: 3, md: 4 },
               backgroundColor: swapPageTheme.mainBg,
               boxShadow: swapPageTheme.mainBoxShadow,
-              margin: '24px 0',
+              margin: '24px 0 0',
               transform: 'translateZ(0)',
               willChange: 'transform',
               direction: 'ltr',
             }}
           >
             <Typography variant="h3" fontWeight={700} color="primary" align="center" gutterBottom>
-              Yo
+              Announcement Board
             </Typography>
             <Typography variant="body1" align="center" style={{ color: '#b0b7be', marginBottom: 24 }}>
               GET THE LATEST UPDATES
@@ -193,7 +198,7 @@ const AnnouncementsUserPage: React.FC = () => {
                           />
                         )}
                         <Typography variant="caption" sx={{ color: '#b0b7be' }}>
-                          Posted by {user.name || 'Unknown'}
+                          Posted by {a.Employee?.employee_name || 'Unknown'}
                           {(() => {
                             let dateString = a.start_date || a.updated_at || '';
                             if (dateString && !isNaN(Date.parse(dateString))) {
@@ -202,34 +207,35 @@ const AnnouncementsUserPage: React.FC = () => {
                             return '';
                           })()}
                         </Typography>
-                        {/* Always show delete button */}
-                        <Button
-                          size="small"
-                          color="error"
-                          variant="outlined"
-                          disabled={deletingIds.includes(a.announcement_id)}
-                          sx={{ 
-                            position: 'absolute', 
-                            top: 8, 
-                            right: 8, 
-                            minWidth: 0, 
-                            px: 1, 
-                            py: 0.5,
-                            '&:disabled': {
-                              opacity: 0.6,
-                            }
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(a.announcement_id);
-                          }}
-                        >
-                          {deletingIds.includes(a.announcement_id) ? (
-                            <CircularProgress size={14} sx={{ color: '#f44336' }} />
-                          ) : (
-                            'Delete'
-                          )}
-                        </Button>
+                        {user.admin && (
+                          <Button
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            disabled={deletingIds.includes(a.announcement_id)}
+                            sx={{ 
+                              position: 'absolute', 
+                              top: 8, 
+                              right: 8, 
+                              minWidth: 0, 
+                              px: 1, 
+                              py: 0.5,
+                              '&:disabled': {
+                                opacity: 0.6,
+                              }
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(a.announcement_id);
+                            }}
+                          >
+                            {deletingIds.includes(a.announcement_id) ? (
+                              <CircularProgress size={14} sx={{ color: '#f44336' }} />
+                            ) : (
+                              'Delete'
+                            )}
+                          </Button>
+                        )}
                       </Paper>
                     );
                   })}
@@ -238,8 +244,8 @@ const AnnouncementsUserPage: React.FC = () => {
             </Box>
           </Box>
         </Container>
-        <Footer />
       </Box>
+      <Footer />
     </ThemeProvider>
   );
 };

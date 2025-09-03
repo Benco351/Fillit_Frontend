@@ -30,11 +30,6 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) => {
                 <ListItemText primary="Signup" />
               </ListItemButton>
             </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to={ROUTES.DASHBOARD} onClick={onClose}>
-                <ListItemText primary="Calendar" />
-              </ListItemButton>
-            </ListItem>
           </List>
         </Box>
       </Drawer>
