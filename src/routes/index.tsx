@@ -49,7 +49,7 @@ const AppRoutes: React.FC = () => (
       <Route
         path={ROUTES.ADMIN}
         element={
-          <ProtectedRoute redirectTo={ROUTES.LOGIN} requireGroup="admin">
+          <ProtectedRoute redirectTo={ROUTES.LOGIN} requireGroup="Admins">
             <AdminDashboard />
           </ProtectedRoute>
         }

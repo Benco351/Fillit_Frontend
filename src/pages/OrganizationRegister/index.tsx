@@ -110,6 +110,16 @@ const OrganizationRegister: React.FC = () => {
 
         if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
           setAwaitingCode(true);
+          // Clear sensitive fields; keep email to inform the user where the code was sent
+          reset({
+            orgName: '',
+            adminName: '',
+            adminEmail: data.adminEmail,
+            adminPhone: '',
+            adminPassword: '',
+            adminConfirmPassword: '',
+            code: '',
+          });
           // UI will switch to code field; do not navigate yet
           return;
         }
@@ -199,7 +209,7 @@ const OrganizationRegister: React.FC = () => {
                 ? `A 6-digit code was sent to ${pendingEmail}`
                 : 'Create your organization and the first admin account to start using Fillit.'}
             </Typography>
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate autoComplete="off">
               {/* Organization fields */}
               {!awaitingCode && (
               <TextField
@@ -210,6 +220,7 @@ const OrganizationRegister: React.FC = () => {
                 helperText={errors.orgName?.message}
                 required
                 sx={{ mb: 3, ...textFieldStyles }}
+                autoComplete="off"
               />)}
 
               {/* Admin user fields */}
@@ -230,6 +241,7 @@ const OrganizationRegister: React.FC = () => {
                 helperText={errors.adminName?.message}
                 required
                 sx={{ mb: 2, ...textFieldStyles }}
+                autoComplete="off"
               />) : null}
               {!awaitingCode ? (
               <TextField
@@ -241,6 +253,7 @@ const OrganizationRegister: React.FC = () => {
                 helperText={errors.adminEmail?.message}
                 required
                 sx={{ mb: 2, ...textFieldStyles }}
+                autoComplete="email"
               />) : null}
               {!awaitingCode ? (
               <TextField
@@ -251,6 +264,7 @@ const OrganizationRegister: React.FC = () => {
                 error={!!errors.adminPhone}
                 helperText={errors.adminPhone?.message}
                 sx={{ mb: 2, ...textFieldStyles }}
+                autoComplete="tel"
               />) : null}
               {!awaitingCode ? (
               <TextField
@@ -262,6 +276,7 @@ const OrganizationRegister: React.FC = () => {
                 helperText={errors.adminPassword?.message}
                 required
                 sx={{ mb: 2, ...textFieldStyles }}
+                autoComplete="new-password"
               />) : null}
               {!awaitingCode ? (
               <TextField
@@ -273,6 +288,7 @@ const OrganizationRegister: React.FC = () => {
                 helperText={errors.adminConfirmPassword?.message}
                 required
                 sx={{ mb: 3, ...textFieldStyles }}
+                 autoComplete="new-password"
               />) : (
                 <TextField
                   label="6-digit Code"
@@ -282,6 +298,7 @@ const OrganizationRegister: React.FC = () => {
                   helperText={(errors as any)?.code?.message}
                   sx={{ mb: 3, ...textFieldStyles }}
                   inputProps={{ maxLength: 6 }}
+                  autoComplete="one-time-code"
                 />
               )}
 
