@@ -19,7 +19,7 @@ const features = [
   },
   {
     title: 'Customizable & Scalable',
-    description: 'Adaptable organizational templates and scalable infrastructure to grow with your organization\'s needs.',
+    description: 'Adaptable organizational settings and scalable infrastructure to grow with your organization\'s needs.',
   },
 ];
 

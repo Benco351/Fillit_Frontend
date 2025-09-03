@@ -13,10 +13,13 @@ import SwapPage from '../pages/Swap';
 import Departments from '../pages/Departments';
 import ShiftInfo from '../pages/ShiftInfo';
 import EmployeeInfo from '../pages/EmployeeInfo';
+import AnnouncementsPage from '../pages/AnnouncementsPage';
+import AnnouncementsUserPage from '../pages/AnnouncementsUserPage';
 import OrganizationRegister from '../pages/OrganizationRegister';
 
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Announcement } from '@mui/icons-material';
 
 /* ── tiny component that logs out then redirects ─────────── */
 function Logout() {
@@ -92,6 +95,18 @@ const AppRoutes: React.FC = () => (
       <Route path={ROUTES.ORG_REGISTER} element={<OrganizationRegister />} />
       <Route path="/settings" element={<SettingsPage />} />
 
+    
+      <Route
+        path={ROUTES.ANNOUNCEMENTS}
+        element={
+          <AdminOnly>
+            <AnnouncementsPage/>
+          </AdminOnly>
+        }
+      />
+      <Route path={ROUTES.USER_ANNOUNCEMENTS} element={<AnnouncementsUserPage/>} />
+      
+
       {/* sign-out helper */}
       <Route path="/logout" element={<Logout />} />
 
@@ -102,3 +117,9 @@ const AppRoutes: React.FC = () => (
 );
 
 export default AppRoutes;
+
+/* Simple admin-only guard based on sessionStorage */
+function AdminOnly({ children }: { children: React.ReactElement }) {
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') === 'true';
+  return isAdmin ? children : <Navigate to={ROUTES.USER_ANNOUNCEMENTS} replace />;
+}
