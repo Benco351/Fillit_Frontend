@@ -4,7 +4,7 @@ import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogCo
 import { format} from 'date-fns';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
-import Navbar from '../../components/layout/userNavbar';
+import AdminNavbar from '../../components/layout/AdminNavbar';
 import { createRequestedShift, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
@@ -97,6 +97,45 @@ const UserDashboard: React.FC = () => {
     setInfoDialogOpen(true);
   };
 
+  // Function to create a dummy employee with all required parameters
+  const createDummyEmployee = async () => {
+    try {
+      const randomNum = Math.floor(Math.random() * 10000);
+      const dummyEmployeeData = {
+        name: `John Doe ${randomNum}`,
+        email: `john.doe${randomNum}@example.com`,
+        password: 'SecurePassword123!',
+        phone: `+1-555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
+      };
+
+      console.log('Creating dummy employee with data:', dummyEmployeeData);
+      const response = await createEmployee(dummyEmployeeData);
+      console.log('Dummy employee created successfully:', response);
+      
+      setSuccess(`Dummy employee "${dummyEmployeeData.name}" created successfully!`);
+      
+      // Refresh employees list
+      const fetchEmployees = async () => {
+        try {
+          const employeesResponse = await getEmployees();
+          if (employeesResponse?.data && Array.isArray(employeesResponse.data)) {
+            setEmployees(employeesResponse.data.map((emp: any) => ({
+              id: emp.employee_id ?? emp.id,
+              name: emp.employee_name ?? emp.name,
+              email: emp.employee_email ?? emp.email,
+            })));
+          }
+        } catch (err) {
+          console.error('Error refreshing employees:', err);
+        }
+      };
+      
+      await fetchEmployees();
+    } catch (error: any) {
+      console.error('Failed to create dummy employee:', error);
+      setError(`Failed to create dummy employee: ${error.response?.data?.message || error.message}`);
+    }
+  };
 
   // Automatically fetch shifts when the component mounts or the week changes
   useEffect(() => {
@@ -347,11 +386,40 @@ const UserDashboard: React.FC = () => {
           maxWidth: '100%',
           scrollBehavior: 'smooth'
         }}>
-          <Navbar />
+          <AdminNavbar />
 
           <Box sx={{ my: 3 }}>
             {/* Title Box */}
             <UserDashboardTitle/>
+
+            {/* Add Create Dummy Employee Button below the title */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+              <Button
+                variant="contained"
+                onClick={createDummyEmployee}
+                sx={{
+                  background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.8), rgba(0, 194, 140, 0.9))',
+                  border: '1px solid rgba(0, 194, 140, 0.3)',
+                  color: 'white',
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1,
+                  borderRadius: 2,
+                  boxShadow: '0 4px 12px rgba(0, 194, 140, 0.2)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.9), rgba(0, 194, 140, 1))',
+                    boxShadow: '0 6px 16px rgba(0, 194, 140, 0.3)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Create Dummy Employee
+              </Button>
+            </Box>
        
             {/* Filters - Matching User Dashboard position */}
             <Box sx={{

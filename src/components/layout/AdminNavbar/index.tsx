@@ -9,7 +9,7 @@ import { NavBarTheme } from '../../../assets/themes/themes';
 import MobileDrawer from './MobileDrawer';
 import { signOut } from '@aws-amplify/auth';
 
-const Navbar = () => {
+const AdminNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const isMobile = useMediaQuery(NavBarTheme.breakpoints.down('md'));
@@ -107,7 +107,7 @@ const Navbar = () => {
           
           <Button
             variant="contained"
-            onClick={() => navigate(ROUTES.ANNOUNCEMENTS)}
+            onClick={() => navigate(ROUTES.USER_ANNOUNCEMENTS)}
             sx={glassButtonStyle}
           >
             Announcments
@@ -158,4 +158,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default AdminNavbar;
