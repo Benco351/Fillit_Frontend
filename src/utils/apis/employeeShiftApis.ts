@@ -66,8 +66,9 @@ export const deleteEmployeeById = async (id: number) => {
     try {
         const response = await api.delete(`/api/employees/${id}`);
 
-        if (!response.data.data) {
-            throw new Error('No data returned from the server');
+        // Check if the response indicates success (status: "ok")
+        if (response.data.status !== 'ok') {
+            throw new Error('Failed to delete employee');
         }
 
         return response.data; // Return the response data
@@ -76,6 +77,3 @@ export const deleteEmployeeById = async (id: number) => {
         throw error; // Re-throw the error for further handling
     }
 };
-
-
-
