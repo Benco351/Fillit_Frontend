@@ -13,11 +13,11 @@ const features = [
     title: "Smart Calendar",
     description: "View and manage shifts with our interactive calendar that displays dates, hours and statuses."
   },
-  {
-    icon: <CheckCircleSharp fontSize="large" color="primary" />,
-    title: "AI Integration",
-    description: "View and manage shifts with our interactive calendar that displays dates, hours, and employee assignments."
-  },
+  // {
+  //   icon: <CheckCircleSharp fontSize="large" color="primary" />,
+  //   title: "AI Integration",
+  //   description: "View and manage shifts with our interactive calendar that displays dates, hours, and employee assignments."
+  // },
   
   {
     icon: <SwapHoriz fontSize="large" color="primary" />,
@@ -39,11 +39,11 @@ const features = [
     title: "Push Notifications",
     description: "Stay updated with instant alerts about schedule changes and shift reminders."
   },
-  {
-    icon: <Chat fontSize="large" color="primary" />,
-    title: "Integrated Chat",
-    description: "Communicate seamlessly with P2P and group chats for quick team coordination and updates."
-  },
+  // {
+  //   icon: <Chat fontSize="large" color="primary" />,
+  //   title: "Integrated Chat",
+  //   description: "Communicate seamlessly with P2P and group chats for quick team coordination and updates."
+  // },
 ];
 
 //////////
