@@ -623,3 +623,5 @@ const handleDeleteAccount = async () => {
     </ThemeProvider>
   );
 };
+
+export default SettingsPage;
