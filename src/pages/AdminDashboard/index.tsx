@@ -53,6 +53,13 @@ const AdminDashboard: React.FC = () => {
     email
   };
 
+  // Debug logging for current user
+  console.log('Current user debug:', {
+    customEmployeeId,
+    currentEmployee,
+    sessionStorageCustomEmployeeId: sessionStorage.getItem('customEmployeeId')
+  });
+
   //These guys are in useUserDashboard
   const { currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
     error, success, filter, setFilter, setSuccess, setError, setRequestedShifts, assignedShifts, setAssignedShifts, newShift,
@@ -337,7 +344,7 @@ const AdminDashboard: React.FC = () => {
 
         // Assigned shifts
         if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
-          setAssignedShifts(assignedResponse.data.map((shift: any) => ({
+          const mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
             id: shift.assigned_id,
             assigned_id: shift.assigned_id,
             employeeId: shift.assigned_employee_id,
@@ -346,7 +353,16 @@ const AdminDashboard: React.FC = () => {
             assigned_shift_id: shift.assigned_shift_id,
             availableShift: shift.availableShift,
             employee: shift.employee,
-          })));
+          }));
+          
+          // Debug logging for assigned shifts
+          console.log('Assigned shifts debug:', {
+            rawResponse: assignedResponse.data,
+            mappedShifts: mappedAssignedShifts,
+            currentEmployeeId: customEmployeeId
+          });
+          
+          setAssignedShifts(mappedAssignedShifts);
         }
       } catch (err) {
         console.error('Error polling dashboard data:', err);
@@ -624,10 +640,37 @@ const AdminDashboard: React.FC = () => {
           
           // Check if current admin user is assigned to this shift
           const isCurrentUserAssigned = assignedShifts.some(
-            assignedShift => 
-              assignedShift.assigned_shift_id === shift.id && 
-              assignedShift.assigned_employee_id === currentEmployee.id
+            assignedShift => {
+              const shiftIdMatch = assignedShift.assigned_shift_id === shift.id;
+              const employeeIdMatch = assignedShift.assigned_employee_id === currentEmployee.id;
+              
+              // Also check alternative ID fields for robustness
+              const alternativeEmployeeIdMatch = assignedShift.employeeId === currentEmployee.id;
+              const alternativeShiftIdMatch = assignedShift.availableShiftId === shift.id;
+              
+              return (shiftIdMatch && employeeIdMatch) || (alternativeShiftIdMatch && alternativeEmployeeIdMatch);
+            }
           );
+          
+          // Debug logging
+          if (shift.id === 2) { // The shift from the API response
+            const matchingAssignedShift = assignedShifts.find(a => a.assigned_shift_id === shift.id);
+            console.log('Debug shift 2:', {
+              shiftId: shift.id,
+              currentEmployeeId: currentEmployee.id,
+              currentEmployeeIdType: typeof currentEmployee.id,
+              assignedShifts: assignedShifts,
+              isFull,
+              isCurrentUserAssigned,
+              matchingAssignedShift,
+              shiftIdMatch: matchingAssignedShift?.assigned_shift_id === shift.id,
+              employeeIdMatch: matchingAssignedShift?.assigned_employee_id === currentEmployee.id,
+              alternativeEmployeeIdMatch: matchingAssignedShift?.employeeId === currentEmployee.id,
+              alternativeShiftIdMatch: matchingAssignedShift?.availableShiftId === shift.id,
+              assignedEmployeeIdType: typeof matchingAssignedShift?.assigned_employee_id,
+              employeeIdType: typeof matchingAssignedShift?.employeeId
+            });
+          }
           
           // Show shift if it's full OR if current user is assigned to it
           return isFull || isCurrentUserAssigned;
