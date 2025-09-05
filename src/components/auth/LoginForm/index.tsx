@@ -19,6 +19,7 @@ import HomeIcon from '@mui/icons-material/Home';
 
 import {
   signIn,
+  signOut,
   fetchAuthSession,
   fetchUserAttributes,
   confirmResetPassword,
@@ -91,6 +92,24 @@ const LoginForm: React.FC = () => {
   } = useForm<AnyFormData>({
     resolver: zodResolver(schema as z.ZodType<AnyFormData>),  // ← cast added
   });
+
+  /* Helper function to clear all authentication state */
+  const clearAuthState = async () => {
+    try {
+      // Sign out from Cognito
+      await signOut();
+    } catch (err) {
+      // Ignore signOut errors - user might not be signed in
+      console.warn('Error during signOut:', err);
+    }
+    
+    // Clear session storage
+    sessionStorage.removeItem('organizationId');
+    sessionStorage.removeItem('customEmployeeId');
+    sessionStorage.removeItem('isAdmin');
+    sessionStorage.removeItem('name');
+    sessionStorage.removeItem('email');
+  };
   /* ────────────────────────────
      Submit handler (all modes)
      ──────────────────────────── */
@@ -142,6 +161,8 @@ const LoginForm: React.FC = () => {
           // If backend returns invalid organization error, show on field
           const backendMsg = err?.response?.data?.message;
           if (backendMsg && backendMsg.toLowerCase().includes('invalid organization id')) {
+            // Clear authentication state since user is signed in to Cognito but backend validation failed
+            await clearAuthState();
             setAuthError(null);
             setError('organizationId', { type: 'manual', message: 'Invalid organization ID' });
             setLoading(false);
@@ -194,6 +215,9 @@ const LoginForm: React.FC = () => {
         setAuthError('Password reset is not available. Please contact your administrator.');
       }
     } catch (err: unknown) {
+      // Clear authentication state for any authentication error
+      await clearAuthState();
+      
       // Show organization ID error on field if backend returns 401 with relevant message
       if (axios.isAxiosError(err)) {
         const backendMsg = err.response?.data?.message;

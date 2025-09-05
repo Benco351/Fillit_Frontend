@@ -615,12 +615,23 @@ const AdminDashboard: React.FC = () => {
       shifts = shifts.filter(shift => shift.department_id === departmentFilter);
     }
     if (filter === 'full') {
-      // Only show shifts where slots taken >= slots amount
+      // Show shifts where slots taken >= slots amount OR where current admin user is assigned
       shifts = shifts.filter(
-        shift =>
-          typeof shift.shift_slots_amount === 'number' &&
-          typeof shift.shift_slots_taken === 'number' &&
-          shift.shift_slots_taken >= shift.shift_slots_amount
+        shift => {
+          const isFull = typeof shift.shift_slots_amount === 'number' &&
+            typeof shift.shift_slots_taken === 'number' &&
+            shift.shift_slots_taken >= shift.shift_slots_amount;
+          
+          // Check if current admin user is assigned to this shift
+          const isCurrentUserAssigned = assignedShifts.some(
+            assignedShift => 
+              assignedShift.assigned_shift_id === shift.id && 
+              assignedShift.assigned_employee_id === currentEmployee.id
+          );
+          
+          // Show shift if it's full OR if current user is assigned to it
+          return isFull || isCurrentUserAssigned;
+        }
       );
     }
     
@@ -637,7 +648,7 @@ const AdminDashboard: React.FC = () => {
       // Finally by ID for complete stability
       return a.id - b.id;
     });
-  }, [availableShifts, filter, departmentFilter]);
+  }, [availableShifts, filter, departmentFilter, assignedShifts, currentEmployee.id]);
 
   return (
     <ThemeProvider theme={MainTheme}>
