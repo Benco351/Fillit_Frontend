@@ -64,11 +64,13 @@ export default function ChatPopup() {
       /* 1 ▸ call the Lambda */
       const employeeId = sessionStorage.getItem('customEmployeeId');
       const adminMode  = sessionStorage.getItem('isAdmin');
+      const organizationId = sessionStorage.getItem('organizationId');
 
       const { data } = await aiLambda.post('/chat', {
         user_prompt : prompt,
         employee_id : employeeId ? Number(employeeId) : undefined,
         admin_mode  : adminMode ? String(JSON.parse(adminMode)) : 'false',
+        organization_id : organizationId ? Number(organizationId) : undefined,
       });
 
       /* 2 ▸ extract ai_reply regardless of wrapper */
