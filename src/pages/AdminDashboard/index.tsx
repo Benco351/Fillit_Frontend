@@ -53,12 +53,6 @@ const AdminDashboard: React.FC = () => {
     email
   };
 
-  // Debug logging for current user
-  console.log('Current user debug:', {
-    customEmployeeId,
-    currentEmployee,
-    sessionStorageCustomEmployeeId: sessionStorage.getItem('customEmployeeId')
-  });
 
   //These guys are in useUserDashboard
   const { currentWeekStart, setCurrentWeekStart, availableShifts, setAvailableShifts, requestedShifts, loading, setLoading,
@@ -156,8 +150,10 @@ const AdminDashboard: React.FC = () => {
 
         // Fetch available shifts
         const availableShiftsResponse = await getAvailableShifts();
+        let mappedAvailableShifts: any[] = [];
+        
         if (availableShiftsResponse?.data && Array.isArray(availableShiftsResponse.data)) {
-          const mappedAvailableShifts = availableShiftsResponse.data.map((shift: any) => ({
+          mappedAvailableShifts = availableShiftsResponse.data.map((shift: any) => ({
             id: shift.shift_id || shift.id,
             date: shift.shift_date || shift.date,
             start: shift.shift_time_start || shift.start,
@@ -166,21 +162,62 @@ const AdminDashboard: React.FC = () => {
             shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0, // Ensure it's parsed as integer
             department_id: shift.department_id || shift.department?.id, // Support both flat and nested
           }));
-          setAvailableShifts(mappedAvailableShifts);
         }
 
         // Fetch assigned shifts
         const assignedShiftsResponse = await getAssignedShifts();
+        let mappedAssignedShifts: any[] = [];
+        
         if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
-          const mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
+          mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
             assigned_id: shift.assigned_id,
             assigned_employee_id: shift.assigned_employee_id,
             assigned_shift_id: shift.assigned_shift_id,
             availableShift: shift.availableShift,
             employee: shift.employee,
           }));
-          setAssignedShifts(mappedAssignedShifts);
+
+          // CRITICAL FIX: If available shifts is empty but we have assigned shifts,
+          // create available shifts from the assigned shift data
+          if (mappedAvailableShifts.length === 0 && mappedAssignedShifts.length > 0) {
+            console.log('Available shifts is empty, creating from assigned shifts data');
+            
+            // Create a map to avoid duplicates
+            const availableShiftMap = new Map();
+            
+            mappedAssignedShifts.forEach((assignedShift: any) => {
+              if (assignedShift.availableShift && assignedShift.assigned_shift_id) {
+                const shiftId = assignedShift.assigned_shift_id;
+                
+                if (!availableShiftMap.has(shiftId)) {
+                  // Create available shift from assigned shift data
+                  const availableShift = {
+                    id: shiftId,
+                    date: assignedShift.availableShift.shift_date,
+                    start: assignedShift.availableShift.shift_time_start,
+                    end: assignedShift.availableShift.shift_time_end,
+                    shift_slots_amount: 1, // Default to 1 slot
+                    shift_slots_taken: 1, // Since it's assigned, it's taken
+                    department_id: assignedShift.availableShift.department?.id || null,
+                  };
+                  
+                  availableShiftMap.set(shiftId, availableShift);
+                } else {
+                  // If shift already exists, increment slots taken
+                  const existingShift = availableShiftMap.get(shiftId);
+                  existingShift.shift_slots_taken += 1;
+                }
+              }
+            });
+            
+            // Convert map to array
+            mappedAvailableShifts = Array.from(availableShiftMap.values());
+            console.log('Created available shifts from assigned shifts:', mappedAvailableShifts);
+          }
         }
+
+        setAvailableShifts(mappedAvailableShifts);
+        setAssignedShifts(mappedAssignedShifts);
       } catch (err) {
         // Handle error
       } finally {
@@ -311,8 +348,9 @@ const AdminDashboard: React.FC = () => {
         );
 
         // Available shifts
+        let mappedAvailableShifts: any[] = [];
         if (availableResponse?.data && Array.isArray(availableResponse.data)) {
-          setAvailableShifts(availableResponse.data.map((shift: any) => ({
+          mappedAvailableShifts = availableResponse.data.map((shift: any) => ({
             id: shift.shift_id || shift.id,
             date: shift.shift_date || shift.date,
             start: shift.shift_time_start || shift.start,
@@ -320,7 +358,7 @@ const AdminDashboard: React.FC = () => {
             shift_slots_amount: parseInt(shift.shift_slots_amount, 10) || 1,
             shift_slots_taken: parseInt(shift.shift_slots_taken, 10) || 0,
             department_id: shift.department_id || shift.department?.id,
-          })));
+          }));
         }
 
         // Requested shifts - use stable update to prevent flickering
@@ -343,8 +381,9 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Assigned shifts
+        let mappedAssignedShifts: any[] = [];
         if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
-          const mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
+          mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
             id: shift.assigned_id,
             assigned_id: shift.assigned_id,
             employeeId: shift.assigned_employee_id,
@@ -355,15 +394,48 @@ const AdminDashboard: React.FC = () => {
             employee: shift.employee,
           }));
           
-          // Debug logging for assigned shifts
-          console.log('Assigned shifts debug:', {
-            rawResponse: assignedResponse.data,
-            mappedShifts: mappedAssignedShifts,
-            currentEmployeeId: customEmployeeId
-          });
-          
-          setAssignedShifts(mappedAssignedShifts);
+
+          // CRITICAL FIX: If available shifts is empty but we have assigned shifts,
+          // create available shifts from the assigned shift data
+          if (mappedAvailableShifts.length === 0 && mappedAssignedShifts.length > 0) {
+            console.log('Available shifts is empty, creating from assigned shifts data (polling)');
+            
+            // Create a map to avoid duplicates
+            const availableShiftMap = new Map();
+            
+            mappedAssignedShifts.forEach((assignedShift: any) => {
+              if (assignedShift.availableShift && assignedShift.assigned_shift_id) {
+                const shiftId = assignedShift.assigned_shift_id;
+                
+                if (!availableShiftMap.has(shiftId)) {
+                  // Create available shift from assigned shift data
+                  const availableShift = {
+                    id: shiftId,
+                    date: assignedShift.availableShift.shift_date,
+                    start: assignedShift.availableShift.shift_time_start,
+                    end: assignedShift.availableShift.shift_time_end,
+                    shift_slots_amount: 1, // Default to 1 slot
+                    shift_slots_taken: 1, // Since it's assigned, it's taken
+                    department_id: assignedShift.availableShift.department?.id || null,
+                  };
+                  
+                  availableShiftMap.set(shiftId, availableShift);
+                } else {
+                  // If shift already exists, increment slots taken
+                  const existingShift = availableShiftMap.get(shiftId);
+                  existingShift.shift_slots_taken += 1;
+                }
+              }
+            });
+            
+            // Convert map to array
+            mappedAvailableShifts = Array.from(availableShiftMap.values());
+            console.log('Created available shifts from assigned shifts (polling):', mappedAvailableShifts);
+          }
         }
+
+        setAvailableShifts(mappedAvailableShifts);
+        setAssignedShifts(mappedAssignedShifts);
       } catch (err) {
         console.error('Error polling dashboard data:', err);
       } finally {
@@ -648,22 +720,6 @@ const AdminDashboard: React.FC = () => {
             }
           );
           
-          // Debug logging
-          if (shift.id === 2) { // The shift from the API response
-            const matchingAssignedShift = assignedShifts.find(a => a.assigned_shift_id === shift.id);
-            console.log('Debug shift 2:', {
-              shiftId: shift.id,
-              currentEmployeeId: currentEmployee.id,
-              currentEmployeeIdType: typeof currentEmployee.id,
-              assignedShifts: assignedShifts,
-              isFull,
-              isCurrentUserAssigned,
-              matchingAssignedShift,
-              shiftIdMatch: matchingAssignedShift?.assigned_shift_id === shift.id,
-              employeeIdMatch: matchingAssignedShift?.assigned_employee_id === currentEmployee.id,
-              assignedEmployeeIdType: typeof matchingAssignedShift?.assigned_employee_id
-            });
-          }
           
           // Show shift if it's full OR if current user is assigned to it
           return isFull || isCurrentUserAssigned;
