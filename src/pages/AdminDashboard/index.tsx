@@ -644,11 +644,7 @@ const AdminDashboard: React.FC = () => {
               const shiftIdMatch = assignedShift.assigned_shift_id === shift.id;
               const employeeIdMatch = assignedShift.assigned_employee_id === currentEmployee.id;
               
-              // Also check alternative ID fields for robustness
-              const alternativeEmployeeIdMatch = assignedShift.employeeId === currentEmployee.id;
-              const alternativeShiftIdMatch = assignedShift.availableShiftId === shift.id;
-              
-              return (shiftIdMatch && employeeIdMatch) || (alternativeShiftIdMatch && alternativeEmployeeIdMatch);
+              return shiftIdMatch && employeeIdMatch;
             }
           );
           
@@ -665,10 +661,7 @@ const AdminDashboard: React.FC = () => {
               matchingAssignedShift,
               shiftIdMatch: matchingAssignedShift?.assigned_shift_id === shift.id,
               employeeIdMatch: matchingAssignedShift?.assigned_employee_id === currentEmployee.id,
-              alternativeEmployeeIdMatch: matchingAssignedShift?.employeeId === currentEmployee.id,
-              alternativeShiftIdMatch: matchingAssignedShift?.availableShiftId === shift.id,
-              assignedEmployeeIdType: typeof matchingAssignedShift?.assigned_employee_id,
-              employeeIdType: typeof matchingAssignedShift?.employeeId
+              assignedEmployeeIdType: typeof matchingAssignedShift?.assigned_employee_id
             });
           }
           
