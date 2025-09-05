@@ -239,10 +239,11 @@ export const useUserDashboard = (currentEmployee: Employee) => {
     }
   }, [currentWeekStart, currentEmployee.id]); // Include currentEmployee.id in dependencies
 
-  // Initial fetch when component mounts or week changes
+  // Initial fetch when component mounts or week changes - only for non-admin users
   useEffect(() => {
+    if (isAdmin) return; // Disable initial fetch for admin users
     fetchShiftsForWeek();
-  }, [fetchShiftsForWeek]);
+  }, [fetchShiftsForWeek, isAdmin]);
 
   // Single polling mechanism for all shifts - only for non-admin users
   useEffect(() => {

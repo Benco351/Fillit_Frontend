@@ -176,8 +176,6 @@ const AdminDashboard: React.FC = () => {
         const assignedShiftsResponse = await getAssignedShifts();
         let mappedAssignedShifts: any[] = [];
         
-        console.log('Assigned shifts response:', assignedShiftsResponse);
-        
         if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
           mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
             assigned_id: shift.assigned_id,
@@ -187,8 +185,6 @@ const AdminDashboard: React.FC = () => {
             employee: shift.employee,
           }));
 
-          console.log('Mapped assigned shifts:', mappedAssignedShifts);
-          console.log('Mapped available shifts before fix:', mappedAvailableShifts);
 
           // CRITICAL FIX: If available shifts is empty but we have assigned shifts,
           // create available shifts from the assigned shift data
@@ -199,7 +195,6 @@ const AdminDashboard: React.FC = () => {
             const availableShiftMap = new Map();
             
             mappedAssignedShifts.forEach((assignedShift: any) => {
-              console.log('Processing assigned shift:', assignedShift);
               if (assignedShift.availableShift && assignedShift.assigned_shift_id) {
                 const shiftId = assignedShift.assigned_shift_id;
                 
@@ -215,7 +210,6 @@ const AdminDashboard: React.FC = () => {
                     department_id: assignedShift.availableShift.department?.id || null,
                   };
                   
-                  console.log('Creating available shift:', availableShift);
                   availableShiftMap.set(shiftId, availableShift);
                 } else {
                   // If shift already exists, increment slots taken
@@ -227,15 +221,6 @@ const AdminDashboard: React.FC = () => {
             
             // Convert map to array
             mappedAvailableShifts = Array.from(availableShiftMap.values());
-            console.log('Created available shifts from assigned shifts:', mappedAvailableShifts);
-            
-            // Check if the created shift is for September 5th
-            const sept5Shift = mappedAvailableShifts.find(shift => shift.date === '2025-09-05');
-            if (sept5Shift) {
-              console.log('Found September 5th shift:', sept5Shift);
-            } else {
-              console.log('September 5th shift not found in created shifts');
-            }
           }
         }
 
@@ -721,12 +706,6 @@ const AdminDashboard: React.FC = () => {
 
   // Filtered shifts based on the selected filter and department
   const filteredShifts = React.useMemo(() => {
-    console.log('Filtering shifts - availableShifts:', availableShifts);
-    console.log('Filtering shifts - assignedShifts:', assignedShifts);
-    console.log('Filtering shifts - currentEmployee:', currentEmployee);
-    console.log('Filtering shifts - filter:', filter);
-    console.log('Current week start:', currentWeekStart);
-    console.log('Week days:', weekDays.map(day => format(day, 'yyyy-MM-dd')));
     
     let shifts = availableShifts;
     if (departmentFilter !== 'all') {
@@ -750,15 +729,11 @@ const AdminDashboard: React.FC = () => {
             }
           );
           
-          console.log(`Shift ${shift.id}: isFull=${isFull}, isCurrentUserAssigned=${isCurrentUserAssigned}, willShow=${isFull || isCurrentUserAssigned}`);
-          
           // Show shift if it's full OR if current user is assigned to it
           return isFull || isCurrentUserAssigned;
         }
       );
     }
-    
-    console.log('Final filtered shifts:', shifts);
     
     // Sort shifts consistently by date, start time, and ID to prevent position jumping
     return shifts.sort((a, b) => {
@@ -1021,11 +996,8 @@ const AdminDashboard: React.FC = () => {
                       }}
                     >
                       {/* Shift Card - Update the existing shift mapping code */}
-                      {(() => {
-                        const dayShifts = filteredShifts.filter(shift => shift.date === format(day, 'yyyy-MM-dd'));
-                        console.log(`Day ${format(day, 'yyyy-MM-dd')} shifts:`, dayShifts);
-                        return dayShifts;
-                      })()
+                      {filteredShifts
+                        .filter(shift => shift.date === format(day, 'yyyy-MM-dd'))
                         .map((shift, idx, arr) => {
                           const pendingRequests = requestedShifts.filter(
                             req => req.availableShiftId === shift.id && req.status === 'pending'
