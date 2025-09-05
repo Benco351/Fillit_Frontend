@@ -192,18 +192,24 @@ const AdminDashboard: React.FC = () => {
           console.log('Mapped assigned shifts:', mappedAssignedShifts);
 
 
-          // CRITICAL FIX: If available shifts is empty but we have assigned shifts,
-          // create available shifts from the assigned shift data
+          // CRITICAL FIX: Always ensure assigned shifts are included in available shifts
+          // This handles cases where assigned shifts are not in available shifts (because they're full)
           console.log('🔧 FIX CHECK:');
           console.log('Available shifts length:', mappedAvailableShifts.length);
           console.log('Assigned shifts length:', mappedAssignedShifts.length);
           
-          if (mappedAvailableShifts.length === 0 && mappedAssignedShifts.length > 0) {
-            console.log('✅ FIX RUNNING: Available shifts is empty, creating from assigned shifts data');
+          if (mappedAssignedShifts.length > 0) {
+            console.log('✅ FIX RUNNING: Adding assigned shifts to available shifts');
             
-            // Create a map to avoid duplicates
+            // Create a map from existing available shifts to avoid duplicates
             const availableShiftMap = new Map();
             
+            // Add existing available shifts to the map
+            mappedAvailableShifts.forEach((shift: any) => {
+              availableShiftMap.set(shift.id, shift);
+            });
+            
+            // Add assigned shifts that are not already in available shifts
             mappedAssignedShifts.forEach((assignedShift: any) => {
               if (assignedShift.availableShift && assignedShift.assigned_shift_id) {
                 const shiftId = assignedShift.assigned_shift_id;
@@ -221,19 +227,21 @@ const AdminDashboard: React.FC = () => {
                   };
                   
                   availableShiftMap.set(shiftId, availableShift);
+                  console.log('➕ ADDED ASSIGNED SHIFT TO AVAILABLE:', availableShift);
                 } else {
                   // If shift already exists, increment slots taken
                   const existingShift = availableShiftMap.get(shiftId);
                   existingShift.shift_slots_taken += 1;
+                  console.log('🔄 INCREMENTED SLOTS TAKEN FOR EXISTING SHIFT:', existingShift);
                 }
               }
             });
             
             // Convert map to array
             mappedAvailableShifts = Array.from(availableShiftMap.values());
-            console.log('🎯 CREATED AVAILABLE SHIFTS:', mappedAvailableShifts);
+            console.log('🎯 FINAL AVAILABLE SHIFTS:', mappedAvailableShifts);
           } else {
-            console.log('❌ FIX NOT RUNNING: Available shifts length =', mappedAvailableShifts.length, ', Assigned shifts length =', mappedAssignedShifts.length);
+            console.log('❌ NO ASSIGNED SHIFTS TO PROCESS');
           }
         }
 
@@ -420,14 +428,20 @@ const AdminDashboard: React.FC = () => {
           }));
           
 
-          // CRITICAL FIX: If available shifts is empty but we have assigned shifts,
-          // create available shifts from the assigned shift data
-          if (mappedAvailableShifts.length === 0 && mappedAssignedShifts.length > 0) {
-            console.log('Available shifts is empty, creating from assigned shifts data (polling)');
+          // CRITICAL FIX: Always ensure assigned shifts are included in available shifts
+          // This handles cases where assigned shifts are not in available shifts (because they're full)
+          if (mappedAssignedShifts.length > 0) {
+            console.log('Adding assigned shifts to available shifts (polling)');
             
-            // Create a map to avoid duplicates
+            // Create a map from existing available shifts to avoid duplicates
             const availableShiftMap = new Map();
             
+            // Add existing available shifts to the map
+            mappedAvailableShifts.forEach((shift: any) => {
+              availableShiftMap.set(shift.id, shift);
+            });
+            
+            // Add assigned shifts that are not already in available shifts
             mappedAssignedShifts.forEach((assignedShift: any) => {
               if (assignedShift.availableShift && assignedShift.assigned_shift_id) {
                 const shiftId = assignedShift.assigned_shift_id;
@@ -455,7 +469,7 @@ const AdminDashboard: React.FC = () => {
             
             // Convert map to array
             mappedAvailableShifts = Array.from(availableShiftMap.values());
-            console.log('Created available shifts from assigned shifts (polling):', mappedAvailableShifts);
+            console.log('Final available shifts (polling):', mappedAvailableShifts);
           }
         }
 
@@ -723,6 +737,11 @@ const AdminDashboard: React.FC = () => {
 
   // Filtered shifts based on the selected filter and department
   const filteredShifts = React.useMemo(() => {
+    console.log('🔍 FILTERING DEBUG:');
+    console.log('Available shifts for filtering:', availableShifts);
+    console.log('Assigned shifts for filtering:', assignedShifts);
+    console.log('Current employee:', currentEmployee);
+    console.log('Filter:', filter);
     
     let shifts = availableShifts;
     if (departmentFilter !== 'all') {
@@ -753,7 +772,7 @@ const AdminDashboard: React.FC = () => {
     }
     
     // Sort shifts consistently by date, start time, and ID to prevent position jumping
-    return shifts.sort((a, b) => {
+    const sortedShifts = shifts.sort((a, b) => {
       // First sort by date
       if (a.date !== b.date) {
         return a.date.localeCompare(b.date);
@@ -765,6 +784,9 @@ const AdminDashboard: React.FC = () => {
       // Finally by ID for complete stability
       return a.id - b.id;
     });
+    
+    console.log('🎯 FINAL FILTERED SHIFTS:', sortedShifts);
+    return sortedShifts;
   }, [availableShifts, filter, departmentFilter, assignedShifts, currentEmployee.id]);
 
   return (
