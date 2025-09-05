@@ -19,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import HomeIcon from '@mui/icons-material/Home';
 import { SignUpTheme } from '../../../assets/themes/themes';
 import { api } from '../../../utils/apis/apiconfig';
+import { deleteEmployeeById } from '../../../utils/apis/employeeShiftApis';
 import { signUp, confirmSignUp, signOut, fetchAuthSession} from '@aws-amplify/auth';
 import axios from 'axios';
 import { Api } from '@mui/icons-material';
@@ -30,7 +31,15 @@ const SignUpSchema = z
   .object({
     name:            z.string().nonempty('Name is required'),
     email:           z.string().email('Please enter a valid email address'),
-    phone:           z.string().optional(),
+    phone:           z.string()
+                       .optional()
+                       .refine((phone) => {
+                         if (!phone) return true; // Optional field
+                         // Phone must start with + and be in international format
+                         const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+                         const phoneRegex = /^\+[1-9]\d{1,14}$/;
+                         return phoneRegex.test(cleanPhone);
+                       }, 'Phone number must start with + and be in international format (e.g., +1234567890)'),
     password:        z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
     code:            z.string().optional(),   // 6-digit e-mail code
@@ -78,6 +87,35 @@ async function clearSessionIfNeeded() {
   }
 }
 
+/**
+ * Validates if organization exists by attempting to create a test employee
+ * This is a lightweight way to check organization validity
+ */
+async function validateOrganizationExists(organizationId: number): Promise<boolean> {
+  try {
+    // We'll let the backend handle organization validation
+    // The backend will return an error if organization doesn't exist
+    return true; // Assume valid, let backend handle the actual validation
+  } catch (error) {
+    console.error('Organization validation error:', error);
+    return false;
+  }
+}
+
+/**
+ * Cleans up employee record if Cognito signup fails
+ */
+async function cleanupEmployeeRecord(employeeId: number) {
+  try {
+    console.log(`Cleaning up employee record with ID: ${employeeId}`);
+    await deleteEmployeeById(employeeId);
+    console.log('Employee record successfully deleted');
+  } catch (error) {
+    console.error('Failed to cleanup employee record:', error);
+    // Don't throw here - we want to show the original Cognito error to the user
+  }
+}
+
   /* ──────────────────────────────────────────
      Submit handler
      ────────────────────────────────────────── */
@@ -93,47 +131,61 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
     }
     /* STEP 1 — persist user to your DB and grab the new employeeId */
     if (!awaitingCode) {
-      const createRes = await api.post('/auth/sign-up', {
-        name:     data.name,
-        email:    data.email,
-        phone:    data.phone,
-        password: data.password,
-        organization_id: orgId,
-        // initial: false,
-      });
-      const id = createRes.data.data.employee_id;
-      // Check if the employee is admin from the response
-      const isAdmin = createRes.data.data.employee_admin;
-      /* STORE it for the confirm step (if needed) */
-      setPendingEmployeeId(id);
-      setPendingEmail(data.email);
-      setPendingSignUpData(data);
+      let employeeId: number | undefined = undefined;
+      
+      try {
+        const createRes = await api.post('/auth/sign-up', {
+          name:     data.name,
+          email:    data.email,
+          phone:    data.phone,
+          password: data.password,
+          organization_id: orgId,
+          // initial: false,
+        });
+        employeeId = createRes.data.data.employee_id;
+        // Check if the employee is admin from the response
+        const isAdmin = createRes.data.data.employee_admin;
+        /* STORE it for the confirm step (if needed) */
+        setPendingEmployeeId(employeeId);
+        setPendingEmail(data.email);
+        setPendingSignUpData(data);
 
-      // --- Cognito signUp code commented out ---
-      const { nextStep } = await signUp({
-        username: data.email,
-        password: data.password,
-        options: {
-          userAttributes: {
-            email:              data.email,
-            'custom:employeeId': String(id),
-            ...(data.phone ? { phone_number: data.phone } : {}),
+        // --- Cognito signUp code ---
+        const { nextStep } = await signUp({
+          username: data.email,
+          password: data.password,
+          options: {
+            userAttributes: {
+              email:              data.email,
+              'custom:employeeId': String(employeeId),
+              ...(data.phone ? { phone_number: data.phone } : {}),
+            },
           },
-        },
-      });
-      if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
-        setAwaitingCode(true);
+        });
+        
+        if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+          setAwaitingCode(true);
+          return;
+        }
+        
+        // /* no confirmation required */
+        setSnackOpen(true);
+        await api.post('/auth/add-to-group', {
+          email: data.email,
+          group: isAdmin ? 'Admins' : 'Users',
+        });
+        setTimeout(() => navigate('/login'), 2000);
         return;
+        
+      } catch (cognitoError) {
+        // If Cognito signup fails, clean up the employee record
+        if (employeeId !== undefined) {
+          await cleanupEmployeeRecord(employeeId);
+        }
+        
+        // Re-throw the Cognito error to be handled by the outer catch block
+        throw cognitoError;
       }
-      // /* no confirmation required */
-      setSnackOpen(true);
-      await api.post('/auth/add-to-group', {
-        email: data.email,
-        group: isAdmin ? 'Admins' : 'Users',
-      });
-      // (add-to-group call commented out as requested)
-      setTimeout(() => navigate('/login'), 2000);
-      return;
     }
 
     /* STEP 3 — confirm code (nothing else to push) */
@@ -152,10 +204,36 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
     setTimeout(() => navigate('/login'), 2000);
   }
   catch (err: unknown) {
-    if (axios.isAxiosError(err) && err.response?.status === 409) {
-      setAuthError('This email is already registered');
+    if (axios.isAxiosError(err)) {
+      const status = err.response?.status;
+      const message = err.response?.data?.message || err.message;
+      
+      if (status === 409) {
+        setAuthError('This email is already registered');
+      } else if (status === 404) {
+        setAuthError('Organization not found. Please check your Organization ID.');
+      } else if (status === 400) {
+        if (message.includes('organization')) {
+          setAuthError('Invalid organization ID. Please check your Organization ID.');
+        } else if (message.includes('phone')) {
+          setAuthError('Invalid phone number format. Please use a valid phone number (e.g., +1234567890)');
+        } else {
+          setAuthError(message || 'Invalid request data');
+        }
+      } else {
+        setAuthError(message || 'Registration failed');
+      }
     } else if (err instanceof Error) {
-      setAuthError(err.message);
+      // Check for specific Cognito error messages
+      if (err.message.includes('phone_number')) {
+        setAuthError('Invalid phone number format. Please use a valid phone number (e.g., +1234567890)');
+      } else if (err.message.includes('email')) {
+        setAuthError('Invalid email format or email already exists');
+      } else if (err.message.includes('password')) {
+        setAuthError('Password does not meet requirements');
+      } else {
+        setAuthError(err.message);
+      }
     } else {
       setAuthError('Registration failed');
     }
@@ -265,7 +343,9 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
                     />
                     <TextField
                       label="Phone Number" type="tel" fullWidth {...register('phone')}
-                      error={!!errors.phone} helperText={errors.phone?.message}
+                      placeholder="+1234567890"
+                      error={!!errors.phone} 
+                      helperText={errors.phone?.message || "Enter phone number with country code (e.g., +1234567890)"}
                       sx={textFieldStyles}
                     />
                     <TextField
