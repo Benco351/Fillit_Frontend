@@ -176,6 +176,10 @@ const AdminDashboard: React.FC = () => {
         const assignedShiftsResponse = await getAssignedShifts();
         let mappedAssignedShifts: any[] = [];
         
+        console.log('🔍 ASSIGNED SHIFTS DEBUG:');
+        console.log('Raw response:', assignedShiftsResponse);
+        console.log('Response data:', assignedShiftsResponse?.data);
+        
         if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
           mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
             assigned_id: shift.assigned_id,
@@ -184,12 +188,18 @@ const AdminDashboard: React.FC = () => {
             availableShift: shift.availableShift,
             employee: shift.employee,
           }));
+          
+          console.log('Mapped assigned shifts:', mappedAssignedShifts);
 
 
           // CRITICAL FIX: If available shifts is empty but we have assigned shifts,
           // create available shifts from the assigned shift data
+          console.log('🔧 FIX CHECK:');
+          console.log('Available shifts length:', mappedAvailableShifts.length);
+          console.log('Assigned shifts length:', mappedAssignedShifts.length);
+          
           if (mappedAvailableShifts.length === 0 && mappedAssignedShifts.length > 0) {
-            console.log('Available shifts is empty, creating from assigned shifts data');
+            console.log('✅ FIX RUNNING: Available shifts is empty, creating from assigned shifts data');
             
             // Create a map to avoid duplicates
             const availableShiftMap = new Map();
@@ -221,9 +231,16 @@ const AdminDashboard: React.FC = () => {
             
             // Convert map to array
             mappedAvailableShifts = Array.from(availableShiftMap.values());
+            console.log('🎯 CREATED AVAILABLE SHIFTS:', mappedAvailableShifts);
+          } else {
+            console.log('❌ FIX NOT RUNNING: Available shifts length =', mappedAvailableShifts.length, ', Assigned shifts length =', mappedAssignedShifts.length);
           }
         }
 
+        console.log('📤 SETTING STATE:');
+        console.log('Available shifts to set:', mappedAvailableShifts);
+        console.log('Assigned shifts to set:', mappedAssignedShifts);
+        
         setAvailableShifts(mappedAvailableShifts);
         setAssignedShifts(mappedAssignedShifts);
       } catch (err) {
