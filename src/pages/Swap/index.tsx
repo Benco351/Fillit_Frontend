@@ -38,6 +38,7 @@ import {
   respondToShiftSwapRequest,
   ShiftSwapRequest,
 } from '../../utils/apis/shiftSwapRequestApis';
+import { getRequestedShifts, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis';
 
 import { getDepartments } from '../../utils/apis/departmentApis';
 
@@ -433,6 +434,83 @@ const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }>
   );
 };
 
+// Function to delete requested shifts that correspond to swapped assigned shifts
+const deleteCorrespondingRequestedShifts = async (swapRequest: ShiftSwapRequest) => {
+  try {
+    // First, we need to get the assigned shift details to find the available shift IDs
+    const assignedShiftMod = await import('../../utils/apis/assignedShiftApis');
+    
+    // Get the assigned shift details for both shifts being swapped
+    const requesterAssignedShift = await assignedShiftMod.getAssignedShiftById(swapRequest.requester_shift_id);
+    const targetAssignedShift = await assignedShiftMod.getAssignedShiftById(swapRequest.target_shift_id);
+    
+    // Extract the available shift IDs from the assigned shifts
+    const requesterAvailableShiftId = requesterAssignedShift.data?.assigned_shift_id;
+    const targetAvailableShiftId = targetAssignedShift.data?.assigned_shift_id;
+    
+    console.log('🔍 Swap request details:', {
+      swapRequestId: swapRequest.id,
+      requesterEmployeeId: swapRequest.requester_employee_id,
+      targetEmployeeId: swapRequest.target_employee_id,
+      requesterAssignedShiftId: swapRequest.requester_shift_id,
+      targetAssignedShiftId: swapRequest.target_shift_id,
+      requesterAvailableShiftId,
+      targetAvailableShiftId
+    });
+    
+    if (!requesterAvailableShiftId || !targetAvailableShiftId) {
+      console.warn('❌ Could not find available shift IDs for assigned shifts');
+      return;
+    }
+
+    // Get all requested shifts for both employees involved in the swap
+    const requesterRequestedShifts = await getRequestedShifts({ 
+      request_employee_id: swapRequest.requester_employee_id 
+    });
+    const targetRequestedShifts = await getRequestedShifts({ 
+      request_employee_id: swapRequest.target_employee_id 
+    });
+
+    // Find requested shifts that correspond to the swapped assigned shifts
+    // We need to find requested shifts where:
+    // 1. The employee matches the swap participants
+    // 2. The availableShiftId matches the available shift ID from the assigned shift
+    // 3. The status is 'approved' (meaning it was approved and created an assigned shift)
+
+    const requesterShiftsToDelete = requesterRequestedShifts.data?.filter(shift => 
+      shift.employeeId === swapRequest.requester_employee_id &&
+      shift.availableShiftId === requesterAvailableShiftId &&
+      shift.status === 'approved'
+    ) || [];
+
+    const targetShiftsToDelete = targetRequestedShifts.data?.filter(shift => 
+      shift.employeeId === swapRequest.target_employee_id &&
+      shift.availableShiftId === targetAvailableShiftId &&
+      shift.status === 'approved'
+    ) || [];
+
+    // Delete the corresponding requested shifts
+    const deletePromises = [
+      ...requesterShiftsToDelete.map(shift => deleteRequestedShiftById(shift.id)),
+      ...targetShiftsToDelete.map(shift => deleteRequestedShiftById(shift.id))
+    ];
+
+    if (deletePromises.length > 0) {
+      await Promise.all(deletePromises);
+      console.log(`✅ Deleted ${deletePromises.length} requested shifts after swap approval:`, {
+        requesterShiftsDeleted: requesterShiftsToDelete.length,
+        targetShiftsDeleted: targetShiftsToDelete.length,
+        swapRequestId: swapRequest.id
+      });
+    } else {
+      console.log('ℹ️ No requested shifts found to delete for swap request:', swapRequest.id);
+    }
+  } catch (error) {
+    console.error('Error in deleteCorrespondingRequestedShifts:', error);
+    throw error;
+  }
+};
+
 const SwapPage: React.FC = () => {
   const user = getCurrentUser();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -813,6 +891,16 @@ const SwapPage: React.FC = () => {
                         color="success"
                         onClick={async () => {
                           await respondToShiftSwapRequest(req.id, { status: 'accepted' });
+                          
+                          // After swap approval, delete corresponding requested shifts
+                          try {
+                            await deleteCorrespondingRequestedShifts(req);
+                          } catch (error) {
+                            console.error('Error deleting requested shifts after swap:', error);
+                            // Don't block the swap approval if this fails
+                            // The swap has already been approved, so we just log the error
+                          }
+                          
                           fetchSwapRequests();
                         }}
                       >Accept</Button>

@@ -215,8 +215,8 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         })));
       }
 
-      // Fetch assigned shifts
-      const assignedResponse = await getAssignedShifts();
+      // Fetch assigned shifts for the current user only
+      const assignedResponse = await getAssignedShifts({ assigned_employee_id: currentEmployee.id });
       let mappedAssignedShifts: any[] = [];
       if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
         mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
