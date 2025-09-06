@@ -301,12 +301,21 @@ const UserDashboard: React.FC = () => {
         break;
       case 'accepted':
         // Show only shifts that are assigned to the current user
-        filteredShifts = shifts.filter(shift =>
-          assignedShifts.some(assign => 
+        console.log('🔍 ACCEPTED FILTER DEBUG:');
+        console.log('Current employee ID:', currentEmployee.id);
+        console.log('Available shifts:', shifts);
+        console.log('Assigned shifts:', assignedShifts);
+        
+        filteredShifts = shifts.filter(shift => {
+          const isAssigned = assignedShifts.some(assign => 
             assign.assigned_shift_id === shift.id && 
             assign.assigned_employee_id === currentEmployee.id
-          )
-        );
+          );
+          console.log(`Shift ${shift.id} (${shift.date}): isAssigned = ${isAssigned}`);
+          return isAssigned;
+        });
+        
+        console.log('🔍 Filtered shifts for accepted:', filteredShifts);
         break;
       default:
         filteredShifts = shifts;

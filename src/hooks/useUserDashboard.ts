@@ -216,10 +216,20 @@ export const useUserDashboard = (currentEmployee: Employee) => {
       }
 
       // Fetch assigned shifts for the current user only
+      console.log('🔍 Fetching assigned shifts for user:', currentEmployee.id);
       const assignedResponse = await getAssignedShifts({ assigned_employee_id: currentEmployee.id });
+      console.log('🔍 Raw assigned shifts response:', assignedResponse);
+      
       let mappedAssignedShifts: any[] = [];
       if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
-        mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
+        // CLIENT-SIDE FIX: Filter by current user's ID since backend might not be filtering correctly
+        const filteredByUser = assignedResponse.data.filter((shift: any) => 
+          shift.assigned_employee_id === currentEmployee.id
+        );
+        console.log('🔍 Backend returned shifts:', assignedResponse.data);
+        console.log('🔍 Filtered by user ID:', filteredByUser);
+        
+        mappedAssignedShifts = filteredByUser.map((shift: any) => ({
           id: shift.assigned_id,
           assigned_id: shift.assigned_id,
           employeeId: shift.assigned_employee_id,
@@ -229,6 +239,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           availableShift: shift.availableShift,
           employee: shift.employee,
         }));
+        console.log('🔍 Mapped assigned shifts:', mappedAssignedShifts);
         setAssignedShifts(mappedAssignedShifts);
       }
 
