@@ -140,7 +140,8 @@ const LoginForm: React.FC = () => {
           cognitoEmployeeId = (attributes as Record<string, string>)['custom:employeeId'];
         }
         if (!cognitoEmployeeId) {
-          throw new Error('Unable to retrieve custom employee ID');
+          // Log warning, but do not block login
+          console.warn('custom:employeeId not found in Cognito attributes, will use backend value');
         }
         // --- END Cognito logic ---
 
@@ -175,11 +176,11 @@ const LoginForm: React.FC = () => {
         const apiEmployeeId = employee.employee_id;
         const isAdmin = employee.employee_admin;
         // Save apiEmployeeId and isAdmin in sessionStorage
-        sessionStorage.setItem('organizationId', String(orgId));
-        sessionStorage.setItem('customEmployeeId', apiEmployeeId);
-        sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
-        sessionStorage.setItem('name', employee.employee_name);
-        sessionStorage.setItem('email', employee.employee_email);
+  sessionStorage.setItem('organizationId', String(orgId));
+  sessionStorage.setItem('customEmployeeId', cognitoEmployeeId || apiEmployeeId);
+  sessionStorage.setItem('isAdmin', JSON.stringify(isAdmin));
+  sessionStorage.setItem('name', employee.employee_name);
+  sessionStorage.setItem('email', employee.employee_email);
         if (isAdmin) {
           navigate('/admin-dashboard', { replace: true });
         } else {
