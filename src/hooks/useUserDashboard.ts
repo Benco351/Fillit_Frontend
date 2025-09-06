@@ -183,8 +183,9 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         shift_end_date: new Date(endDate),
       });
 
+      let mappedShifts: any[] = [];
       if (availableResponse?.data && Array.isArray(availableResponse.data)) {
-        const mappedShifts = availableResponse.data.map((shift: any) => {
+        mappedShifts = availableResponse.data.map((shift: any) => {
           const slotsAmount = Number(shift.shift_slots_amount);
           const slotsTaken = Number(shift.shift_slots_taken);
           
@@ -198,10 +199,6 @@ export const useUserDashboard = (currentEmployee: Employee) => {
             department_id: shift.department_id || shift.department?.id,
           };
         });
-
-        setAvailableShifts(mappedShifts);
-      } else {
-        setAvailableShifts([]);
       }
 
       // Fetch requested shifts for the current employee

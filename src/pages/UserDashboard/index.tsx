@@ -9,7 +9,7 @@ import { createRequestedShift, deleteRequestedShiftById } from '../../utils/apis
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
 import {Employee, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
 
-import { createEmployee, getEmployees, deleteEmployeeById } from '../../utils/apis/employeeShiftApis'; 
+import { getEmployees, deleteEmployeeById } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
 import RequestShiftDialog from '../../components/ShiftManagment';
@@ -97,45 +97,6 @@ const UserDashboard: React.FC = () => {
     setInfoDialogOpen(true);
   };
 
-  // Function to create a dummy employee with all required parameters
-  const createDummyEmployee = async () => {
-    try {
-      const randomNum = Math.floor(Math.random() * 10000);
-      const dummyEmployeeData = {
-        name: `John Doe ${randomNum}`,
-        email: `john.doe${randomNum}@example.com`,
-        password: 'SecurePassword123!',
-        phone: `+1-555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
-      };
-
-      console.log('Creating dummy employee with data:', dummyEmployeeData);
-      const response = await createEmployee(dummyEmployeeData);
-      console.log('Dummy employee created successfully:', response);
-      
-      setSuccess(`Dummy employee "${dummyEmployeeData.name}" created successfully!`);
-      
-      // Refresh employees list
-      const fetchEmployees = async () => {
-        try {
-          const employeesResponse = await getEmployees();
-          if (employeesResponse?.data && Array.isArray(employeesResponse.data)) {
-            setEmployees(employeesResponse.data.map((emp: any) => ({
-              id: emp.employee_id ?? emp.id,
-              name: emp.employee_name ?? emp.name,
-              email: emp.employee_email ?? emp.email,
-            })));
-          }
-        } catch (err) {
-          console.error('Error refreshing employees:', err);
-        }
-      };
-      
-      await fetchEmployees();
-    } catch (error: any) {
-      console.error('Failed to create dummy employee:', error);
-      setError(`Failed to create dummy employee: ${error.response?.data?.message || error.message}`);
-    }
-  };
 
   // Automatically fetch shifts when the component mounts or the week changes
   useEffect(() => {
@@ -250,9 +211,23 @@ const UserDashboard: React.FC = () => {
       shift_slots_taken: availableShift?.shift_slots_taken,
       requestedShift,
       availableShiftsLength: availableShifts.length,
-      requestedShiftsLength: requestedShifts.length
+      requestedShiftsLength: requestedShifts.length,
+      assignedShiftsLength: assignedShifts.length,
+      currentEmployeeId: currentEmployee.id
     });
 
+    // FIRST: Check if current user is assigned to this shift (regardless of slots)
+    const isUserAssigned = assignedShifts.some(s => 
+      s.assigned_shift_id === availableShiftId && 
+      s.assigned_employee_id === currentEmployee.id
+    );
+    
+    if (isUserAssigned) {
+      console.log('User is assigned to this shift, returning assigned status');
+      return 'assigned';
+    }
+
+    // SECOND: Check if user has a requested shift for this shift
     if (requestedShift) {
       // If the shift is denied, show it as "denied" for users
       if (requestedShift.status === 'denied') {
@@ -265,7 +240,7 @@ const UserDashboard: React.FC = () => {
       return requestedShift.status;
     }
 
-    // Check if shift has available slots first
+    // THIRD: Check if shift has available slots
     if (availableShift) {
       const slotsAmount = Number(availableShift.shift_slots_amount) || 1;
       const slotsTaken = Number(availableShift.shift_slots_taken) || 0;
@@ -285,34 +260,12 @@ const UserDashboard: React.FC = () => {
         isNaN_availableSlots: isNaN(availableSlots)
       });
       
-      // If no slots are available, check if current user is part of this shift
+      // If no slots are available, show as full
       if (availableSlots <= 0) {
-        console.log('Shift is full, checking if current user is part of it');
-        
-        // Check if current user is assigned to this shift
-        const isUserAssigned = assignedShifts.some(s => 
-          s.assigned_shift_id === availableShiftId && 
-          s.assigned_employee_id === currentEmployee.id
-        );
-        
-        // Check if current user has a pending/approved request for this shift
-        const isUserRequested = requestedShifts.some(s => 
-          s.availableShiftId === availableShiftId && 
-          s.employeeId === currentEmployee.id &&
-          (s.status === 'pending' || s.status === 'approved')
-        );
-        
-        // If user is part of the shift (assigned or has pending/approved request), show as assigned
-        if (isUserAssigned || isUserRequested) {
-          return 'assigned';
-        }
-        
-        // If user is not part of the shift, show as full (will be displayed as grey)
+        console.log('Shift is full, returning full status');
         return 'full';
       }
     }
-
-
 
     return 'available';
   };
@@ -392,34 +345,6 @@ const UserDashboard: React.FC = () => {
             {/* Title Box */}
             <UserDashboardTitle/>
 
-            {/* Add Create Dummy Employee Button below the title */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-              <Button
-                variant="contained"
-                onClick={createDummyEmployee}
-                sx={{
-                  background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.8), rgba(0, 194, 140, 0.9))',
-                  border: '1px solid rgba(0, 194, 140, 0.3)',
-                  color: 'white',
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1,
-                  borderRadius: 2,
-                  boxShadow: '0 4px 12px rgba(0, 194, 140, 0.2)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.9), rgba(0, 194, 140, 1))',
-                    boxShadow: '0 6px 16px rgba(0, 194, 140, 0.3)',
-                    transform: 'translateY(-1px)',
-                  },
-                  '&:active': {
-                    transform: 'translateY(0)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Create Dummy Employee
-              </Button>
-            </Box>
        
             {/* Filters - Matching User Dashboard position */}
             <Box sx={{
@@ -477,61 +402,6 @@ const UserDashboard: React.FC = () => {
                   mb: 3,
                 }}
               >
-                {/* Employee selection
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 2,
-                  width: { xs: '100%', md: 'auto' }
-                }}>
-                  <TextField
-                    select
-                    label="Current Employee"
-                    value={currentEmployee.id}
-                    onChange={(e) => {
-                      const empId = Number(e.target.value);
-                      const employee = employees.find(emp => emp.id === empId);
-                      if (employee) setCurrentEmployee(employee);
-                    }}
-                    sx={{ 
-                      width: { xs: '100%', sm: 200 },
-                      color: 'white',
-                      '& .MuiInputBase-input': { color: 'white' }
-                    }}
-                  >
-                    {employees.map((employee) => (
-                      <MenuItem key={employee.id} value={employee.id}>
-                        {employee.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={async () => {
-                      try {
-                        const response = await createEmployee({
-                          name: 'John Doe',
-                          email: `john${Math.floor(Math.random() * 10000)}@example.com`,
-                          password: 'SuperSecret123!',
-                          phone: '1234567890'
-                        });
-                        console.log('Employee created successfully:', response);
-                        alert('Employee created successfully!');
-                      } catch (error) {
-                        console.error('Failed to create employee:', error);
-                        alert('Failed to create employee. Check console for details.');
-                      }
-                    }}
-                    fullWidth={false}
-                    sx={{
-                      ...commonButtonStyle, // Spread the common styles
-                      width: { xs: '100%', sm: 'auto' },
-                    }}
-                  >
-                    Create Dummy Employee
-                  </Button>
-                </Box> */}
 
                 {/* Week navigation */}
                 <Box sx={{ 
