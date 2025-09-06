@@ -22,7 +22,6 @@ import { api } from '../../../utils/apis/apiconfig';
 import { deleteEmployeeById } from '../../../utils/apis/employeeShiftApis';
 import { signUp, confirmSignUp, signOut, fetchAuthSession} from '@aws-amplify/auth';
 import axios from 'axios';
-import { Api } from '@mui/icons-material';
 
 /* ──────────────────────────────────────────────
    Validation
@@ -36,11 +35,13 @@ const SignUpSchema = z
                        .refine((phone) => {
                          if (!phone) return true; // Optional field
                          // Phone must start with + and be in international format
-                         const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+                         const cleanPhone = phone.replace(/[\s\-()]/g, '');
                          const phoneRegex = /^\+[1-9]\d{1,14}$/;
                          return phoneRegex.test(cleanPhone);
                        }, 'Phone number must start with + and be in international format (e.g., +1234567890)'),
-    password:        z.string().min(8, 'Password must be at least 8 characters'),
+    password:        z.string()
+                       .min(8, 'Password must be at least 8 characters')
+                       .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must have at least one symbol character'),
     confirmPassword: z.string(),
     code:            z.string().optional(),   // 6-digit e-mail code
     organizationId:  z.coerce.number({ invalid_type_error: 'Organization ID must be a number' })
@@ -64,8 +65,8 @@ const SignUpForm: React.FC = () => {
   const [loading,      setLoading]      = useState(false);
   const [awaitingCode, setAwaitingCode] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
-  const [pendingSignUpData, setPendingSignUpData]       = useState<SignUpFormType|null>(null);
-  const [pendingEmployeeId, setPendingEmployeeId] = useState<number|undefined>(undefined);
+  // Removed unused pendingSignUpData and setPendingSignUpData
+  // Removed unused pendingEmployeeId and setPendingEmployeeId
 
   const {
     register,
@@ -91,16 +92,6 @@ async function clearSessionIfNeeded() {
  * Validates if organization exists by attempting to create a test employee
  * This is a lightweight way to check organization validity
  */
-async function validateOrganizationExists(organizationId: number): Promise<boolean> {
-  try {
-    // We'll let the backend handle organization validation
-    // The backend will return an error if organization doesn't exist
-    return true; // Assume valid, let backend handle the actual validation
-  } catch (error) {
-    console.error('Organization validation error:', error);
-    return false;
-  }
-}
 
 /**
  * Cleans up employee record if Cognito signup fails
@@ -146,9 +137,7 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
         // Check if the employee is admin from the response
         const isAdmin = createRes.data.data.employee_admin;
         /* STORE it for the confirm step (if needed) */
-        setPendingEmployeeId(employeeId);
-        setPendingEmail(data.email);
-        setPendingSignUpData(data);
+  setPendingEmail(data.email);
 
         // --- Cognito signUp code ---
         const { nextStep } = await signUp({
@@ -192,8 +181,8 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
     const code = getValues('code')?.trim();
     if (!code) throw new Error('Please enter the verification code.');
     await confirmSignUp({
-      username:         pendingEmail!,
-      confirmationCode: code,
+  username:         pendingEmail || '',
+  confirmationCode: code,
     });
     await clearSessionIfNeeded();
     setSnackOpen(true);
@@ -207,7 +196,6 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
     if (axios.isAxiosError(err)) {
       const status = err.response?.status;
       const message = err.response?.data?.message || err.message;
-      
       if (status === 409) {
         setAuthError('This email is already registered');
       } else if (status === 404) {
@@ -217,6 +205,8 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
           setAuthError('Invalid organization ID. Please check your Organization ID.');
         } else if (message.includes('phone')) {
           setAuthError('Invalid phone number format. Please use a valid phone number (e.g., +1234567890)');
+        } else if (message.toLowerCase().includes('password did not conform with policy') || message.toLowerCase().includes('symbol')) {
+          setAuthError('Password must have symbol characters');
         } else {
           setAuthError(message || 'Invalid request data');
         }
@@ -229,8 +219,8 @@ const onSubmit = async (data: SignUpFormType): Promise<void> => {
         setAuthError('Invalid phone number format. Please use a valid phone number (e.g., +1234567890)');
       } else if (err.message.includes('email')) {
         setAuthError('Invalid email format or email already exists');
-      } else if (err.message.includes('password')) {
-        setAuthError('Password does not meet requirements');
+      } else if (err.message.toLowerCase().includes('password did not conform with policy') || err.message.toLowerCase().includes('symbol')) {
+        setAuthError('Password must have symbol characters');
       } else {
         setAuthError(err.message);
       }

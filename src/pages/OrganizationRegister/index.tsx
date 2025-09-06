@@ -104,7 +104,6 @@ const OrganizationRegister: React.FC = () => {
         const adminEmployeeId: number | undefined = Number(
           responseData.admin?.employee_id ?? responseData.admin?.id
         ) || undefined;
-        const isAdminResp: boolean = !!(responseData.admin?.employee_admin ?? responseData.admin?.admin ?? true);
         setPendingEmployeeId(adminEmployeeId);
         setPendingEmail(data.adminEmail);
 
