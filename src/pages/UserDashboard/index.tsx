@@ -290,16 +290,22 @@ const UserDashboard: React.FC = () => {
     let filteredShifts;
     switch (filter) {
       case 'requested':
+        // Show only shifts that are requested by the current user and still pending
         filteredShifts = shifts.filter(shift =>
-          requestedShifts.some(req => req.availableShiftId === shift.id)
+          requestedShifts.some(req => 
+            req.availableShiftId === shift.id && 
+            req.employeeId === currentEmployee.id && 
+            req.status === 'pending'
+          )
         );
         break;
       case 'accepted':
+        // Show only shifts that are assigned to the current user
         filteredShifts = shifts.filter(shift =>
-          requestedShifts.some(req =>
-            req.availableShiftId === shift.id && req.status === 'approved'
-          ) ||
-          assignedShifts.some(assign => assign.assigned_shift_id === shift.id)
+          assignedShifts.some(assign => 
+            assign.assigned_shift_id === shift.id && 
+            assign.assigned_employee_id === currentEmployee.id
+          )
         );
         break;
       default:
