@@ -66,7 +66,7 @@ const OrganizationRegister: React.FC = () => {
   const [loading, setLoading]        = useState(false);
   const [awaitingCode, setAwaitingCode] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
-  const [pendingEmployeeId, setPendingEmployeeId] = useState<number>();
+  // Removed unused pendingEmployeeId state
 
   const [success, setSuccess] = useState<string | null>(null);
   const [error,   setError]   = useState<string | null>(null);
@@ -107,10 +107,10 @@ const OrganizationRegister: React.FC = () => {
           adminPassword,
         } = data as OrgForm;
 
-        // Cognito pre-check: see if user already exists
+        // First, try Cognito signUp (pre-check)
+        let nextStep;
         try {
-          // This will throw if user exists
-          await signUp({
+          const signUpRes = await signUp({
             username: adminEmail,
             password: adminPassword,
             options: {
@@ -120,22 +120,21 @@ const OrganizationRegister: React.FC = () => {
               },
             },
           });
+          nextStep = signUpRes.nextStep;
         } catch (err: any) {
-          // Cognito error: user already exists
           if (err?.name === 'UsernameExistsException' || (err?.message && err.message.toLowerCase().includes('already exists'))) {
             setError('An account with this email already exists. Please use a different email or login.');
             setLoading(false);
-            reset(); // clear form so user can try again
+            reset();
             return;
           }
-          // Other Cognito errors: show message
-          setError(err?.message || 'Failed to check user existence');
+          setError(err?.message || 'Failed to register admin in Cognito');
           setLoading(false);
           reset();
           return;
         }
 
-        // If user does not exist, proceed with org/admin registration in DB
+        // Only if Cognito signUp succeeds, register org/admin in DB
         const res = await api.post('/api/organizations', {
           organization: { name: orgName },
           admin: { name: adminName, email: adminEmail, phone: adminPhone, password: adminPassword },
@@ -145,29 +144,16 @@ const OrganizationRegister: React.FC = () => {
         if (!orgId || Number.isNaN(orgId)) throw new Error('Organization creation failed');
         sessionStorage.setItem('organizationId', String(orgId));
 
-        // Keep employeeId for custom attr
-        const eid = Number(responseData.admin?.employee_id ?? responseData.admin?.id) || undefined;
-        setPendingEmployeeId(eid);
+        // Keep employeeId for custom attr (removed unused state)
+        // const eid = Number(responseData.admin?.employee_id ?? responseData.admin?.id) || undefined;
         setPendingEmail(adminEmail);
 
-        // Now sign up for real, with custom:employeeId
-        const { nextStep } = await signUp({
-          username: adminEmail,
-          password: adminPassword,
-          options: {
-            userAttributes: {
-              email: adminEmail,
-              ...(eid ? { 'custom:employeeId': String(eid) } : {}),
-              ...(adminPhone ? { phone_number: adminPhone } : {}),
-            },
-          },
-        });
-
-        if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+        // If confirmation required, show code field
+        if (nextStep && nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
           setAwaitingCode(true);
           reset({ code: '' });
           setLoading(false);
-          return; // stop here until code arrives
+          return;
         }
 
         await api.post('/auth/add-to-group', { email: adminEmail, group: 'Admins' });
