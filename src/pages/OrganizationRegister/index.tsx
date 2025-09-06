@@ -107,6 +107,35 @@ const OrganizationRegister: React.FC = () => {
           adminPassword,
         } = data as OrgForm;
 
+        // Cognito pre-check: see if user already exists
+        try {
+          // This will throw if user exists
+          await signUp({
+            username: adminEmail,
+            password: adminPassword,
+            options: {
+              userAttributes: {
+                email: adminEmail,
+                ...(adminPhone ? { phone_number: adminPhone } : {}),
+              },
+            },
+          });
+        } catch (err: any) {
+          // Cognito error: user already exists
+          if (err?.name === 'UsernameExistsException' || (err?.message && err.message.toLowerCase().includes('already exists'))) {
+            setError('An account with this email already exists. Please use a different email or login.');
+            setLoading(false);
+            reset(); // clear form so user can try again
+            return;
+          }
+          // Other Cognito errors: show message
+          setError(err?.message || 'Failed to check user existence');
+          setLoading(false);
+          reset();
+          return;
+        }
+
+        // If user does not exist, proceed with org/admin registration in DB
         const res = await api.post('/api/organizations', {
           organization: { name: orgName },
           admin: { name: adminName, email: adminEmail, phone: adminPhone, password: adminPassword },
@@ -121,6 +150,7 @@ const OrganizationRegister: React.FC = () => {
         setPendingEmployeeId(eid);
         setPendingEmail(adminEmail);
 
+        // Now sign up for real, with custom:employeeId
         const { nextStep } = await signUp({
           username: adminEmail,
           password: adminPassword,
