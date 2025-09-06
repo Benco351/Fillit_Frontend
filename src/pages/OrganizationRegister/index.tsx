@@ -23,14 +23,20 @@ import { signUp, confirmSignUp, signOut, fetchAuthSession } from '@aws-amplify/a
 
 // Validation schema for organization + admin user
 const OrgAdminSchema = z.object({
-  orgName: z.string().nonempty('Organization name is required'),
-  adminName: z.string().nonempty('Admin name is required'),
-  adminEmail: z.string().email('Please enter a valid email address'),
+  orgName: z.string().optional(),
+  adminName: z.string().optional(),
+  adminEmail: z.string().email().optional(),
   adminPhone: z.string().optional(),
-  adminPassword: z.string().min(8, 'Password must be at least 8 characters'),
-  adminConfirmPassword: z.string(),
+  adminPassword: z.string().optional(),
+  adminConfirmPassword: z.string().optional(),
   code: z.string().optional(), // 6-digit confirmation code when required
-}).refine((d) => d.adminPassword === d.adminConfirmPassword, {
+}).refine((d) => {
+  // Only validate password match if both passwords are provided
+  if (d.adminPassword && d.adminConfirmPassword) {
+    return d.adminPassword === d.adminConfirmPassword;
+  }
+  return true;
+}, {
   message: 'Passwords do not match',
   path: ['adminConfirmPassword'],
 });
@@ -71,6 +77,13 @@ const OrganizationRegister: React.FC = () => {
     setSuccess(null);
     try {
       if (!awaitingCode) {
+        // Validate required fields for initial registration
+        if (!data.orgName || !data.adminName || !data.adminEmail || !data.adminPassword || !data.adminConfirmPassword) {
+          throw new Error('All fields are required for registration');
+        }
+        if (data.adminPassword !== data.adminConfirmPassword) {
+          throw new Error('Passwords do not match');
+        }
         // STEP 1: Create organization and admin in backend
         const payload = {
           organization: { name: data.orgName },
