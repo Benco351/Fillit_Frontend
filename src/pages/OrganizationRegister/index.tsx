@@ -136,9 +136,10 @@ const OrganizationRegister: React.FC = () => {
 
       // STEP 3: Confirm sign-up with code
       const code = getValues('code')?.trim();
-      if (!code) {
-        throw new Error('Please enter the verification code.');
+      if (!code || code.length !== 6) {
+        throw new Error('Please enter a valid 6-digit verification code.');
       }
+      
       await confirmSignUp({ username: pendingEmail, confirmationCode: code });
       await clearSessionIfNeeded();
 
@@ -295,7 +296,7 @@ const OrganizationRegister: React.FC = () => {
                   fullWidth
                   {...register('code')}
                   error={!!errors.code}
-                  helperText={(errors as any)?.code?.message}
+                  helperText={errors.code?.message}
                   sx={{ mb: 3, ...textFieldStyles }}
                   inputProps={{ maxLength: 6 }}
                   autoComplete="one-time-code"
