@@ -220,8 +220,9 @@ export const useUserDashboard = (currentEmployee: Employee) => {
 
       // Fetch assigned shifts
       const assignedResponse = await getAssignedShifts();
+      let mappedAssignedShifts: any[] = [];
       if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
-        setAssignedShifts(assignedResponse.data.map((shift: any) => ({
+        mappedAssignedShifts = assignedResponse.data.map((shift: any) => ({
           id: shift.assigned_id,
           assigned_id: shift.assigned_id,
           employeeId: shift.assigned_employee_id,
@@ -230,7 +231,56 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           assigned_shift_id: shift.assigned_shift_id,
           availableShift: shift.availableShift,
           employee: shift.employee,
-        })));
+        }));
+        setAssignedShifts(mappedAssignedShifts);
+      }
+
+      // CRITICAL FIX: Always ensure assigned shifts are included in available shifts
+      // This handles cases where assigned shifts are not in available shifts (because they're full)
+      if (mappedAssignedShifts.length > 0) {
+        console.log('🔧 USER DASHBOARD FIX: Adding assigned shifts to available shifts');
+        
+        // Create a map from existing available shifts to avoid duplicates
+        const availableShiftMap = new Map();
+        
+        // Add existing available shifts to the map
+        mappedShifts.forEach((shift: any) => {
+          availableShiftMap.set(shift.id, shift);
+        });
+        
+        // Add assigned shifts that are not already in available shifts
+        mappedAssignedShifts.forEach((assignedShift: any) => {
+          if (assignedShift.availableShift && assignedShift.assigned_shift_id) {
+            const shiftId = assignedShift.assigned_shift_id;
+            
+            if (!availableShiftMap.has(shiftId)) {
+              // Create available shift from assigned shift data
+              const availableShift = {
+                id: shiftId,
+                date: assignedShift.availableShift.shift_date,
+                start: assignedShift.availableShift.shift_time_start,
+                end: assignedShift.availableShift.shift_time_end,
+                shift_slots_amount: 1, // Default to 1 slot
+                shift_slots_taken: 1, // Since it's assigned, it's taken
+                department_id: assignedShift.availableShift.department?.id || null,
+              };
+              
+              availableShiftMap.set(shiftId, availableShift);
+              console.log('➕ ADDED ASSIGNED SHIFT TO AVAILABLE (USER):', availableShift);
+            } else {
+              // If shift already exists, don't modify the slots taken count
+              // The API already provides the correct count
+              console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (USER):', availableShiftMap.get(shiftId));
+            }
+          }
+        });
+        
+        // Convert map to array and update available shifts
+        const finalAvailableShifts = Array.from(availableShiftMap.values());
+        setAvailableShifts(finalAvailableShifts);
+        console.log('🎯 FINAL AVAILABLE SHIFTS (USER):', finalAvailableShifts);
+      } else {
+        setAvailableShifts(mappedShifts);
       }
     } catch (err) {
       //setError('Failed to fetch shifts. Please try again later.');

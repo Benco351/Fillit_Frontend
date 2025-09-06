@@ -229,10 +229,9 @@ const AdminDashboard: React.FC = () => {
                   availableShiftMap.set(shiftId, availableShift);
                   console.log('➕ ADDED ASSIGNED SHIFT TO AVAILABLE:', availableShift);
                 } else {
-                  // If shift already exists, increment slots taken
-                  const existingShift = availableShiftMap.get(shiftId);
-                  existingShift.shift_slots_taken += 1;
-                  console.log('🔄 INCREMENTED SLOTS TAKEN FOR EXISTING SHIFT:', existingShift);
+                  // If shift already exists, don't modify the slots taken count
+                  // The API already provides the correct count
+                  console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (ADMIN INIT):', availableShiftMap.get(shiftId));
                 }
               }
             });
@@ -460,9 +459,9 @@ const AdminDashboard: React.FC = () => {
                   
                   availableShiftMap.set(shiftId, availableShift);
                 } else {
-                  // If shift already exists, increment slots taken
-                  const existingShift = availableShiftMap.get(shiftId);
-                  existingShift.shift_slots_taken += 1;
+                  // If shift already exists, don't modify the slots taken count
+                  // The API already provides the correct count
+                  console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (ADMIN):', availableShiftMap.get(shiftId));
                 }
               }
             });
