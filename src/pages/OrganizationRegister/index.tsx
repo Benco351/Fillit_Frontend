@@ -23,20 +23,19 @@ import { signUp, confirmSignUp, signOut, fetchAuthSession } from '@aws-amplify/a
 
 // Validation schema for organization + admin user
 const OrgAdminSchema = z.object({
-  orgName: z.string().optional(),
-  adminName: z.string().optional(),
-  adminEmail: z.string().email().optional(),
+  orgName: z.string().nonempty('Organization name is required'),
+  adminName: z.string().nonempty('Admin name is required'),
+  adminEmail: z.string().email('Please enter a valid email address'),
   adminPhone: z.string().optional(),
-  adminPassword: z.string().optional(),
-  adminConfirmPassword: z.string().optional(),
+  adminPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one digit')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must have at least one symbol character'),
+  adminConfirmPassword: z.string(),
   code: z.string().optional(), // 6-digit confirmation code when required
-}).refine((d) => {
-  // Only validate password match if both passwords are provided
-  if (d.adminPassword && d.adminConfirmPassword) {
-    return d.adminPassword === d.adminConfirmPassword;
-  }
-  return true;
-}, {
+}).refine((d) => d.adminPassword === d.adminConfirmPassword, {
   message: 'Passwords do not match',
   path: ['adminConfirmPassword'],
 });
