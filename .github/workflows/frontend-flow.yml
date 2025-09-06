@@ -1,10 +1,10 @@
 name: Frontend - Lint & Amplify Build
 
-on:
-  workflow_dispatch: {}
-  push:
-    paths:
-      - '/**'
+# on:
+#   workflow_dispatch: {}
+#   push:
+#     paths:
+#       - '/**'
 
 env:
   AWS_REGION: us-east-1
