@@ -301,7 +301,7 @@ const UserDashboard: React.FC = () => {
             shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1,
             shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1,
             department_id: assignedShift.availableShift.department_id || 
-                          assignedShift.availableShift.department?.id || 
+                          assignedShift.availableShift.department?.department_id || 
                           null,
           };
           

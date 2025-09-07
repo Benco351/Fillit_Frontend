@@ -522,7 +522,6 @@ const SwapPage: React.FC = () => {
   const [requestsToMe, setRequestsToMe] = useState<ShiftSwapRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [requestsError, setRequestsError] = useState<string | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
   
   // Shift swap log states
   const [logDialogOpen, setLogDialogOpen] = useState(false);
@@ -678,10 +677,8 @@ const SwapPage: React.FC = () => {
   // Poll for new swap requests every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsPolling(true);
-      fetchSwapRequests(false).finally(() => {
-        setIsPolling(false);
-      });
+      // Silent background refresh - no polling indicator to avoid flickering
+      fetchSwapRequests(false);
     }, 10000); // Poll every 10 seconds
 
     return () => clearInterval(interval);
@@ -863,9 +860,6 @@ const SwapPage: React.FC = () => {
             <Box sx={{ mt: 6 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
                 <Typography variant="h5" fontWeight={600} style={{ color: swapPageTheme.unselectedText }}>My Pending Swap Requests</Typography>
-                {isPolling && (
-                  <CircularProgress size={16} color="primary" sx={{ ml: 1 }} />
-                )}
               </Box>
               {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}
@@ -896,9 +890,6 @@ const SwapPage: React.FC = () => {
             <Box sx={{ mt: 6 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
                 <Typography variant="h5" fontWeight={600} style={{ color: swapPageTheme.unselectedText }}>Pending Requests to Me</Typography>
-                {isPolling && (
-                  <CircularProgress size={16} color="primary" sx={{ ml: 1 }} />
-                )}
               </Box>
               {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}

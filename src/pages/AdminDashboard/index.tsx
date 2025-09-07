@@ -218,7 +218,7 @@ const AdminDashboard: React.FC = () => {
                     shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1, // Use actual slots amount
                     shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1, // Use actual slots taken
                     department_id: assignedShift.availableShift.department_id || 
-                                  assignedShift.availableShift.department?.id || 
+                                  assignedShift.availableShift.department?.department_id || 
                                   null,
                   };
                   
@@ -460,7 +460,7 @@ const AdminDashboard: React.FC = () => {
                     shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1, // Use actual slots amount
                     shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1, // Use actual slots taken
                     department_id: assignedShift.availableShift.department_id || 
-                                  assignedShift.availableShift.department?.id || 
+                                  assignedShift.availableShift.department?.department_id || 
                                   null,
                   };
                   
@@ -709,15 +709,6 @@ const AdminDashboard: React.FC = () => {
         shiftSlotId: requestedShift.availableShiftId
       });
 
-      // Increment shift_slots_taken for the assigned shift
-      setAvailableShifts(prev =>
-        prev.map(shift =>
-          shift.id === requestedShift.availableShiftId
-            ? { ...shift, shift_slots_taken: (shift.shift_slots_taken || 0) + 1 }
-            : shift
-        )
-      );
-
       // Then update the request status to approved
       await updateRequestedShiftById(requestedShift.id, { status: 'approved' });
 
@@ -744,6 +735,10 @@ const AdminDashboard: React.FC = () => {
           employee: assignedEmployee
         }]);
       }
+
+      // OPTIMIZED: Use a more targeted update to prevent unnecessary re-renders
+      // Instead of updating the entire availableShifts array, we'll let the polling handle the update
+      // This prevents the animation issue on other pending requests
 
       setSuccess('Shift assigned successfully');
     } catch (err) {
@@ -786,7 +781,7 @@ const AdminDashboard: React.FC = () => {
             shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1,
             shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1,
             department_id: assignedShift.availableShift.department_id || 
-                          assignedShift.availableShift.department?.id || 
+                          assignedShift.availableShift.department?.department_id || 
                           null,
           };
           
@@ -1250,7 +1245,7 @@ const AdminDashboard: React.FC = () => {
                                 const requester = employees.find(emp => emp.id === pendingRequest.employeeId);
                                 return (
                                   <Box
-                                    key={`pending-${pendingRequest.id}-${pendingRequest.status}`}
+                                    key={`pending-${pendingRequest.id}-${pendingRequest.status}-${shift.id}`}
                                     sx={{
                                       width: '100%',
                                       backgroundColor: 'rgba(255, 152, 0, 0.1)',
@@ -1261,6 +1256,8 @@ const AdminDashboard: React.FC = () => {
                                       justifyContent: 'space-between',
                                       gap: 1,
                                       borderTop: '1px solid rgba(255,255,255,0.1)',
+                                      // Add transition to prevent jarring animations
+                                      transition: 'all 0.2s ease-in-out',
                                     }}
                                   >
                                     <Tooltip title="View Request Details">
@@ -1288,7 +1285,10 @@ const AdminDashboard: React.FC = () => {
                                             handleAcceptRequest(pendingRequest);
                                           }}
                                           disabled={loading}
-                                          sx={{ color: 'green' }}
+                                          sx={{ 
+                                            color: 'green',
+                                            transition: 'all 0.2s ease-in-out',
+                                          }}
                                         >
                                           <CheckIcon fontSize="small" />
                                         </IconButton>
@@ -1301,7 +1301,10 @@ const AdminDashboard: React.FC = () => {
                                             handleOpenDenyDialog(pendingRequest.id);
                                           }}
                                           disabled={loading}
-                                          sx={{ color: 'red' }}
+                                          sx={{ 
+                                            color: 'red',
+                                            transition: 'all 0.2s ease-in-out',
+                                          }}
                                         >
                                           <CloseIcon fontSize="small" />
                                         </IconButton>
@@ -1580,21 +1583,7 @@ const AdminDashboard: React.FC = () => {
             <DialogContent>
               {selectedShiftInfo && (
                 <Box sx={{ mt: 1 }}>
-                  <Typography variant="body1" gutterBottom>
-                    <strong>Time:</strong> {selectedShiftInfo.start?.substring(0, 5) || '??:??'} - {selectedShiftInfo.end?.substring(0, 5) || '??:??'}
-                  </Typography>
-                  <Typography variant="body1" gutterBottom>
-                    <strong>Date:</strong> {format(parseISO(selectedShiftInfo.date), 'MMM d, yyyy')}
-                  </Typography>
-                  <Typography variant="body1" gutterBottom>
-                    <strong>Slots:</strong> {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount || 1}
-                  </Typography>
-                  {selectedShiftInfo.department_id && (
-                    <Typography variant="body1" gutterBottom>
-                      <strong>Department:</strong> {departments.find(d => d.id === selectedShiftInfo.department_id)?.name || 'Unknown'}
-                    </Typography>
-                  )}
-                  <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                  <Typography variant="h6" sx={{ mb: 2 }}>
                     Assigned Users:
                   </Typography>
                   {(() => {
