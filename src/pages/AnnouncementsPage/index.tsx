@@ -209,10 +209,10 @@ const AnnouncementsPage: React.FC = () => {
             sx={{
               border: swapPageTheme.mainBorder,
               borderRadius: '12px',
-              padding: { xs: 1.5, sm: 3, md: 4 },
+              padding: { xs: 2, sm: 3, md: 4 },
               backgroundColor: swapPageTheme.mainBg,
               boxShadow: swapPageTheme.mainBoxShadow,
-              margin: '24px 0 0',
+              margin: { xs: '16px 0 0', sm: '24px 0 0' },
               transform: 'translateZ(0)',
               willChange: 'transform',
               direction: 'ltr',
@@ -225,11 +225,15 @@ const AnnouncementsPage: React.FC = () => {
               align="center" 
               gutterBottom
               sx={{
-                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '3rem' },
+                fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3rem' },
                 wordBreak: 'break-word',
                 hyphens: 'auto',
-                lineHeight: 1.2,
-                px: { xs: 1, sm: 0 }
+                lineHeight: { xs: 1.1, sm: 1.2 },
+                px: { xs: 2, sm: 0 },
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: { xs: 'normal', sm: 'nowrap' }
               }}
             >
               Announcement Board
@@ -239,9 +243,11 @@ const AnnouncementsPage: React.FC = () => {
               align="center" 
               sx={{ 
                 color: '#b0b7be', 
-                marginBottom: 3,
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-                px: { xs: 1, sm: 0 }
+                marginBottom: { xs: 2, sm: 3 },
+                fontSize: { xs: '0.8rem', sm: '1rem' },
+                px: { xs: 2, sm: 0 },
+                lineHeight: 1.4,
+                wordBreak: 'break-word'
               }}
             >
               GET THE LATEST UPDATES

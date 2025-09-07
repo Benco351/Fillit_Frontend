@@ -242,7 +242,7 @@ const SignUpForm: React.FC = () => {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
       borderRadius: { xs: 2, sm: 1 },
-      '& fieldset': { borderColor: 'grey.300' },
+      '& fieldset': { borderColor: '#3a3f47' },
       '&:hover fieldset': { borderColor: 'primary.main' },
       '& input': { 
         color: '#ffffff',

@@ -996,9 +996,10 @@ const AdminDashboard: React.FC = () => {
               <Box
                 sx={{
                   display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' }, // Stack vertically on mobile, horizontally on desktop
                   gap: 2,
                   width: '100%',
-                  overflowX: 'visible', // Remove horizontal scroll
+                  overflowX: { xs: 'visible', md: 'visible' }, // Remove horizontal scroll
                   pb: 2,
                 }}
               >
@@ -1006,10 +1007,12 @@ const AdminDashboard: React.FC = () => {
                   <Box
                     key={index}
                     sx={{
-                      flex: 1, // Make columns flexible and fill the row
+                      flex: { xs: 'none', md: 1 }, // Don't flex on mobile, flex on desktop
                       minWidth: 0, // Allow shrinking to fit
                       maxWidth: '100%',
-                      height: '600px',
+                      width: { xs: '100%', md: 'auto' }, // Full width on mobile, auto on desktop
+                      height: { xs: 'auto', md: '600px' }, // Auto height on mobile, fixed on desktop
+                      minHeight: { xs: '400px', md: '600px' }, // Minimum height for mobile
                       display: 'flex',
                       flexDirection: 'column',
                       backgroundColor: 'rgba(255, 255, 255, 0.03)', // Very subtle white background
@@ -1070,7 +1073,7 @@ const AdminDashboard: React.FC = () => {
                       sx={{
                         flex: 1,
                         overflowY: 'auto',
-                        p: 2,
+                        p: { xs: 1, sm: 2 }, // Smaller padding on mobile
                         gap: 2,
                         display: 'flex',
                         flexDirection: 'column',
