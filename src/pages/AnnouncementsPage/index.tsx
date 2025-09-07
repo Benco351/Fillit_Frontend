@@ -203,13 +203,13 @@ const AnnouncementsPage: React.FC = () => {
         px: 2,
         direction: 'ltr',
       }}>
-        <Container maxWidth={false} sx={{ px: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%', direction: 'ltr' }}>
+        <Container maxWidth={false} sx={{ px: { xs: 0.5, sm: 2, md: 3 }, width: '100%', maxWidth: '100%', direction: 'ltr' }}>
           <Navbar />
           <Box
             sx={{
               border: swapPageTheme.mainBorder,
               borderRadius: '12px',
-              padding: { xs: 2, sm: 3, md: 4 },
+              padding: { xs: 1.5, sm: 3, md: 4 },
               backgroundColor: swapPageTheme.mainBg,
               boxShadow: swapPageTheme.mainBoxShadow,
               margin: '24px 0 0',
@@ -218,14 +218,44 @@ const AnnouncementsPage: React.FC = () => {
               direction: 'ltr',
             }}
           >
-            <Typography variant="h3" fontWeight={700} color="primary" align="center" gutterBottom>
+            <Typography 
+              variant="h3" 
+              fontWeight={700} 
+              color="primary" 
+              align="center" 
+              gutterBottom
+              sx={{
+                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '3rem' },
+                wordBreak: 'break-word',
+                hyphens: 'auto',
+                lineHeight: 1.2,
+                px: { xs: 1, sm: 0 }
+              }}
+            >
               Announcement Board
             </Typography>
-            <Typography variant="body1" align="center" style={{ color: '#b0b7be', marginBottom: 24 }}>
+            <Typography 
+              variant="body1" 
+              align="center" 
+              sx={{ 
+                color: '#b0b7be', 
+                marginBottom: 3,
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                px: { xs: 1, sm: 0 }
+              }}
+            >
               GET THE LATEST UPDATES
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 4 }}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 300, borderRadius: 3, background: swapPageTheme.infoPaperBg, border: swapPageTheme.cardBorder, boxShadow: swapPageTheme.cardShadow }} elevation={0}>
+              <Paper sx={{ 
+                p: { xs: 1.5, sm: 3 }, 
+                minWidth: { xs: 'auto', sm: 300 }, 
+                width: { xs: '100%', sm: 'auto' },
+                borderRadius: 3, 
+                background: swapPageTheme.infoPaperBg, 
+                border: swapPageTheme.cardBorder, 
+                boxShadow: swapPageTheme.cardShadow 
+              }} elevation={0}>
                 <Typography variant="h6" gutterBottom align="center" color={swapPageTheme.unselectedText}>Current User Info</Typography>
                 <Typography style={{ color: swapPageTheme.unselectedText }}>Name: {user.name}</Typography>
                 <Typography style={{ color: '#b0b7be' }}>Email: {user.email}</Typography>

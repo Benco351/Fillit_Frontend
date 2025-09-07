@@ -186,37 +186,112 @@ const OrganizationRegister: React.FC = () => {
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
+      borderRadius: { xs: 2, sm: 1 },
       '& fieldset': { borderColor: 'grey.300' },
       '&:hover fieldset, &.Mui-focused fieldset': { borderColor: 'primary.main' },
     },
-    '& .MuiInputBase-input': { color: '#fff', backgroundColor: '#3a3f47 !important' },
+    '& .MuiInputBase-input': { 
+      color: '#fff', 
+      backgroundColor: '#3a3f47 !important',
+      fontSize: { xs: '16px', sm: '14px' }, // Prevent zoom on iOS
+      padding: { xs: '16px 14px', sm: '16px 14px' }
+    },
     '& input:-webkit-autofill': {
       WebkitBoxShadow: '0 0 0 100px #3a3f47 inset',
       WebkitTextFillColor: '#fff',
       caretColor: '#fff',
     },
-    '& .MuiInputLabel-root': { color: '#ddd', '&.Mui-focused': { color: '#00c28c' } },
+    '& .MuiInputLabel-root': { 
+      color: '#ddd', 
+      fontSize: { xs: '16px', sm: '14px' },
+      '&.Mui-focused': { color: '#00c28c' } 
+    },
+    '& .MuiFormHelperText-root': {
+      fontSize: { xs: '12px', sm: '12px' },
+      marginLeft: 0
+    }
   } as const;
 
   /* ---------- render ---------- */
 
   return (
     <ThemeProvider theme={LoginTheme}>
-      <Box sx={{ position:'absolute', inset:0, bgcolor:'background.default', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <Button component={RouterLink} to="/" startIcon={<HomeIcon />} variant="text" color="primary"
-          sx={{ position:'absolute', top:24, left:24, textTransform:'none' }}>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        bgcolor: 'background.default', 
+        display: 'flex', 
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
+      }}>
+        <Button 
+          component={RouterLink} 
+          to="/" 
+          startIcon={<HomeIcon />} 
+          variant="text" 
+          color="primary"
+          sx={{ 
+            position: 'absolute', 
+            top: { xs: 16, sm: 24 }, 
+            left: { xs: 16, sm: 24 }, 
+            textTransform: 'none',
+            zIndex: 1
+          }}
+        >
           Home
         </Button>
 
-        <Container maxWidth="sm">
-          <Paper elevation={3} sx={{ p:4, borderRadius:8, bgcolor:'background.paper',
-            '@media (max-width:600px)': { bgcolor:'transparent', boxShadow:'none' } }}>
-
-            <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight:700, color:'primary.main' }}>
+        <Container 
+          maxWidth="sm" 
+          sx={{ 
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            py: { xs: 2, sm: 4 },
+            px: { xs: 2, sm: 3 }
+          }}
+        >
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: { xs: 3, sm: 4 }, 
+              borderRadius: { xs: 2, sm: 8 }, 
+              bgcolor: 'background.paper',
+              width: '100%',
+              maxWidth: { xs: '100%', sm: 500 },
+              '@media (max-width:600px)': { 
+                bgcolor: 'transparent', 
+                boxShadow: 'none',
+                p: 2
+              } 
+            }}
+          >
+            <Typography 
+              variant="h4" 
+              align="center" 
+              gutterBottom 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'primary.main',
+                fontSize: { xs: '1.75rem', sm: '2.125rem' },
+                mb: { xs: 1, sm: 2 }
+              }}
+            >
               Register Organization
             </Typography>
 
-            <Typography variant="body1" align="center" sx={{ mb:3, color:'#fff' }}>
+            <Typography 
+              variant="body1" 
+              align="center" 
+              sx={{ 
+                mb: { xs: 2, sm: 3 }, 
+                color: '#fff',
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                lineHeight: 1.5
+              }}
+            >
               {awaitingCode
                 ? `A 6-digit code was sent to ${pendingEmail}`
                 : 'Create your organization and first admin to start using Fillit.'}
@@ -226,62 +301,185 @@ const OrganizationRegister: React.FC = () => {
               {/* org + admin fields */}
               {!awaitingCode && (
                 <>
-                  <TextField label="Organization Name" fullWidth {...register('orgName')}
-                    error={'orgName' in errors} helperText={('orgName' in errors) ? (errors as any).orgName?.message : '' }
-                    required sx={{ mb:3, ...textFieldStyles }} autoComplete="off" />
+                  <TextField 
+                    label="Organization Name" 
+                    fullWidth 
+                    {...register('orgName')}
+                    error={'orgName' in errors} 
+                    helperText={('orgName' in errors) ? (errors as any).orgName?.message : '' }
+                    required 
+                    sx={{ mb: { xs: 2, sm: 3 }, ...textFieldStyles }} 
+                    autoComplete="off" 
+                  />
 
-                  <Box sx={{ display:'flex', alignItems:'center', mt:2, mb:1 }}>
-                    <AdminPanelSettingsIcon sx={{ color:'#d8d8c5', fontSize:32, mr:1 }} />
-                    <Typography variant="subtitle1" sx={{ color:'#d8d8c5', fontWeight:600 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    mt: { xs: 2, sm: 3 }, 
+                    mb: { xs: 1.5, sm: 2 } 
+                  }}>
+                    <AdminPanelSettingsIcon sx={{ 
+                      color: '#d8d8c5', 
+                      fontSize: { xs: 28, sm: 32 }, 
+                      mr: 1 
+                    }} />
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        color: '#d8d8c5', 
+                        fontWeight: 600,
+                        fontSize: { xs: '1rem', sm: '1.1rem' }
+                      }}
+                    >
                       Admin Account Details
                     </Typography>
                   </Box>
 
-                  <TextField label="Full Name" fullWidth {...register('adminName')}
-                    error={'adminName' in errors} helperText={('adminName' in errors) ? (errors as any).adminName?.message : '' }
-                    required sx={{ mb:2, ...textFieldStyles }} autoComplete="off" />
+                  <TextField 
+                    label="Full Name" 
+                    fullWidth 
+                    {...register('adminName')}
+                    error={'adminName' in errors} 
+                    helperText={('adminName' in errors) ? (errors as any).adminName?.message : '' }
+                    required 
+                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
+                    autoComplete="off" 
+                  />
 
-                  <TextField label="Email" type="email" fullWidth {...register('adminEmail')}
-                    error={'adminEmail' in errors} helperText={('adminEmail' in errors) ? (errors as any).adminEmail?.message : '' }
-                    required sx={{ mb:2, ...textFieldStyles }} autoComplete="email" />
+                  <TextField 
+                    label="Email" 
+                    type="email" 
+                    fullWidth 
+                    {...register('adminEmail')}
+                    error={'adminEmail' in errors} 
+                    helperText={('adminEmail' in errors) ? (errors as any).adminEmail?.message : '' }
+                    required 
+                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
+                    autoComplete="email" 
+                  />
 
-                  <TextField label="Phone Number" type="tel" fullWidth {...register('adminPhone')}
-                    error={'adminPhone' in errors} helperText={('adminPhone' in errors) ? (errors as any).adminPhone?.message : '' }
-                    sx={{ mb:2, ...textFieldStyles }} autoComplete="tel" />
+                  <TextField 
+                    label="Phone Number" 
+                    type="tel" 
+                    fullWidth 
+                    {...register('adminPhone')}
+                    error={'adminPhone' in errors} 
+                    helperText={('adminPhone' in errors) ? (errors as any).adminPhone?.message : '' }
+                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
+                    autoComplete="tel" 
+                  />
 
-                  <TextField label="Password" type="password" fullWidth {...register('adminPassword')}
-                    error={'adminPassword' in errors} helperText={('adminPassword' in errors) ? (errors as any).adminPassword?.message : '' }
-                    required sx={{ mb:2, ...textFieldStyles }} autoComplete="new-password" />
+                  <TextField 
+                    label="Password" 
+                    type="password" 
+                    fullWidth 
+                    {...register('adminPassword')}
+                    error={'adminPassword' in errors} 
+                    helperText={('adminPassword' in errors) ? (errors as any).adminPassword?.message : '' }
+                    required 
+                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
+                    autoComplete="new-password" 
+                  />
 
-                  <TextField label="Confirm Password" type="password" fullWidth {...register('adminConfirmPassword')}
-                    error={'adminConfirmPassword' in errors} helperText={('adminConfirmPassword' in errors) ? (errors as any).adminConfirmPassword?.message : '' }
-                    required sx={{ mb:3, ...textFieldStyles }} autoComplete="new-password" />
+                  <TextField 
+                    label="Confirm Password" 
+                    type="password" 
+                    fullWidth 
+                    {...register('adminConfirmPassword')}
+                    error={'adminConfirmPassword' in errors} 
+                    helperText={('adminConfirmPassword' in errors) ? (errors as any).adminConfirmPassword?.message : '' }
+                    required 
+                    sx={{ mb: { xs: 2, sm: 3 }, ...textFieldStyles }} 
+                    autoComplete="new-password" 
+                  />
                 </>
               )}
 
               {/* code field */}
               {awaitingCode && (
-                <TextField label="6-digit Code" fullWidth {...register('code')}
-                  error={'code' in errors} helperText={('code' in errors) ? (errors as any).code?.message : '' }
-                  sx={{ mb:3, ...textFieldStyles }} inputProps={{ maxLength:6 }} autoComplete="one-time-code" />
+                <TextField 
+                  label="6-digit Code" 
+                  fullWidth 
+                  {...register('code')}
+                  error={'code' in errors} 
+                  helperText={('code' in errors) ? (errors as any).code?.message : '' }
+                  sx={{ mb: { xs: 2, sm: 3 }, ...textFieldStyles }} 
+                  inputProps={{ maxLength: 6 }} 
+                  autoComplete="one-time-code" 
+                />
               )}
 
-              <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading} sx={{ py:1.5 }}>
-                {loading ? <CircularProgress size={22} color="inherit" /> : awaitingCode ? 'Verify' : 'Register Organization & Admin'}
+              <Button 
+                type="submit" 
+                variant="contained" 
+                color="primary" 
+                fullWidth 
+                disabled={loading} 
+                sx={{ 
+                  py: { xs: 1.5, sm: 1.5 },
+                  fontSize: { xs: '1rem', sm: '0.875rem' },
+                  fontWeight: 600,
+                  borderRadius: { xs: 2, sm: 1 },
+                  minHeight: { xs: 48, sm: 44 }
+                }}
+              >
+                {loading ? (
+                  <CircularProgress size={22} color="inherit" />
+                ) : awaitingCode ? (
+                  'Verify'
+                ) : (
+                  'Register Organization & Admin'
+                )}
               </Button>
             </form>
           </Paper>
         </Container>
       </Box>
 
-      <Snackbar open={!!success} autoHideDuration={4000} onClose={() => setSuccess(null)}
-        anchorOrigin={{ vertical:'bottom', horizontal:'center' }}>
-        <Alert severity="success" onClose={() => setSuccess(null)} sx={{ width:'100%' }}>{success}</Alert>
+      <Snackbar 
+        open={!!success} 
+        autoHideDuration={4000} 
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ 
+          bottom: { xs: 16, sm: 24 },
+          left: { xs: 16, sm: 'auto' },
+          right: { xs: 16, sm: 'auto' }
+        }}
+      >
+        <Alert 
+          severity="success" 
+          onClose={() => setSuccess(null)} 
+          sx={{ 
+            width: '100%',
+            fontSize: { xs: '0.875rem', sm: '0.875rem' }
+          }}
+        >
+          {success}
+        </Alert>
       </Snackbar>
 
-      <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)}
-        anchorOrigin={{ vertical:'bottom', horizontal:'center' }}>
-        <Alert severity="error" onClose={() => setError(null)} sx={{ width:'100%' }}>{error}</Alert>
+      <Snackbar 
+        open={!!error} 
+        autoHideDuration={6000} 
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ 
+          bottom: { xs: 16, sm: 24 },
+          left: { xs: 16, sm: 'auto' },
+          right: { xs: 16, sm: 'auto' }
+        }}
+      >
+        <Alert 
+          severity="error" 
+          onClose={() => setError(null)} 
+          sx={{ 
+            width: '100%',
+            fontSize: { xs: '0.875rem', sm: '0.875rem' }
+          }}
+        >
+          {error}
+        </Alert>
       </Snackbar>
     </ThemeProvider>
   );

@@ -293,7 +293,7 @@ const handleDeleteAccount = async () => {
         overflowAnchor: 'none'
       }}>
         <Container maxWidth={false} sx={{ 
-          px: { xs: 1, sm: 2, md: 3 }, 
+          px: { xs: 0.5, sm: 2, md: 3 }, 
           width: '100%', 
           maxWidth: '100%',
           scrollBehavior: 'smooth'
@@ -302,10 +302,31 @@ const handleDeleteAccount = async () => {
 
           {/* Header */}
           <Box sx={{ mb: 4, textAlign: 'center' }}>
-            <Typography variant="h3" sx={{ color: '#fff', fontWeight: 700, mb: 1 }}>
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                color: '#fff', 
+                fontWeight: 700, 
+                mb: 1,
+                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '3rem' },
+                wordBreak: 'break-word',
+                hyphens: 'auto',
+                lineHeight: 1.2,
+                px: { xs: 1, sm: 0 }
+              }}
+            >
               Settings
             </Typography>
-            <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 3 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: 'rgba(255, 255, 255, 0.7)', 
+                mb: 3,
+                fontSize: { xs: '1rem', sm: '1.25rem' },
+                px: { xs: 1, sm: 0 },
+                lineHeight: 1.4
+              }}
+            >
               Manage your profile information and account settings
             </Typography>
           </Box>
@@ -315,7 +336,7 @@ const handleDeleteAccount = async () => {
             <Box sx={{ flex: { xs: 1, md: 2 } }}>
               <Paper
                 sx={{
-                  p: 4,
+                  p: { xs: 2, sm: 3, md: 4 },
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   backdropFilter: 'blur(8px)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -324,8 +345,15 @@ const handleDeleteAccount = async () => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Person sx={{ mr: 2, color: '#00c28c', fontSize: 28 }} />
-                  <Typography variant="h5" sx={{ fontWeight: 600, color: '#00c28c' }}>
+                  <Person sx={{ mr: 2, color: '#00c28c', fontSize: { xs: 24, sm: 28 } }} />
+                  <Typography 
+                    variant="h5" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      color: '#00c28c',
+                      fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                    }}
+                  >
                     Profile Information
                   </Typography>
                 </Box>
@@ -531,7 +559,7 @@ const handleDeleteAccount = async () => {
             { <Box sx={{ flex: { xs: 1, md: 1 } }}>
               <Paper
                 sx={{
-                  p: 4,
+                  p: { xs: 2, sm: 3, md: 4 },
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   backdropFilter: 'blur(8px)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -540,11 +568,27 @@ const handleDeleteAccount = async () => {
                   height: 'fit-content',
                 }}
               >
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: '#f44336' }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 3, 
+                    color: '#f44336',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                  }}
+                >
                   Danger Zone
                 </Typography>
                 
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 3 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'rgba(255, 255, 255, 0.7)', 
+                    mb: 3,
+                    fontSize: { xs: '0.85rem', sm: '0.875rem' },
+                    lineHeight: 1.5
+                  }}
+                >
                   {isOnlyUser 
                     ? 'You are the only user in your organization. Deleting your account will also delete the entire organization.'
                     : 'Permanently delete your account. This action cannot be undone.'

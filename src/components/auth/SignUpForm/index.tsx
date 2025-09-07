@@ -241,24 +241,37 @@ const SignUpForm: React.FC = () => {
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
+      borderRadius: { xs: 2, sm: 1 },
       '& fieldset': { borderColor: 'grey.300' },
       '&:hover fieldset': { borderColor: 'primary.main' },
-      '& input': { color: '#ffffff' },
+      '& input': { 
+        color: '#ffffff',
+        fontSize: { xs: '16px', sm: '14px' }, // Prevent zoom on iOS
+        padding: { xs: '16px 14px', sm: '16px 14px' }
+      },
     },
+    '& .MuiInputLabel-root': { 
+      color: '#ddd', 
+      fontSize: { xs: '16px', sm: '14px' },
+      '&.Mui-focused': { color: '#00c28c' } 
+    },
+    '& .MuiFormHelperText-root': {
+      fontSize: { xs: '12px', sm: '12px' },
+      marginLeft: 0
+    }
   } as const;
 
   return (
     <ThemeProvider theme={SignUpTheme}>
       <Box
         sx={{
-          position: 'absolute', inset: 0,
+          minHeight: '100vh',
           bgcolor: 'background.default',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh', // Ensure it covers the full viewport height
-          margin: 0,
-          padding: 0,
+          flexDirection: 'column',
+          position: 'relative',
+          overflow: 'auto',
+          WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
         }}
       >
         <Button
@@ -267,7 +280,13 @@ const SignUpForm: React.FC = () => {
           startIcon={<HomeIcon />}
           variant="text"
           color="primary"
-          sx={{ position: 'absolute', top: 24, left: 24, textTransform: 'none' }}
+          sx={{ 
+            position: 'absolute', 
+            top: { xs: 16, sm: 24 }, 
+            left: { xs: 16, sm: 24 }, 
+            textTransform: 'none',
+            zIndex: 1
+          }}
         >
           Home
         </Button>
@@ -275,38 +294,61 @@ const SignUpForm: React.FC = () => {
         <Container
           maxWidth="sm"
           sx={{
-            '@media (max-width: 600px)': {
-              bgcolor: 'transparent', // Transparent on mobile
-              border: 'none', // No border on mobile
-              p: 0, // Remove padding on mobile
-            },
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            py: { xs: 2, sm: 4 },
+            px: { xs: 2, sm: 3 }
           }}
         >
           <Paper
-            elevation={0} // Remove shadow
+            elevation={0}
             sx={{
-              p: 4,
-              borderRadius: 8,
+              p: { xs: 3, sm: 4 },
+              borderRadius: { xs: 2, sm: 8 },
               bgcolor: 'background.paper',
               color: 'white',
+              width: '100%',
+              maxWidth: { xs: '100%', sm: 500 },
               '@media (max-width: 600px)': {
-                bgcolor: 'transparent', // Transparent on mobile
-                border: 'none', // No border on mobile
-                boxShadow: 'none', // Remove shadow on mobile
+                bgcolor: 'transparent',
+                border: 'none',
+                boxShadow: 'none',
+                p: 2
               },
             }}
           >
-            <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography 
+              variant="h4" 
+              align="center" 
+              gutterBottom 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'primary.main',
+                fontSize: { xs: '1.75rem', sm: '2.125rem' },
+                mb: { xs: 1, sm: 2 }
+              }}
+            >
               Create Account
             </Typography>
-            <Typography variant="body1" align="center" color="grey.300" sx={{ mb: 4 }}>
+            <Typography 
+              variant="body1" 
+              align="center" 
+              color="grey.300" 
+              sx={{ 
+                mb: { xs: 2, sm: 4 },
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                lineHeight: 1.5
+              }}
+            >
               {awaitingCode
                 ? `A 6-digit code was sent to ${pendingEmail}`
                 : 'Fill in your details to get started'}
             </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
-              <Stack spacing={3}>
+              <Stack spacing={{ xs: 2, sm: 3 }}>
                 {!awaitingCode ? (
                   <>
                     <TextField
@@ -375,7 +417,13 @@ const SignUpForm: React.FC = () => {
                   color="primary"
                   size="large"
                   fullWidth
-                  sx={{ py: 1.5 }}
+                  sx={{ 
+                    py: { xs: 1.5, sm: 1.5 },
+                    fontSize: { xs: '1rem', sm: '0.875rem' },
+                    fontWeight: 600,
+                    borderRadius: { xs: 2, sm: 1 },
+                    minHeight: { xs: 48, sm: 44 }
+                  }}
                   disabled={loading}
                 >
                   {loading
@@ -390,7 +438,11 @@ const SignUpForm: React.FC = () => {
                 variant="text"
                 color="primary"
                 fullWidth
-                sx={{ mt: 2, textTransform: 'none' }}
+                sx={{ 
+                  mt: { xs: 1.5, sm: 2 }, 
+                  textTransform: 'none',
+                  fontSize: { xs: '0.9rem', sm: '0.875rem' }
+                }}
                 component={RouterLink}
                 to="/login"
               >
@@ -406,8 +458,19 @@ const SignUpForm: React.FC = () => {
         autoHideDuration={2000}
         onClose={() => setSnackOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ 
+          top: { xs: 16, sm: 24 },
+          left: { xs: 16, sm: 'auto' },
+          right: { xs: 16, sm: 'auto' }
+        }}
       >
-        <Alert severity="success" sx={{ width: '100%' }}>
+        <Alert 
+          severity="success" 
+          sx={{ 
+            width: '100%',
+            fontSize: { xs: '0.875rem', sm: '0.875rem' }
+          }}
+        >
           Account verified — redirecting to login…
         </Alert>
       </Snackbar>

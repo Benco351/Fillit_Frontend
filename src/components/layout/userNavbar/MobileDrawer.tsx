@@ -3,6 +3,7 @@ import { Box, Drawer, List, ListItem, ListItemButton, ListItemText, ThemeProvide
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../routes/config/routes';
 import { DrawerTheme } from '../../../assets/themes/themes';
+import { signOut } from '@aws-amplify/auth';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -16,6 +17,12 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) => {
   const handleHomeClick = () => {
     const targetRoute = isAdmin ? ROUTES.ADMIN : ROUTES.DASHBOARD;
     navigate(targetRoute);
+    onClose();
+  };
+
+  const handleLogout = () => {
+    signOut();
+    navigate(ROUTES.LOGIN, { replace: true });
     onClose();
   };
   
@@ -47,12 +54,15 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton onClick={onClose}>
+              <ListItemButton onClick={() => {
+                navigate('/settings');
+                onClose();
+              }}>
                 <ListItemText primary="Settings" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to={ROUTES.HOME} onClick={onClose}>
+              <ListItemButton onClick={handleLogout}>
                 <ListItemText primary="Logout" />
               </ListItemButton>
             </ListItem>
