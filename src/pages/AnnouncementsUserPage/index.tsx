@@ -128,7 +128,31 @@ const AnnouncementsUserPage: React.FC = () => {
               direction: 'ltr',
             }}
           >
-            <Typography variant="h3" fontWeight={700} color="primary" align="center" gutterBottom>
+            <Typography 
+              variant="h3" 
+              fontWeight={700} 
+              color="primary" 
+              align="center" 
+              gutterBottom
+              sx={{
+                fontSize: { xs: '1.1rem', sm: '2.2rem', md: '3rem' },
+                wordBreak: 'break-word',
+                hyphens: 'auto',
+                lineHeight: { xs: 1.2, sm: 1.2 },
+                px: { xs: 4, sm: 0 },
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'normal',
+                display: 'block',
+                width: '100%',
+                boxSizing: 'border-box',
+                '@media (max-width: 375px)': {
+                  fontSize: '1rem',
+                  px: 2
+                }
+              }}
+            >
               Announcement Board
             </Typography>
             <Typography variant="body1" align="center" style={{ color: '#b0b7be', marginBottom: 24 }}>

@@ -11,10 +11,8 @@ import type { AnnouncementMapped } from './types';
  */
 export const createAnnouncement = async (data: CreateAnnouncementDTO): Promise<any> => {
   try {
-    // Backend expects `body` rather than `content`
-    const { content, ...rest } = data as any;
-    const requestBody = { ...rest, body: content };
-    const response = await api.post('/api/announcements', requestBody);
+    // Use content field directly
+    const response = await api.post('/api/announcements', data);
     // Backend returns { status, message, data: { ...announcement } }
     // We return it as-is; consumers typically re-fetch the list afterwards.
     return response.data;
