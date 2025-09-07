@@ -851,16 +851,18 @@ const AdminDashboard: React.FC = () => {
           backgroundColor: '#18191c !important',
           minHeight: '100vh',
           py: 4,
-          px: 2,
-          overflowX: 'hidden' // prevents horizontal scroll
+          px: { xs: 1, sm: 2 }, // Responsive padding
+          overflowX: 'hidden', // prevents horizontal scroll
+          width: '100%',
+          maxWidth: '100vw', // Ensure no overflow
         }}
       >
         <Container
           maxWidth={false}
           sx={{
-            px: { xs: 1, sm: 2, md: 3 },
+            px: { xs: 0, sm: 1, md: 2 }, // Reduced padding to prevent overflow
             width: '100%',
-            maxWidth: '100vw', // Prevent container from exceeding viewport width
+            maxWidth: '100%', // Use 100% instead of 100vw to prevent overflow
           }}
         >
           <Navbar />
@@ -906,12 +908,15 @@ const AdminDashboard: React.FC = () => {
               sx={{
                 border: '2px solid rgba(0, 194, 140, 0.2)',
                 borderRadius: '12px',
-                padding: '24px',
+                padding: { xs: '16px', sm: '20px', md: '24px' }, // Responsive padding
                 backgroundColor: 'secondary.main', // Changed to match UserDashboard's grey
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
                 mb: 4,
                 transform: 'translateZ(0)',
                 willChange: 'transform',
+                width: '100%',
+                maxWidth: '100%', // Prevent overflow
+                overflow: 'hidden', // Hide any potential overflow
               }}
             >
               {/* Combined top row for employee selection, navigation, and actions */}
@@ -921,8 +926,9 @@ const AdminDashboard: React.FC = () => {
                   flexDirection: { xs: 'column', md: 'row' },
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: { xs: 2, md: 2 },
                   mb: 3,
+                  width: '100%',
                 }}
               >
 
@@ -937,6 +943,7 @@ const AdminDashboard: React.FC = () => {
                     border: '1px solid rgba(0, 194, 140, 0.3)',
                     borderRadius: '10px',
                     color: '#00c28c',
+                    width: { xs: '100%', md: 'auto' }, // Full width on mobile
                     '&:hover': {
                       background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
                       transform: 'translateY(-1px)',
@@ -949,7 +956,10 @@ const AdminDashboard: React.FC = () => {
                 {/* Right side: Week navigation (moved from center) */}
                 <Box sx={{
                   display: 'flex',
-                  gap: 2,
+                  flexDirection: { xs: 'column', sm: 'row' }, // Stack vertically on mobile
+                  gap: { xs: 1, sm: 2 },
+                  width: { xs: '100%', md: 'auto' },
+                  alignItems: 'center',
                 }}>
                   <Button
                     variant="outlined"
@@ -960,6 +970,8 @@ const AdminDashboard: React.FC = () => {
                       border: '1px solid rgba(0, 194, 140, 0.3)',
                       borderRadius: '10px',
                       color: '#00c28c',
+                      width: { xs: '100%', sm: 'auto' }, // Full width on mobile
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
                       '&:hover': {
                         background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
                         transform: 'translateY(-1px)',
@@ -981,6 +993,8 @@ const AdminDashboard: React.FC = () => {
                       border: '1px solid rgba(0, 194, 140, 0.3)',
                       borderRadius: '10px',
                       color: '#00c28c',
+                      width: { xs: '100%', sm: 'auto' }, // Full width on mobile
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
                       '&:hover': {
                         background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
                         transform: 'translateY(-1px)',

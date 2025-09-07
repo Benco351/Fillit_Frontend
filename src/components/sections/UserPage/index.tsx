@@ -34,17 +34,19 @@ const UserDashboardTitle: React.FC<UserDashboardTitleProps> = ({
               variant="h4"
               component="h1"
               align="center"
-              noWrap // Forces single line
               sx={{
                 color: '#00c28c', // Match your theme's primary color
                 fontWeight: 900,
                 fontFamily: '"Montserrat", "Roboto", sans-serif',
                 letterSpacing: '0.02em',
                 textTransform: 'uppercase',
-                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem' }, // Slightly smaller for better fit
-                lineHeight: 1.1,
+                fontSize: { xs: '1.2rem', sm: '1.8rem', md: '2.2rem' }, // Much smaller on mobile
+                lineHeight: { xs: 1.2, sm: 1.1 }, // Better line height for mobile
                 textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s ease',
+                wordBreak: 'break-word', // Allow word breaking
+                overflowWrap: 'break-word', // Allow breaking long words
+                maxWidth: '100%', // Ensure it doesn't exceed container
                 '&:hover': {
                   letterSpacing: '0.04em',
                   transform: 'scale(1.02)',

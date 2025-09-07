@@ -203,7 +203,14 @@ const AnnouncementsPage: React.FC = () => {
         px: 2,
         direction: 'ltr',
       }}>
-        <Container maxWidth={false} sx={{ px: { xs: 0.5, sm: 2, md: 3 }, width: '100%', maxWidth: '100%', direction: 'ltr' }}>
+        <Container maxWidth={false} sx={{ 
+          px: { xs: 1, sm: 2, md: 3 }, 
+          width: '100%', 
+          maxWidth: '100%', 
+          direction: 'ltr',
+          overflow: 'hidden',
+          boxSizing: 'border-box'
+        }}>
           <Navbar />
           <Box
             sx={{
@@ -225,15 +232,22 @@ const AnnouncementsPage: React.FC = () => {
               align="center" 
               gutterBottom
               sx={{
-                fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3rem' },
+                fontSize: { xs: '1.1rem', sm: '2.2rem', md: '3rem' },
                 wordBreak: 'break-word',
                 hyphens: 'auto',
-                lineHeight: { xs: 1.1, sm: 1.2 },
-                px: { xs: 2, sm: 0 },
+                lineHeight: { xs: 1.2, sm: 1.2 },
+                px: { xs: 4, sm: 0 },
                 maxWidth: '100%',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: { xs: 'normal', sm: 'nowrap' }
+                whiteSpace: 'normal',
+                display: 'block',
+                width: '100%',
+                boxSizing: 'border-box',
+                '@media (max-width: 375px)': {
+                  fontSize: '1rem',
+                  px: 2
+                }
               }}
             >
               Announcement Board

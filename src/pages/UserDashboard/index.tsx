@@ -373,14 +373,17 @@ const UserDashboard: React.FC = () => {
         backgroundColor: '#093039', 
         minHeight: '100vh', 
         py: 4, 
-        px: 2,
+        px: { xs: 1, sm: 2 }, // Responsive padding
         scrollBehavior: 'smooth',
-        overflowAnchor: 'none'
+        overflowAnchor: 'none',
+        width: '100%',
+        maxWidth: '100vw', // Ensure no overflow
+        overflowX: 'hidden', // Prevent horizontal scroll
       }}>
         <Container maxWidth={false} sx={{ 
-          px: { xs: 1, sm: 2, md: 3 }, 
+          px: { xs: 0, sm: 1, md: 2 }, // Reduced padding to prevent overflow
           width: '100%', 
-          maxWidth: '100%',
+          maxWidth: '100%', // Use 100% instead of 100vw to prevent overflow
           scrollBehavior: 'smooth'
         }}>
           <AdminNavbar />
@@ -427,12 +430,15 @@ const UserDashboard: React.FC = () => {
               sx={{
                 border: '2px solid rgba(0, 194, 140, 0.2)',
                 borderRadius: '12px',
-                padding: '24px',
+                padding: { xs: '16px', sm: '20px', md: '24px' }, // Responsive padding
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                margin: '24px 0',
+                margin: { xs: '16px 0', sm: '20px 0', md: '24px 0' }, // Responsive margin
                 transform: 'translateZ(0)',
                 willChange: 'transform',
+                width: '100%',
+                maxWidth: '100%', // Prevent overflow
+                overflow: 'hidden', // Hide any potential overflow
               }}
             >
               {/* Employee selection and Week navigation in one row */}
@@ -442,16 +448,19 @@ const UserDashboard: React.FC = () => {
                   flexDirection: { xs: 'column', md: 'row' },
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: 3,
+                  gap: { xs: 2, md: 3 },
                   mb: 3,
+                  width: '100%',
                 }}
               >
 
                 {/* Week navigation */}
                 <Box sx={{ 
                   display: 'flex',
-                  gap: 2,
-                  width: { xs: '100%', md: 'auto' }
+                  flexDirection: { xs: 'column', sm: 'row' }, // Stack vertically on mobile
+                  gap: { xs: 1, sm: 2 },
+                  width: { xs: '100%', md: 'auto' },
+                  alignItems: 'center',
                 }}>
                   <Button 
                     variant="outlined" 
@@ -460,6 +469,7 @@ const UserDashboard: React.FC = () => {
                     sx={{
                       ...commonButtonStyle, // Spread the common styles
                       width: { xs: '100%', sm: 'auto' },
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
                     }}
                   >
                     Previous Week
@@ -475,6 +485,7 @@ const UserDashboard: React.FC = () => {
                     sx={{
                       ...commonButtonStyle, // Spread the common styles
                       width: { xs: '100%', sm: 'auto' },
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
                     }}
                   >
                     Next Week
