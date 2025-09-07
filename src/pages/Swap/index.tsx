@@ -26,7 +26,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import { getEmployees } from '../../utils/apis/employeeShiftApis';
 import { Employee } from '../../components/CalendarFeatures/calendarStates';
 import { MainTheme, swapPageTheme } from '../../assets/themes/themes';
-import { useUserDashboard } from '../../hooks/useUserDashboard';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../routes/config/routes';
@@ -58,7 +57,6 @@ const getCurrentUser = () => {
 
 const EmployeeCard: React.FC<{ emp: Employee; refreshSwapRequests: () => void }> = ({ emp, refreshSwapRequests }) => {
   const theme = useTheme();
-  const { commonButtonStyle } = useUserDashboard({ id: 0, name: '', email: '' });
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assignedShifts, setAssignedShifts] = useState<any[]>([]);
@@ -516,7 +514,6 @@ const SwapPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { commonButtonStyle } = useUserDashboard({ id: 0, name: '', email: '' });
   const navigate = useNavigate();
   const [myRequests, setMyRequests] = useState<ShiftSwapRequest[]>([]);
   const [requestsToMe, setRequestsToMe] = useState<ShiftSwapRequest[]>([]);
@@ -723,20 +720,6 @@ const SwapPage: React.FC = () => {
       }}>
         <Container maxWidth={false} sx={{ px: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
           <Navbar />
-          {/* Return Button
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => {
-              if (user.admin) {
-                navigate(ROUTES.ADMIN);
-              } else {
-                navigate(ROUTES.DASHBOARD);
-              }
-            }}
-            sx={{ ...commonButtonStyle, mb: 3, bgcolor: 'primary.main', color: 'white', boxShadow: 'none', '&:hover': { bgcolor: 'primary.dark' } }}
-          >
-            Back to Dashboard
-          </Button> */}
           {/* Main Content Card/Frame */}
           <Box
             sx={{
@@ -861,9 +844,8 @@ const SwapPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
                 <Typography variant="h5" fontWeight={600} style={{ color: swapPageTheme.unselectedText }}>My Pending Swap Requests</Typography>
               </Box>
-              {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}
-              {!requestsLoading && !requestsError && myRequests.filter(req => req.status === 'pending').length === 0 && (
+              {!requestsError && myRequests.filter(req => req.status === 'pending').length === 0 && (
                 <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No pending swap requests sent.</Typography>
               )}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, justifyContent: 'center' }}>
@@ -891,9 +873,8 @@ const SwapPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
                 <Typography variant="h5" fontWeight={600} style={{ color: swapPageTheme.unselectedText }}>Pending Requests to Me</Typography>
               </Box>
-              {requestsLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><CircularProgress color="primary" /></Box>}
               {requestsError && <Alert severity="error" sx={{ mt: 2 }}>{requestsError}</Alert>}
-              {!requestsLoading && !requestsError && requestsToMe.filter(req => req.status === 'pending').length === 0 && (
+              {!requestsError && requestsToMe.filter(req => req.status === 'pending').length === 0 && (
                 <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No pending swap requests received.</Typography>
               )}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, justifyContent: 'center' }}>
