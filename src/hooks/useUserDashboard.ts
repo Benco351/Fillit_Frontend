@@ -268,9 +268,11 @@ export const useUserDashboard = (currentEmployee: Employee) => {
                 date: assignedShift.availableShift.shift_date,
                 start: assignedShift.availableShift.shift_time_start,
                 end: assignedShift.availableShift.shift_time_end,
-                shift_slots_amount: 1, // Default to 1 slot
-                shift_slots_taken: 1, // Since it's assigned, it's taken
-                department_id: assignedShift.availableShift.department?.id || null,
+                shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1, // Use actual slots amount
+                shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1, // Use actual slots taken
+                department_id: assignedShift.availableShift.department_id || 
+                              assignedShift.availableShift.department?.id || 
+                              null,
               };
               
               availableShiftMap.set(shiftId, availableShift);

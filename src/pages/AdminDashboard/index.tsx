@@ -215,9 +215,11 @@ const AdminDashboard: React.FC = () => {
                     date: assignedShift.availableShift.shift_date,
                     start: assignedShift.availableShift.shift_time_start,
                     end: assignedShift.availableShift.shift_time_end,
-                    shift_slots_amount: 1, // Default to 1 slot
-                    shift_slots_taken: 1, // Since it's assigned, it's taken
-                    department_id: assignedShift.availableShift.department?.id || null,
+                    shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1, // Use actual slots amount
+                    shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1, // Use actual slots taken
+                    department_id: assignedShift.availableShift.department_id || 
+                                  assignedShift.availableShift.department?.id || 
+                                  null,
                   };
                   
                   availableShiftMap.set(shiftId, availableShift);
@@ -396,11 +398,22 @@ const AdminDashboard: React.FC = () => {
           }));
 
           setRequestedShifts(prevShifts => {
-            // Deep comparison to prevent unnecessary updates
-            if (JSON.stringify(prevShifts) === JSON.stringify(mappedRequestedShifts)) {
-              return prevShifts; // No changes, return previous state
+            // More efficient comparison to prevent unnecessary updates
+            if (prevShifts.length !== mappedRequestedShifts.length) {
+              return mappedRequestedShifts;
             }
-            return mappedRequestedShifts;
+            
+            // Check if any shift has changed
+            const hasChanges = prevShifts.some((prevShift, index) => {
+              const newShift = mappedRequestedShifts[index];
+              return !newShift || 
+                     prevShift.id !== newShift.id ||
+                     prevShift.status !== newShift.status ||
+                     prevShift.employeeId !== newShift.employeeId ||
+                     prevShift.availableShiftId !== newShift.availableShiftId;
+            });
+            
+            return hasChanges ? mappedRequestedShifts : prevShifts;
           });
         }
 
@@ -444,9 +457,11 @@ const AdminDashboard: React.FC = () => {
                     date: assignedShift.availableShift.shift_date,
                     start: assignedShift.availableShift.shift_time_start,
                     end: assignedShift.availableShift.shift_time_end,
-                    shift_slots_amount: 1, // Default to 1 slot
-                    shift_slots_taken: 1, // Since it's assigned, it's taken
-                    department_id: assignedShift.availableShift.department?.id || null,
+                    shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1, // Use actual slots amount
+                    shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1, // Use actual slots taken
+                    department_id: assignedShift.availableShift.department_id || 
+                                  assignedShift.availableShift.department?.id || 
+                                  null,
                   };
                   
                   availableShiftMap.set(shiftId, availableShift);
@@ -706,6 +721,7 @@ const AdminDashboard: React.FC = () => {
       // Then update the request status to approved
       await updateRequestedShiftById(requestedShift.id, { status: 'approved' });
 
+      // Update only the specific request that was approved to prevent unnecessary re-renders
       setRequestedShifts(prev =>
         prev.map(shift =>
           shift.id === requestedShift.id
@@ -713,6 +729,21 @@ const AdminDashboard: React.FC = () => {
             : shift
         )
       );
+
+      // Update assigned shifts to include the new assignment
+      const assignedEmployee = employees.find(emp => emp.id === requestedShift.employeeId);
+      if (assignedEmployee) {
+        setAssignedShifts(prev => [...prev, {
+          id: Date.now(), // Temporary ID until we get the real one from API
+          assigned_id: Date.now(),
+          employeeId: requestedShift.employeeId,
+          assigned_employee_id: requestedShift.employeeId,
+          availableShiftId: requestedShift.availableShiftId,
+          assigned_shift_id: requestedShift.availableShiftId,
+          availableShift: availableShifts.find(s => s.id === requestedShift.availableShiftId),
+          employee: assignedEmployee
+        }]);
+      }
 
       setSuccess('Shift assigned successfully');
     } catch (err) {
@@ -733,10 +764,45 @@ const AdminDashboard: React.FC = () => {
     // console.log('Assigned shifts for filtering:', assignedShifts);
     // console.log('Current employee:', currentEmployee);
     // console.log('Filter:', filter);
+    // console.log('Department filter:', departmentFilter);
     
     let shifts = availableShifts;
+    
+    // CRITICAL FIX: Ensure all assigned shifts are included in the shifts array
+    // This handles cases where assigned shifts might not be properly merged
+    if (assignedShifts.length > 0) {
+      const assignedShiftIds = new Set(shifts.map(s => s.id));
+      
+      assignedShifts.forEach(assignedShift => {
+        if (assignedShift.availableShift && assignedShift.assigned_shift_id && 
+            !assignedShiftIds.has(assignedShift.assigned_shift_id)) {
+          
+          // Create shift from assigned shift data
+          const shiftFromAssigned = {
+            id: assignedShift.assigned_shift_id,
+            date: assignedShift.availableShift.shift_date,
+            start: assignedShift.availableShift.shift_time_start,
+            end: assignedShift.availableShift.shift_time_end,
+            shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1,
+            shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1,
+            department_id: assignedShift.availableShift.department_id || 
+                          assignedShift.availableShift.department?.id || 
+                          null,
+          };
+          
+          shifts.push(shiftFromAssigned);
+          // console.log('🔧 ADDED MISSING ASSIGNED SHIFT TO FILTERING:', shiftFromAssigned);
+        }
+      });
+    }
+    
+    // Apply department filter
     if (departmentFilter !== 'all') {
-      shifts = shifts.filter(shift => shift.department_id === departmentFilter);
+      shifts = shifts.filter(shift => {
+        const matchesDepartment = shift.department_id === departmentFilter;
+        // console.log(`Shift ${shift.id} department_id: ${shift.department_id}, filter: ${departmentFilter}, matches: ${matchesDepartment}`);
+        return matchesDepartment;
+      });
     }
     if (filter === 'full') {
       // Show shifts where slots taken >= slots amount OR where current admin user is assigned
@@ -1184,7 +1250,7 @@ const AdminDashboard: React.FC = () => {
                                 const requester = employees.find(emp => emp.id === pendingRequest.employeeId);
                                 return (
                                   <Box
-                                    key={pendingRequest.id}
+                                    key={`pending-${pendingRequest.id}-${pendingRequest.status}`}
                                     sx={{
                                       width: '100%',
                                       backgroundColor: 'rgba(255, 152, 0, 0.1)',
@@ -1515,15 +1581,41 @@ const AdminDashboard: React.FC = () => {
               {selectedShiftInfo && (
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="body1" gutterBottom>
-                    Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount}
+                    <strong>Time:</strong> {selectedShiftInfo.start?.substring(0, 5) || '??:??'} - {selectedShiftInfo.end?.substring(0, 5) || '??:??'}
                   </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    <strong>Date:</strong> {format(parseISO(selectedShiftInfo.date), 'MMM d, yyyy')}
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    <strong>Slots:</strong> {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount || 1}
+                  </Typography>
+                  {selectedShiftInfo.department_id && (
+                    <Typography variant="body1" gutterBottom>
+                      <strong>Department:</strong> {departments.find(d => d.id === selectedShiftInfo.department_id)?.name || 'Unknown'}
+                    </Typography>
+                  )}
                   <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
                     Assigned Users:
                   </Typography>
-                  {assignedShifts
-                    .filter(assign => assign.assigned_shift_id === selectedShiftInfo.id)
-                    .map(assign => {
-                      const user = employees.find(emp => emp.id === assign.assigned_employee_id);
+                  {(() => {
+                    // Find all assigned shifts for this specific shift
+                    const shiftAssignments = assignedShifts.filter(assign => 
+                      assign.assigned_shift_id === selectedShiftInfo.id
+                    );
+                    
+                    if (shiftAssignments.length === 0) {
+                      return (
+                        <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                          No users assigned to this shift
+                        </Typography>
+                      );
+                    }
+                    
+                    return shiftAssignments.map(assign => {
+                      // Try multiple ways to find the user
+                      const user = employees.find(emp => 
+                        emp.id === assign.assigned_employee_id
+                      ) || assign.employee;
 
                       return (
                         <Box
@@ -1539,7 +1631,7 @@ const AdminDashboard: React.FC = () => {
                           }}
                         >
                           <Typography variant="body2">
-                            {user?.name || 'Unknown User'}
+                            {user?.name || user?.employee_name || 'Unknown User'}
                           </Typography>
                           <Button
                             size="small"
@@ -1554,7 +1646,8 @@ const AdminDashboard: React.FC = () => {
                           </Button>
                         </Box>
                       );
-                    })}
+                    });
+                  })()}
                 </Box>
               )}
             </DialogContent>

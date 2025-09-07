@@ -282,6 +282,35 @@ const UserDashboard: React.FC = () => {
   // Filtered shifts based on the selected filter and department
   const filteredShifts = useMemo(() => {
     let shifts = availableShifts;
+    
+    // CRITICAL FIX: Ensure all assigned shifts are included in the shifts array
+    // This handles cases where assigned shifts might not be properly merged
+    if (assignedShifts.length > 0) {
+      const assignedShiftIds = new Set(shifts.map(s => s.id));
+      
+      assignedShifts.forEach(assignedShift => {
+        if (assignedShift.availableShift && assignedShift.assigned_shift_id && 
+            !assignedShiftIds.has(assignedShift.assigned_shift_id)) {
+          
+          // Create shift from assigned shift data
+          const shiftFromAssigned = {
+            id: assignedShift.assigned_shift_id,
+            date: assignedShift.availableShift.shift_date,
+            start: assignedShift.availableShift.shift_time_start,
+            end: assignedShift.availableShift.shift_time_end,
+            shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1,
+            shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1,
+            department_id: assignedShift.availableShift.department_id || 
+                          assignedShift.availableShift.department?.id || 
+                          null,
+          };
+          
+          shifts.push(shiftFromAssigned);
+          // console.log('🔧 ADDED MISSING ASSIGNED SHIFT TO FILTERING (USER):', shiftFromAssigned);
+        }
+      });
+    }
+    
     if (departmentFilter !== 'all') {
       shifts = shifts.filter(shift => shift.department_id === departmentFilter);
     }

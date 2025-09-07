@@ -536,24 +536,41 @@ const SwapPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const employeesPerPage = 5;
 
-  const fetchSwapRequests = async () => {
-    setRequestsLoading(true);
+  const fetchSwapRequests = async (showLoading = false) => {
+    if (showLoading) {
+      setRequestsLoading(true);
+    }
     setRequestsError(null);
     try {
       const currentUserId = Number(user.id);
       const res = await listShiftSwapRequests(currentUserId);
       const all: ShiftSwapRequest[] = res.data?.data || res.data || [];
-      setMyRequests(all.filter(r => r.requester_employee_id === currentUserId));
-      setRequestsToMe(all.filter(r => r.target_employee_id === currentUserId));
+      const newMyRequests = all.filter(r => r.requester_employee_id === currentUserId);
+      const newRequestsToMe = all.filter(r => r.target_employee_id === currentUserId);
+      
+      // Only update state if data has actually changed
+      const myRequestsChanged = JSON.stringify(newMyRequests) !== JSON.stringify(myRequests);
+      const requestsToMeChanged = JSON.stringify(newRequestsToMe) !== JSON.stringify(requestsToMe);
+      
+      if (myRequestsChanged) {
+        setMyRequests(newMyRequests);
+      }
+      if (requestsToMeChanged) {
+        setRequestsToMe(newRequestsToMe);
+      }
     } catch (err: any) {
       setRequestsError(err.message || 'Failed to fetch swap requests');
     } finally {
-      setRequestsLoading(false);
+      if (showLoading) {
+        setRequestsLoading(false);
+      }
     }
   };
 
-  const fetchAllSwapRequests = async () => {
-    setLogLoading(true);
+  const fetchAllSwapRequests = async (showLoading = false) => {
+    if (showLoading) {
+      setLogLoading(true);
+    }
     setLogError(null);
     try {
       const currentUserId = Number(user.id);
@@ -565,7 +582,12 @@ const SwapPage: React.FC = () => {
         const dateB = new Date(b.created_at || 0);
         return dateB.getTime() - dateA.getTime();
       });
-      setAllSwapRequests(sorted);
+      
+      // Only update state if data has actually changed
+      const dataChanged = JSON.stringify(sorted) !== JSON.stringify(allSwapRequests);
+      if (dataChanged) {
+        setAllSwapRequests(sorted);
+      }
       
       // Fetch shift details for all requests using the exact same method as employee cards
       const shiftDetailsMap: {[key: number]: any} = {};
@@ -607,11 +629,17 @@ const SwapPage: React.FC = () => {
         }
       }
       
-      setShiftDetails(shiftDetailsMap);
+      // Only update shift details if they have changed
+      const shiftDetailsChanged = JSON.stringify(shiftDetailsMap) !== JSON.stringify(shiftDetails);
+      if (shiftDetailsChanged) {
+        setShiftDetails(shiftDetailsMap);
+      }
     } catch (err: any) {
       setLogError(err.message || 'Failed to fetch swap requests');
     } finally {
-      setLogLoading(false);
+      if (showLoading) {
+        setLogLoading(false);
+      }
     }
   };
 
@@ -644,14 +672,14 @@ const SwapPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchSwapRequests();
+    fetchSwapRequests(true); // Show loading on initial fetch
   }, []);
 
   // Poll for new swap requests every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setIsPolling(true);
-      fetchSwapRequests().finally(() => {
+      fetchSwapRequests(false).finally(() => {
         setIsPolling(false);
       });
     }, 10000); // Poll every 10 seconds
@@ -664,7 +692,7 @@ const SwapPage: React.FC = () => {
     if (!logDialogOpen) return;
 
     const interval = setInterval(() => {
-      fetchAllSwapRequests();
+      fetchAllSwapRequests(false); // Don't show loading during polling
     }, 15000); // Poll every 15 seconds when dialog is open
 
     return () => clearInterval(interval);
@@ -856,10 +884,10 @@ const SwapPage: React.FC = () => {
                       size="small"
                       color="error"
                       sx={{ mt: 1 }}
-                      onClick={async () => {
-                        await respondToShiftSwapRequest(req.id, { status: 'cancelled' });
-                        fetchSwapRequests();
-                      }}
+                        onClick={async () => {
+                          await respondToShiftSwapRequest(req.id, { status: 'cancelled' });
+                          fetchSwapRequests(false); // Don't show loading for manual actions
+                        }}
                     >Cancel</Button>
                   </Paper>
                 ))}
@@ -901,7 +929,7 @@ const SwapPage: React.FC = () => {
                             // The swap has already been approved, so we just log the error
                           }
                           
-                          fetchSwapRequests();
+                          fetchSwapRequests(false); // Don't show loading for manual actions
                         }}
                       >Accept</Button>
                       <Button
@@ -909,7 +937,7 @@ const SwapPage: React.FC = () => {
                         color="error"
                         onClick={async () => {
                           await respondToShiftSwapRequest(req.id, { status: 'rejected' });
-                          fetchSwapRequests();
+                          fetchSwapRequests(false); // Don't show loading for manual actions
                         }}
                       >Reject</Button>
                     </Box>
@@ -924,7 +952,7 @@ const SwapPage: React.FC = () => {
                 variant="contained"
                 onClick={() => {
                   setLogDialogOpen(true);
-                  fetchAllSwapRequests();
+                  fetchAllSwapRequests(true); // Show loading when manually opening dialog
                 }}
                 sx={{
                   background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
