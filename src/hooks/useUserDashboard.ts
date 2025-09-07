@@ -216,9 +216,9 @@ export const useUserDashboard = (currentEmployee: Employee) => {
       }
 
       // Fetch assigned shifts for the current user only
-      console.log('🔍 Fetching assigned shifts for user:', currentEmployee.id);
+      // console.log('🔍 Fetching assigned shifts for user:', currentEmployee.id);
       const assignedResponse = await getAssignedShifts({ assigned_employee_id: currentEmployee.id });
-      console.log('🔍 Raw assigned shifts response:', assignedResponse);
+      // console.log('🔍 Raw assigned shifts response:', assignedResponse);
       
       let mappedAssignedShifts: any[] = [];
       if (assignedResponse?.data && Array.isArray(assignedResponse.data)) {
@@ -226,8 +226,8 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         const filteredByUser = assignedResponse.data.filter((shift: any) => 
           shift.assigned_employee_id === currentEmployee.id
         );
-        console.log('🔍 Backend returned shifts:', assignedResponse.data);
-        console.log('🔍 Filtered by user ID:', filteredByUser);
+        // console.log('🔍 Backend returned shifts:', assignedResponse.data);
+        // console.log('🔍 Filtered by user ID:', filteredByUser);
         
         mappedAssignedShifts = filteredByUser.map((shift: any) => ({
           id: shift.assigned_id,
@@ -239,14 +239,14 @@ export const useUserDashboard = (currentEmployee: Employee) => {
           availableShift: shift.availableShift,
           employee: shift.employee,
         }));
-        console.log('🔍 Mapped assigned shifts:', mappedAssignedShifts);
+        // console.log('🔍 Mapped assigned shifts:', mappedAssignedShifts);
         setAssignedShifts(mappedAssignedShifts);
       }
 
       // CRITICAL FIX: Always ensure assigned shifts are included in available shifts
       // This handles cases where assigned shifts are not in available shifts (because they're full)
       if (mappedAssignedShifts.length > 0) {
-        console.log('🔧 USER DASHBOARD FIX: Adding assigned shifts to available shifts');
+        // console.log('🔧 USER DASHBOARD FIX: Adding assigned shifts to available shifts');
         
         // Create a map from existing available shifts to avoid duplicates
         const availableShiftMap = new Map();
@@ -274,11 +274,11 @@ export const useUserDashboard = (currentEmployee: Employee) => {
               };
               
               availableShiftMap.set(shiftId, availableShift);
-              console.log('➕ ADDED ASSIGNED SHIFT TO AVAILABLE (USER):', availableShift);
+              // console.log('➕ ADDED ASSIGNED SHIFT TO AVAILABLE (USER):', availableShift);
             } else {
               // If shift already exists, don't modify the slots taken count
               // The API already provides the correct count
-              console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (USER):', availableShiftMap.get(shiftId));
+              // console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (USER):', availableShiftMap.get(shiftId));
             }
           }
         });
@@ -286,7 +286,7 @@ export const useUserDashboard = (currentEmployee: Employee) => {
         // Convert map to array and update available shifts
         const finalAvailableShifts = Array.from(availableShiftMap.values());
         setAvailableShifts(finalAvailableShifts);
-        console.log('🎯 FINAL AVAILABLE SHIFTS (USER):', finalAvailableShifts);
+        // console.log('🎯 FINAL AVAILABLE SHIFTS (USER):', finalAvailableShifts);
       } else {
         setAvailableShifts(mappedShifts);
       }

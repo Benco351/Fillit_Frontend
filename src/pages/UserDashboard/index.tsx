@@ -205,16 +205,16 @@ const UserDashboard: React.FC = () => {
     const availableShift = availableShifts.find(s => s.id === availableShiftId);
 
     // Debug logging
-    console.log('getShiftStatus for shift:', availableShiftId, {
-      availableShift,
-      shift_slots_amount: availableShift?.shift_slots_amount,
-      shift_slots_taken: availableShift?.shift_slots_taken,
-      requestedShift,
-      availableShiftsLength: availableShifts.length,
-      requestedShiftsLength: requestedShifts.length,
-      assignedShiftsLength: assignedShifts.length,
-      currentEmployeeId: currentEmployee.id
-    });
+    // console.log('getShiftStatus for shift:', availableShiftId, {
+    //   availableShift,
+    //   shift_slots_amount: availableShift?.shift_slots_amount,
+    //   shift_slots_taken: availableShift?.shift_slots_taken,
+    //   requestedShift,
+    //   availableShiftsLength: availableShifts.length,
+    //   requestedShiftsLength: requestedShifts.length,
+    //   assignedShiftsLength: assignedShifts.length,
+    //   currentEmployeeId: currentEmployee.id
+    // });
 
     // FIRST: Check if current user is assigned to this shift (regardless of slots)
     const isUserAssigned = assignedShifts.some(s => 
@@ -223,7 +223,7 @@ const UserDashboard: React.FC = () => {
     );
     
     if (isUserAssigned) {
-      console.log('User is assigned to this shift, returning assigned status');
+      // console.log('User is assigned to this shift, returning assigned status');
       return 'assigned';
     }
 
@@ -246,23 +246,23 @@ const UserDashboard: React.FC = () => {
       const slotsTaken = Number(availableShift.shift_slots_taken) || 0;
       const availableSlots = isNaN(slotsAmount) || isNaN(slotsTaken) ? 1 : slotsAmount - slotsTaken;
       
-      console.log('Slot check:', {
-        shift_slots_amount: slotsAmount,
-        shift_slots_taken: slotsTaken,
-        availableSlots,
-        hasAvailableSlots: availableSlots > 0,
-        type_slots_amount: typeof availableShift.shift_slots_amount,
-        type_slots_taken: typeof availableShift.shift_slots_taken,
-        raw_slots_amount: availableShift.shift_slots_amount,
-        raw_slots_taken: availableShift.shift_slots_taken,
-        isNaN_slots_amount: isNaN(slotsAmount),
-        isNaN_slots_taken: isNaN(slotsTaken),
-        isNaN_availableSlots: isNaN(availableSlots)
-      });
+      // console.log('Slot check:', {
+      //   shift_slots_amount: slotsAmount,
+      //   shift_slots_taken: slotsTaken,
+      //   availableSlots,
+      //   hasAvailableSlots: availableSlots > 0,
+      //   type_slots_amount: typeof availableShift.shift_slots_amount,
+      //   type_slots_taken: typeof availableShift.shift_slots_taken,
+      //   raw_slots_amount: availableShift.shift_slots_amount,
+      //   raw_slots_taken: availableShift.shift_slots_taken,
+      //   isNaN_slots_amount: isNaN(slotsAmount),
+      //   isNaN_slots_taken: isNaN(slotsTaken),
+      //   isNaN_availableSlots: isNaN(availableSlots)
+      // });
       
       // If no slots are available, show as full
       if (availableSlots <= 0) {
-        console.log('Shift is full, returning full status');
+        // console.log('Shift is full, returning full status');
         return 'full';
       }
     }
@@ -301,21 +301,21 @@ const UserDashboard: React.FC = () => {
         break;
       case 'accepted':
         // Show only shifts that are assigned to the current user
-        console.log('🔍 ACCEPTED FILTER DEBUG:');
-        console.log('Current employee ID:', currentEmployee.id);
-        console.log('Available shifts:', shifts);
-        console.log('Assigned shifts:', assignedShifts);
+        // console.log('🔍 ACCEPTED FILTER DEBUG:');
+        // console.log('Current employee ID:', currentEmployee.id);
+        // console.log('Available shifts:', shifts);
+        // console.log('Assigned shifts:', assignedShifts);
         
         filteredShifts = shifts.filter(shift => {
           const isAssigned = assignedShifts.some(assign => 
             assign.assigned_shift_id === shift.id && 
             assign.assigned_employee_id === currentEmployee.id
           );
-          console.log(`Shift ${shift.id} (${shift.date}): isAssigned = ${isAssigned}`);
+          // console.log(`Shift ${shift.id} (${shift.date}): isAssigned = ${isAssigned}`);
           return isAssigned;
         });
         
-        console.log('🔍 Filtered shifts for accepted:', filteredShifts);
+        // console.log('🔍 Filtered shifts for accepted:', filteredShifts);
         break;
       default:
         filteredShifts = shifts;
@@ -584,12 +584,12 @@ const UserDashboard: React.FC = () => {
                           const status = getShiftStatus(shift.id);
                           
                           // Debug logging for shift rendering
-                          console.log('Rendering shift:', shift.id, {
-                            shift,
-                            status,
-                            shift_slots_amount: shift.shift_slots_amount,
-                            shift_slots_taken: shift.shift_slots_taken
-                          });
+                          // console.log('Rendering shift:', shift.id, {
+                          //   shift,
+                          //   status,
+                          //   shift_slots_amount: shift.shift_slots_amount,
+                          //   shift_slots_taken: shift.shift_slots_taken
+                          // });
                           
                           const backgroundColor =
                             status === 'denied' ? '#f44336' :

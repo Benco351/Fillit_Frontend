@@ -154,7 +154,7 @@ const AdminDashboard: React.FC = () => {
         
         try {
           availableShiftsResponse = await getAvailableShifts();
-          console.log('Available shifts response:', availableShiftsResponse);
+          // console.log('Available shifts response:', availableShiftsResponse);
           
           if (availableShiftsResponse?.data && Array.isArray(availableShiftsResponse.data)) {
             mappedAvailableShifts = availableShiftsResponse.data.map((shift: any) => ({
@@ -168,7 +168,7 @@ const AdminDashboard: React.FC = () => {
             }));
           }
         } catch (error) {
-          console.log('Available shifts API error (this is expected when empty):', error);
+          // console.log('Available shifts API error (this is expected when empty):', error);
           // This is expected when available shifts is empty, continue with empty array
         }
 
@@ -176,9 +176,6 @@ const AdminDashboard: React.FC = () => {
         const assignedShiftsResponse = await getAssignedShifts();
         let mappedAssignedShifts: any[] = [];
         
-        console.log('🔍 ASSIGNED SHIFTS DEBUG:');
-        console.log('Raw response:', assignedShiftsResponse);
-        console.log('Response data:', assignedShiftsResponse?.data);
         
         if (assignedShiftsResponse?.data && Array.isArray(assignedShiftsResponse.data)) {
           mappedAssignedShifts = assignedShiftsResponse.data.map((shift: any) => ({
@@ -189,17 +186,14 @@ const AdminDashboard: React.FC = () => {
             employee: shift.employee,
           }));
           
-          console.log('Mapped assigned shifts:', mappedAssignedShifts);
+          // console.log('Mapped assigned shifts:', mappedAssignedShifts);
 
 
           // CRITICAL FIX: Always ensure assigned shifts are included in available shifts
           // This handles cases where assigned shifts are not in available shifts (because they're full)
-          console.log('🔧 FIX CHECK:');
-          console.log('Available shifts length:', mappedAvailableShifts.length);
-          console.log('Assigned shifts length:', mappedAssignedShifts.length);
-          
+
           if (mappedAssignedShifts.length > 0) {
-            console.log('✅ FIX RUNNING: Adding assigned shifts to available shifts');
+            // console.log('✅ FIX RUNNING: Adding assigned shifts to available shifts');
             
             // Create a map from existing available shifts to avoid duplicates
             const availableShiftMap = new Map();
@@ -227,26 +221,24 @@ const AdminDashboard: React.FC = () => {
                   };
                   
                   availableShiftMap.set(shiftId, availableShift);
-                  console.log('➕ ADDED ASSIGNED SHIFT TO AVAILABLE:', availableShift);
+                  // console.log('➕ ADDED ASSIGNED SHIFT TO AVAILABLE:', availableShift);
                 } else {
                   // If shift already exists, don't modify the slots taken count
                   // The API already provides the correct count
-                  console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (ADMIN INIT):', availableShiftMap.get(shiftId));
+                  // console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (ADMIN INIT):', availableShiftMap.get(shiftId));
                 }
               }
             });
             
             // Convert map to array
             mappedAvailableShifts = Array.from(availableShiftMap.values());
-            console.log('🎯 FINAL AVAILABLE SHIFTS:', mappedAvailableShifts);
+
           } else {
-            console.log('❌ NO ASSIGNED SHIFTS TO PROCESS');
+            // console.log('❌ NO ASSIGNED SHIFTS TO PROCESS');
           }
         }
 
-        console.log('📤 SETTING STATE:');
-        console.log('Available shifts to set:', mappedAvailableShifts);
-        console.log('Assigned shifts to set:', mappedAssignedShifts);
+
         
         setAvailableShifts(mappedAvailableShifts);
         setAssignedShifts(mappedAssignedShifts);
@@ -430,7 +422,7 @@ const AdminDashboard: React.FC = () => {
           // CRITICAL FIX: Always ensure assigned shifts are included in available shifts
           // This handles cases where assigned shifts are not in available shifts (because they're full)
           if (mappedAssignedShifts.length > 0) {
-            console.log('Adding assigned shifts to available shifts (polling)');
+            // console.log('Adding assigned shifts to available shifts (polling)');
             
             // Create a map from existing available shifts to avoid duplicates
             const availableShiftMap = new Map();
@@ -461,14 +453,14 @@ const AdminDashboard: React.FC = () => {
                 } else {
                   // If shift already exists, don't modify the slots taken count
                   // The API already provides the correct count
-                  console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (ADMIN):', availableShiftMap.get(shiftId));
+                  // console.log('🔄 SHIFT ALREADY EXISTS IN AVAILABLE SHIFTS (ADMIN):', availableShiftMap.get(shiftId));
                 }
               }
             });
             
             // Convert map to array
             mappedAvailableShifts = Array.from(availableShiftMap.values());
-            console.log('Final available shifts (polling):', mappedAvailableShifts);
+            // console.log('Final available shifts (polling):', mappedAvailableShifts);
           }
         }
 
@@ -736,11 +728,11 @@ const AdminDashboard: React.FC = () => {
 
   // Filtered shifts based on the selected filter and department
   const filteredShifts = React.useMemo(() => {
-    console.log('🔍 FILTERING DEBUG:');
-    console.log('Available shifts for filtering:', availableShifts);
-    console.log('Assigned shifts for filtering:', assignedShifts);
-    console.log('Current employee:', currentEmployee);
-    console.log('Filter:', filter);
+    // console.log('🔍 FILTERING DEBUG:');
+    // console.log('Available shifts for filtering:', availableShifts);
+    // console.log('Assigned shifts for filtering:', assignedShifts);
+    // console.log('Current employee:', currentEmployee);
+    // console.log('Filter:', filter);
     
     let shifts = availableShifts;
     if (departmentFilter !== 'all') {
@@ -784,7 +776,7 @@ const AdminDashboard: React.FC = () => {
       return a.id - b.id;
     });
     
-    console.log('🎯 FINAL FILTERED SHIFTS:', sortedShifts);
+    // console.log('🎯 FINAL FILTERED SHIFTS:', sortedShifts);
     return sortedShifts;
   }, [availableShifts, filter, departmentFilter, assignedShifts, currentEmployee.id]);
 
