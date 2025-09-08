@@ -237,41 +237,22 @@ const SignUpForm: React.FC = () => {
     }
   };
 
-  /* dark-theme field styling */
+  /* dark-field styling */
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
-      borderRadius: { xs: 2, sm: 1 },
-      '& fieldset': { borderColor: '#3a3f47' },
+      '& fieldset': { borderColor: 'grey.300' },
       '&:hover fieldset': { borderColor: 'primary.main' },
-      '& input': { 
-        color: '#ffffff',
-        fontSize: { xs: '16px', sm: '14px' }, // Prevent zoom on iOS
-        padding: { xs: '16px 14px', sm: '16px 14px' }
-      },
+      '& input': { color: '#ffffff' },
     },
-    '& .MuiInputLabel-root': { 
-      color: '#ddd', 
-      fontSize: { xs: '16px', sm: '14px' },
-      '&.Mui-focused': { color: '#00c28c' } 
-    },
-    '& .MuiFormHelperText-root': {
-      fontSize: { xs: '12px', sm: '12px' },
-      marginLeft: 0
-    }
   } as const;
 
   return (
     <ThemeProvider theme={SignUpTheme}>
       <Box sx={{
-        position: 'absolute', 
-        inset: 0, 
-        bgcolor: 'background.default',
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        overflow: 'auto',
-        WebkitOverflowScrolling: 'touch'
+        position: 'absolute', inset: 0, bgcolor: 'background.default',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'auto', WebkitOverflowScrolling: 'touch'
       }}>
         <Button
           component={RouterLink} to="/"
@@ -288,42 +269,19 @@ const SignUpForm: React.FC = () => {
           Home
         </Button>
 
-        <Container 
-          maxWidth="sm" 
-          sx={{ 
-            py: { xs: 4, sm: 4 },
-            px: { xs: 2, sm: 3 }
-          }}
-        >
+        <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 4 } }}>
           <Paper elevation={3} sx={{
-            p: { xs: 3, sm: 4 }, 
-            borderRadius: { xs: 2, sm: 8 }, 
-            bgcolor: 'background.paper', 
-            color: 'white',
-            width: '100%',
-            maxWidth: { xs: '100%', sm: 500 },
-            '@media (max-width:600px)': { 
-              bgcolor: 'transparent', 
-              boxShadow: 'none',
-              p: 2
-            }
+            p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white',
+            '@media (max-width:600px)': { bgcolor: 'transparent', boxShadow: 'none' },
           }}>
-            <Typography 
-              variant="h4" 
-              align="center" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 700, 
-                color: 'primary.main',
-                fontSize: { xs: '1.75rem', sm: '2.125rem' },
-                mb: { xs: 1, sm: 2 }
-              }}
+            <Typography variant="h4" align="center" gutterBottom
+              sx={{ fontWeight: 700, color: 'primary.main' }}
             >
               Create Account
             </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
-              <Stack spacing={{ xs: 2, sm: 3 }}>
+              <Stack spacing={3}>
                 {!awaitingCode ? (
                   <>
                     <TextField
@@ -393,18 +351,9 @@ const SignUpForm: React.FC = () => {
 
                 <Button
                   type="submit"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  fullWidth
-                  sx={{ 
-                    py: { xs: 1.5, sm: 1.5 },
-                    fontSize: { xs: '1rem', sm: '0.875rem' },
-                    fontWeight: 600,
-                    borderRadius: { xs: 2, sm: 1 },
-                    minHeight: { xs: 48, sm: 44 }
-                  }}
-                  disabled={loading}
+                  variant="contained" color="primary"
+                  size="large" fullWidth disabled={loading}
+                  sx={{ py: 1.5 }}
                 >
                   {loading
                     ? awaitingCode ? 'Verifying…' : 'Signing up…'
@@ -413,22 +362,14 @@ const SignUpForm: React.FC = () => {
               </Stack>
             </form>
 
-            {!awaitingCode && (
-              <Button
-                variant="text"
-                color="primary"
-                fullWidth
-                sx={{ 
-                  mt: { xs: 1.5, sm: 2 }, 
-                  textTransform: 'none',
-                  fontSize: { xs: '0.9rem', sm: '0.875rem' }
-                }}
-                component={RouterLink}
-                to="/login"
-              >
-                Already have an account? Login
-              </Button>
-            )}
+            {/* footer links */}
+            <Stack direction="row" justifyContent="space-between" mt={2}>
+              {!awaitingCode && (
+                <Button variant="text" color="primary" component={RouterLink} to="/login">
+                  Already have an account? Login
+                </Button>
+              )}
+            </Stack>
           </Paper>
         </Container>
       </Box>

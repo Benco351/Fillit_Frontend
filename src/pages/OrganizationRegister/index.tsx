@@ -187,30 +187,10 @@ const OrganizationRegister: React.FC = () => {
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
-      borderRadius: { xs: 2, sm: 1 },
-      '& fieldset': { borderColor: '#3a3f47' },
-      '&:hover fieldset, &.Mui-focused fieldset': { borderColor: 'primary.main' },
+      '& fieldset': { borderColor: 'grey.300' },
+      '&:hover fieldset': { borderColor: 'primary.main' },
+      '& input': { color: '#ffffff' },
     },
-    '& .MuiInputBase-input': { 
-      color: '#fff', 
-      backgroundColor: '#3a3f47 !important',
-      fontSize: { xs: '16px', sm: '14px' }, // Prevent zoom on iOS
-      padding: { xs: '16px 14px', sm: '16px 14px' }
-    },
-    '& input:-webkit-autofill': {
-      WebkitBoxShadow: '0 0 0 100px #3a3f47 inset',
-      WebkitTextFillColor: '#fff',
-      caretColor: '#fff',
-    },
-    '& .MuiInputLabel-root': { 
-      color: '#ddd', 
-      fontSize: { xs: '16px', sm: '14px' },
-      '&.Mui-focused': { color: '#00c28c' } 
-    },
-    '& .MuiFormHelperText-root': {
-      fontSize: { xs: '12px', sm: '12px' },
-      marginLeft: 0
-    }
   } as const;
 
   /* ---------- render ---------- */
@@ -218,14 +198,9 @@ const OrganizationRegister: React.FC = () => {
   return (
     <ThemeProvider theme={LoginTheme}>
       <Box sx={{
-        position: 'absolute', 
-        inset: 0, 
-        bgcolor: 'background.default',
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        overflow: 'auto',
-        WebkitOverflowScrolling: 'touch'
+        position: 'absolute', inset: 0, bgcolor: 'background.default',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'auto', WebkitOverflowScrolling: 'touch'
       }}>
         <Button 
           component={RouterLink} to="/"
@@ -242,42 +217,19 @@ const OrganizationRegister: React.FC = () => {
           Home
         </Button>
 
-        <Container 
-          maxWidth="sm" 
-          sx={{ 
-            py: { xs: 4, sm: 4 },
-            px: { xs: 2, sm: 3 }
-          }}
-        >
+        <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 4 } }}>
           <Paper elevation={3} sx={{
-            p: { xs: 3, sm: 4 }, 
-            borderRadius: { xs: 2, sm: 8 }, 
-            bgcolor: 'background.paper', 
-            color: 'white',
-            width: '100%',
-            maxWidth: { xs: '100%', sm: 500 },
-            '@media (max-width:600px)': { 
-              bgcolor: 'transparent', 
-              boxShadow: 'none',
-              p: 2
-            }
+            p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white',
+            '@media (max-width:600px)': { bgcolor: 'transparent', boxShadow: 'none' },
           }}>
-            <Typography 
-              variant="h4" 
-              align="center" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 700, 
-                color: 'primary.main',
-                fontSize: { xs: '1.75rem', sm: '2.125rem' },
-                mb: { xs: 1, sm: 2 }
-              }}
+            <Typography variant="h4" align="center" gutterBottom
+              sx={{ fontWeight: 700, color: 'primary.main' }}
             >
               Register Organization
             </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
-              <Stack spacing={{ xs: 2, sm: 3 }}>
+              <Stack spacing={3}>
                 {/* org + admin fields */}
                 {!awaitingCode && (
                   <>
@@ -295,12 +247,12 @@ const OrganizationRegister: React.FC = () => {
                     <Box sx={{ 
                       display: 'flex', 
                       alignItems: 'center', 
-                      mt: { xs: 2, sm: 3 }, 
-                      mb: { xs: 1.5, sm: 2 } 
+                      mt: 2, 
+                      mb: 1.5 
                     }}>
                       <AdminPanelSettingsIcon sx={{ 
                         color: '#d8d8c5', 
-                        fontSize: { xs: 28, sm: 32 }, 
+                        fontSize: 28, 
                         mr: 1 
                       }} />
                       <Typography 
@@ -308,7 +260,7 @@ const OrganizationRegister: React.FC = () => {
                         sx={{ 
                           color: '#d8d8c5', 
                           fontWeight: 600,
-                          fontSize: { xs: '1rem', sm: '1.1rem' }
+                          fontSize: '1rem'
                         }}
                       >
                         Admin Account Details
@@ -395,13 +347,7 @@ const OrganizationRegister: React.FC = () => {
                   color="primary" 
                   fullWidth 
                   disabled={loading} 
-                  sx={{ 
-                    py: { xs: 1.5, sm: 1.5 },
-                    fontSize: { xs: '1rem', sm: '0.875rem' },
-                    fontWeight: 600,
-                    borderRadius: { xs: 2, sm: 1 },
-                    minHeight: { xs: 48, sm: 44 }
-                  }}
+                  sx={{ py: 1.5 }}
                 >
                   {loading ? (
                     <CircularProgress size={22} color="inherit" />
