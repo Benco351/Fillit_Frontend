@@ -670,6 +670,70 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleDuplicateForMonth = async () => {
+    if (!editShift) return;
+
+    setLoading(true);
+    try {
+      // Get the day of the week from the current shift date
+      const currentDate = new Date(editShift.date);
+      const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      
+      // Calculate the next 3 weeks (including current week = 4 total)
+      const duplicatedShifts: AvailableShift[] = [];
+      
+      for (let weekOffset = 1; weekOffset <= 3; weekOffset++) {
+        // Calculate the date for the same day of week in the next weeks
+        const targetDate = new Date(currentDate);
+        targetDate.setDate(currentDate.getDate() + (weekOffset * 7));
+        
+        // Create the shift data for this week
+        const shiftData = {
+          date: targetDate, // Pass Date object instead of string
+          start: editShift.start,
+          end: editShift.end,
+          shift_slots_amount: editShift.shift_slots_amount || 1,
+          department_id: editShift.department_id || undefined,
+        };
+
+        // Make API call to create the shift
+        const apiResponse = await createAvailableShift(shiftData);
+        
+        // Extract shift ID from response
+        let shiftId = null;
+        if (apiResponse && apiResponse.shift_id !== undefined) {
+          shiftId = apiResponse.shift_id;
+        } else if (apiResponse && apiResponse.data && apiResponse.data.shift_id !== undefined) {
+          shiftId = apiResponse.data.shift_id;
+        }
+
+        if (shiftId) {
+          const duplicatedShift: AvailableShift = {
+            id: shiftId,
+            date: format(targetDate, 'yyyy-MM-dd'),
+            start: shiftData.start,
+            end: shiftData.end,
+            shift_slots_amount: shiftData.shift_slots_amount,
+            shift_slots_taken: 0,
+            department_id: shiftData.department_id,
+          };
+          
+          duplicatedShifts.push(duplicatedShift);
+        }
+      }
+
+      // Update local state with all duplicated shifts
+      setAvailableShifts((prev) => [...prev, ...duplicatedShifts]);
+
+      setSuccess(`Successfully duplicated shift for the next 3 weeks (${duplicatedShifts.length} shifts created)`);
+    } catch (err) {
+      console.error('Failed to duplicate shifts:', err);
+      setError('Failed to duplicate shifts. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDenyRequestedShift = async (requestedShiftId: number) => {
     setLoading(true);
     try {
@@ -1538,6 +1602,23 @@ const AdminDashboard: React.FC = () => {
                 disabled={loading}
               >
                 {loading ? <CircularProgress size={24} /> : 'Request Shift'}
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleDuplicateForMonth}
+                disabled={loading}
+                sx={{
+                  background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.1), rgba(0, 194, 140, 0.2))',
+                  border: '1px solid rgba(0, 194, 140, 0.3)',
+                  color: '#00c28c',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, rgba(0, 194, 140, 0.15), rgba(0, 194, 140, 0.25))',
+                    border: '1px solid rgba(0, 194, 140, 0.4)',
+                  }
+                }}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Duplicate for Month'}
               </Button>
               <Button
                 variant="contained"
