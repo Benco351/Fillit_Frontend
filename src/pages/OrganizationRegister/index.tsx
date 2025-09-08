@@ -218,11 +218,12 @@ const OrganizationRegister: React.FC = () => {
   return (
     <ThemeProvider theme={LoginTheme}>
       <Box sx={{
-        minHeight: '100vh', 
+        position: 'absolute', 
+        inset: 0, 
         bgcolor: 'background.default',
         display: 'flex', 
-        flexDirection: 'column',
-        position: 'relative',
+        alignItems: 'center', 
+        justifyContent: 'center',
         overflow: 'auto',
         WebkitOverflowScrolling: 'touch'
       }}>
@@ -244,11 +245,7 @@ const OrganizationRegister: React.FC = () => {
         <Container 
           maxWidth="sm" 
           sx={{ 
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            py: { xs: 2, sm: 4 },
+            py: { xs: 4, sm: 4 },
             px: { xs: 2, sm: 3 }
           }}
         >

@@ -263,23 +263,20 @@ const SignUpForm: React.FC = () => {
 
   return (
     <ThemeProvider theme={SignUpTheme}>
-      <Box
-        sx={{
-          minHeight: '100vh',
-          bgcolor: 'background.default',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-          overflow: 'auto',
-          WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
-        }}
-      >
+      <Box sx={{
+        position: 'absolute', 
+        inset: 0, 
+        bgcolor: 'background.default',
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      }}>
         <Button
-          component={RouterLink}
-          to="/"
+          component={RouterLink} to="/"
           startIcon={<HomeIcon />}
-          variant="text"
-          color="primary"
+          variant="text" color="primary"
           sx={{ 
             position: 'absolute', 
             top: { xs: 16, sm: 24 }, 
@@ -291,34 +288,26 @@ const SignUpForm: React.FC = () => {
           Home
         </Button>
 
-        <Container
-          maxWidth="sm"
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            py: { xs: 2, sm: 4 },
+        <Container 
+          maxWidth="sm" 
+          sx={{ 
+            py: { xs: 4, sm: 4 },
             px: { xs: 2, sm: 3 }
           }}
         >
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 3, sm: 4 },
-              borderRadius: { xs: 2, sm: 8 },
-              bgcolor: 'background.paper',
-              color: 'white',
-              width: '100%',
-              maxWidth: { xs: '100%', sm: 500 },
-              '@media (max-width: 600px)': {
-                bgcolor: 'transparent',
-                border: 'none',
-                boxShadow: 'none',
-                p: 2
-              },
-            }}
-          >
+          <Paper elevation={3} sx={{
+            p: { xs: 3, sm: 4 }, 
+            borderRadius: { xs: 2, sm: 8 }, 
+            bgcolor: 'background.paper', 
+            color: 'white',
+            width: '100%',
+            maxWidth: { xs: '100%', sm: 500 },
+            '@media (max-width:600px)': { 
+              bgcolor: 'transparent', 
+              boxShadow: 'none',
+              p: 2
+            }
+          }}>
             <Typography 
               variant="h4" 
               align="center" 
