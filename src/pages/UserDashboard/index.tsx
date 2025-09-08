@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {Box, Container, Paper, Typography, Button, TextField, MenuItem,
-  Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
+  IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
 import { format} from 'date-fns';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
@@ -20,6 +20,7 @@ import { getRequestedShifts } from '../../utils/apis/requestedShiftsApis';
 import { getAvailableShifts } from '../../utils/apis/availableShiftApis';
 import { getAssignedShifts } from '../../utils/apis/assignedShiftApis';
 import { getDepartments } from '../../utils/apis/departmentApis';
+import InfoIcon from '@mui/icons-material/Info';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../routes/config/routes';
 
@@ -77,6 +78,10 @@ const UserDashboard: React.FC = () => {
   // Department filter state
   const [departmentFilter, setDepartmentFilter] = useState<number | 'all'>('all');
 
+  // Navigation functions
+  const handleNavigateToShiftInfo = (shiftId: number) => {
+    navigate(ROUTES.SHIFT_INFO.replace(':shiftId', shiftId.toString()));
+  };
 
 
   // Automatically fetch shifts when the component mounts or the week changes
@@ -656,6 +661,16 @@ const UserDashboard: React.FC = () => {
                                 >
                                   {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                                 </Typography>
+                                  <IconButton
+                                    size="small"
+                                    sx={{ color: '#fff', ml: 1, p: 0.5, '&:hover': { color: '#fff', background: 'none' }, '&:focus': { color: '#fff' } }}
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent triggering the card click
+                                      handleNavigateToShiftInfo(shift.id);
+                                    }}
+                                  >
+                                    <InfoIcon fontSize="small" />
+                                  </IconButton>
                                 </Box>
                                 <Box sx={{ minHeight: 18 }}>
                                   {shift.department_id && (
