@@ -263,13 +263,15 @@ export const useUserDashboard = (currentEmployee: Employee) => {
             
             if (!availableShiftMap.has(shiftId)) {
               // Create available shift from assigned shift data
+              // Note: assigned shifts API doesn't include shift_slots_amount and shift_slots_taken
+              // These will be undefined and won't be displayed
               const availableShift = {
                 id: shiftId,
                 date: assignedShift.availableShift.shift_date,
                 start: assignedShift.availableShift.shift_time_start,
                 end: assignedShift.availableShift.shift_time_end,
-                shift_slots_amount: assignedShift.availableShift.shift_slots_amount || 1, // Use actual slots amount
-                shift_slots_taken: assignedShift.availableShift.shift_slots_taken || 1, // Use actual slots taken
+                shift_slots_amount: undefined, // Not available in assigned shifts API
+                shift_slots_taken: undefined, // Not available in assigned shifts API
                 department_id: assignedShift.availableShift.department_id || 
                               assignedShift.availableShift.department?.department_id || 
                               null,

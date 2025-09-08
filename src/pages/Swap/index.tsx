@@ -750,16 +750,45 @@ const SwapPage: React.FC = () => {
         shiftIds.add(req.target_shift_id);
       });
       
-      // Fetch employee details for all unique IDs
-      const employeeDetailsMap: {[key: number]: Employee} = {};
-      for (const employeeId of employeeIds) {
-        const employee = employees.find(emp => emp.id === employeeId);
-        if (employee) {
-          employeeDetailsMap[employeeId] = employee;
+      // Fetch employee details from API if we have employee IDs to fetch
+      if (employeeIds.size > 0) {
+        const employeeDetailsMap: {[key: number]: Employee} = {};
+        
+        // First try to find in existing employees array
+        for (const employeeId of employeeIds) {
+          const employee = employees.find(emp => emp.id === employeeId);
+          if (employee) {
+            employeeDetailsMap[employeeId] = employee;
+          }
         }
+        
+        // If we still have missing employees, fetch them from API
+        const missingEmployeeIds = Array.from(employeeIds).filter(id => !employeeDetailsMap[id]);
+        if (missingEmployeeIds.length > 0) {
+          try {
+            const res = await getEmployees();
+            const allEmployees = (res.data || []).map((emp: any) => ({
+              id: emp.employee_id || emp.id,
+              name: emp.employee_name || emp.name,
+              email: emp.employee_email || emp.email,
+              admin: emp.employee_admin || emp.admin,
+              phone: emp.employee_phone || emp.phone,
+            }));
+            
+            // Add missing employees to the map
+            for (const employeeId of missingEmployeeIds) {
+              const employee = allEmployees.find((emp: Employee) => emp.id === employeeId);
+              if (employee) {
+                employeeDetailsMap[employeeId] = employee;
+              }
+            }
+          } catch (err) {
+            console.error('Failed to fetch missing employees:', err);
+          }
+        }
+        
+        setPendingRequestEmployeeDetails(employeeDetailsMap);
       }
-      
-      setPendingRequestEmployeeDetails(employeeDetailsMap);
       
       // Fetch shift details for pending requests
       await fetchShiftDetailsForPendingRequests(Array.from(shiftIds));
@@ -915,6 +944,13 @@ const SwapPage: React.FC = () => {
   useEffect(() => {
     fetchSwapRequests(true); // Show loading on initial fetch
   }, []);
+
+  // Fetch employee details for pending requests when both employees and swap requests are available
+  useEffect(() => {
+    if (employees.length > 0 && (myRequests.length > 0 || requestsToMe.length > 0)) {
+      fetchEmployeeDetailsForPendingRequests(myRequests, requestsToMe);
+    }
+  }, [employees, myRequests, requestsToMe]);
 
   // Poll for new swap requests every 10 seconds
   useEffect(() => {

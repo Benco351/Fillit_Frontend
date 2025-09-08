@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {Box, Container, Paper, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,TextField, MenuItem,
-  IconButton, Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
+import {Box, Container, Paper, Typography, Button, TextField, MenuItem,
+  Chip, Alert, Snackbar, CircularProgress, CssBaseline, ThemeProvider} from '@mui/material';
 import { format} from 'date-fns';
 import { MainTheme } from '../../assets/themes/themes';
 import Footer from '../../components/layout/Footer';
 import AdminNavbar from '../../components/layout/AdminNavbar';
 import { createRequestedShift, deleteRequestedShiftById } from '../../utils/apis/requestedShiftsApis'; // Import the API functions
 import {AvailableShift, RequestedShift, AssignedShift} from '../../components/CalendarFeatures/ShiftUtils';
-import {Employee, getShiftColor, calculateDuration} from '../../components/CalendarFeatures/calendarStates';
+import {Employee, getShiftColor} from '../../components/CalendarFeatures/calendarStates';
 
-import { getEmployees, deleteEmployeeById } from '../../utils/apis/employeeShiftApis'; 
+import { getEmployees } from '../../utils/apis/employeeShiftApis'; 
 import { useUserDashboard } from '../../hooks/useUserDashboard';
-import ShiftFilters from '../../components/ShiftManagment/ShiftFilters';
-import RequestShiftDialog from '../../components/ShiftManagment';
-//import EditShiftDialog from '../../components/ShiftManagment/editShift';
 import WeekPicker from '../../components/CalendarFeatures/WeekPicker';
 import ActionButtons from '../../components/sections/UserPage/ActionButtons';
 import UserDashboardTitle from '../../components/sections/UserPage';
@@ -22,10 +19,7 @@ import AIChatPopup from '../../components/aiChat';
 import { getRequestedShifts } from '../../utils/apis/requestedShiftsApis';
 import { getAvailableShifts } from '../../utils/apis/availableShiftApis';
 import { getAssignedShifts } from '../../utils/apis/assignedShiftApis';
-import { deleteAssignedShiftById } from '../../utils/apis/assignedShiftApis';
-import { deleteAvailableShiftById } from '../../utils/apis/availableShiftApis';
 import { getDepartments } from '../../utils/apis/departmentApis';
-import InfoIcon from '@mui/icons-material/Info';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../routes/config/routes';
 
@@ -83,19 +77,6 @@ const UserDashboard: React.FC = () => {
   // Department filter state
   const [departmentFilter, setDepartmentFilter] = useState<number | 'all'>('all');
 
-  // Info dialog state
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
-  const [selectedShiftInfo, setSelectedShiftInfo] = useState<AvailableShift | null>(null);
-
-  // Navigation functions
-  const handleNavigateToShiftInfo = (shiftId: number) => {
-    navigate(ROUTES.SHIFT_INFO.replace(':shiftId', shiftId.toString()));
-  };
-
-  const handleShiftCardClick = (shift: AvailableShift) => {
-    setSelectedShiftInfo(shift);
-    setInfoDialogOpen(true);
-  };
 
 
   // Automatically fetch shifts when the component mounts or the week changes
@@ -270,14 +251,6 @@ const UserDashboard: React.FC = () => {
     return 'available';
   };
 
-  // Utility function to get assigned employee name
-  const getAssignedEmployeeName = (availableShiftId: number): string => {
-    const assignedShift = assignedShifts.find(s => s.assigned_shift_id === availableShiftId);
-    if (!assignedShift) return '';
-    
-    const employee = employees.find(e => e.id === assignedShift.assigned_employee_id);
-    return employee ? employee.name : 'Unknown Employee';
-  };
 
   // Filtered shifts based on the selected filter and department
   const filteredShifts = useMemo(() => {
@@ -672,7 +645,6 @@ const UserDashboard: React.FC = () => {
                                     boxShadow: '0 6px 16px rgba(0, 0, 0, 0.15)',
                                   },
                                 }}
-                                onClick={() => handleShiftCardClick(shift)}
                               >
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
                                 <Typography
@@ -684,33 +656,11 @@ const UserDashboard: React.FC = () => {
                                 >
                                   {shift.start.substring(0, 5)} - {shift.end.substring(0, 5)}
                                 </Typography>
-                                  <IconButton
-                                    size="small"
-                                    sx={{ color: '#fff', ml: 1, p: 0.5, '&:hover': { color: '#fff', background: 'none' }, '&:focus': { color: '#fff' } }}
-                                    onClick={(e) => {
-                                      e.stopPropagation(); // Prevent triggering the card click
-                                      handleNavigateToShiftInfo(shift.id);
-                                    }}
-                                  >
-                                    <InfoIcon fontSize="small" />
-                                  </IconButton>
                                 </Box>
                                 <Box sx={{ minHeight: 18 }}>
                                   {shift.department_id && (
                                     <Typography variant="caption" sx={{ color: '#111', fontWeight: 500 }}>
                                       {departments.find(d => d.id === shift.department_id)?.name || 'Department'}
-                                    </Typography>
-                                  )}
-                                  {/* Display slot information */}
-                                  {shift.shift_slots_amount && (
-                                    <Typography variant="caption" sx={{ 
-                                      color: '#111', 
-                                      fontWeight: 500,
-                                      display: 'block',
-                                      mt: 0.5,
-                                      fontSize: { xs: '0.6rem', sm: '0.7rem' }
-                                    }}>
-                                      Slots: {shift.shift_slots_taken || 0}/{shift.shift_slots_amount}
                                     </Typography>
                                   )}
                                 </Box>
@@ -731,7 +681,7 @@ const UserDashboard: React.FC = () => {
                                     display="block"
                                     sx={{ fontSize: { xs: '0.6rem', sm: '0.75rem' } }}
                                   >
-                                    {getAssignedEmployeeName(shift.id)}
+                                    Assigned
                                   </Typography>
                                 )}
 
@@ -851,59 +801,6 @@ const UserDashboard: React.FC = () => {
           </Box>
         </Container>
       </Box>
-      {/* Info Dialog for assigned users */}
-      <Dialog
-        open={infoDialogOpen}
-        onClose={() => setInfoDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Shift Information</DialogTitle>
-        <DialogContent>
-          {selectedShiftInfo && (
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body1" gutterBottom>
-                Slots: {selectedShiftInfo.shift_slots_taken || 0}/{selectedShiftInfo.shift_slots_amount}
-              </Typography>
-              <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-                Assigned Users:
-              </Typography>
-              {assignedShifts
-                .filter(assign => assign.assigned_shift_id === selectedShiftInfo.id)
-                .map(assign => {
-                  const user = employees.find(emp => emp.id === assign.assigned_employee_id);
-
-                  return (
-                    <Box
-                      key={assign.assigned_id}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        mb: 1,
-                        p: 1,
-                        borderRadius: 1,
-                        backgroundColor: 'rgba(0, 194, 140, 0.1)'
-                      }}
-                    >
-                      <Typography variant="body2">
-                        {user?.name || 'Unknown User'}
-                      </Typography>
-                    </Box>
-                  );
-                })}
-              {assignedShifts.filter(assign => assign.assigned_shift_id === selectedShiftInfo.id).length === 0 && (
-                <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-                  No users assigned to this shift.
-                </Typography>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setInfoDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
       <Footer /> {/* Add Footer at the bottom */}
     </ThemeProvider>
   );
