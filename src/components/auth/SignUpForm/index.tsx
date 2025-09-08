@@ -237,132 +237,60 @@ const SignUpForm: React.FC = () => {
     }
   };
 
-  /* dark-theme field styling */
+  /* dark-field styling */
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
-      borderRadius: { xs: 2, sm: 1 },
-      '& fieldset': { borderColor: '#3a3f47' },
+      '& fieldset': { borderColor: 'grey.300' },
       '&:hover fieldset': { borderColor: 'primary.main' },
-      '& input': { 
-        color: '#ffffff',
-        fontSize: { xs: '16px', sm: '14px' }, // Prevent zoom on iOS
-        padding: { xs: '16px 14px', sm: '16px 14px' }
-      },
+      '& input': { color: '#ffffff' },
     },
-    '& .MuiInputLabel-root': { 
-      color: '#ddd', 
-      fontSize: { xs: '16px', sm: '14px' },
-      '&.Mui-focused': { color: '#00c28c' } 
-    },
-    '& .MuiFormHelperText-root': {
-      fontSize: { xs: '12px', sm: '12px' },
-      marginLeft: 0
-    }
   } as const;
 
   return (
     <ThemeProvider theme={SignUpTheme}>
-      <Box
-        sx={{
-          minHeight: '100vh',
-          bgcolor: 'background.default',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-          overflow: 'auto',
-          WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
-        }}
-      >
+      <Box sx={{
+        position: 'absolute', inset: 0, bgcolor: 'background.default',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
         <Button
-          component={RouterLink}
-          to="/"
+          component={RouterLink} to="/"
           startIcon={<HomeIcon />}
-          variant="text"
-          color="primary"
-          sx={{ 
-            position: 'absolute', 
-            top: { xs: 16, sm: 24 }, 
-            left: { xs: 16, sm: 24 }, 
-            textTransform: 'none',
-            zIndex: 1
-          }}
+          variant="text" color="primary"
+          sx={{ position: 'absolute', top: 24, left: 24, textTransform: 'none' }}
         >
           Home
         </Button>
 
-        <Container
-          maxWidth="sm"
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            py: { xs: 2, sm: 4 },
-            px: { xs: 2, sm: 3 }
-          }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 3, sm: 4 },
-              borderRadius: { xs: 2, sm: 8 },
-              bgcolor: 'background.paper',
-              color: 'white',
-              width: '100%',
-              maxWidth: { xs: '100%', sm: 500 },
-              '@media (max-width: 600px)': {
-                bgcolor: 'transparent',
-                border: 'none',
-                boxShadow: 'none',
-                p: 2
-              },
-            }}
-          >
-            <Typography 
-              variant="h4" 
-              align="center" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 700, 
-                color: 'primary.main',
-                fontSize: { xs: '1.75rem', sm: '2.125rem' },
-                mb: { xs: 1, sm: 2 }
-              }}
+        <Container maxWidth="sm">
+          <Paper elevation={3} sx={{
+            p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white',
+            '@media (max-width:600px)': { bgcolor: 'transparent', boxShadow: 'none' },
+          }}>
+            <Typography variant="h4" align="center" gutterBottom
+              sx={{ fontWeight: 700, color: 'primary.main' }}
             >
               Create Account
             </Typography>
-            <Typography 
-              variant="body1" 
-              align="center" 
-              color="grey.300" 
-              sx={{ 
-                mb: { xs: 2, sm: 4 },
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-                lineHeight: 1.5
-              }}
-            >
-              {awaitingCode
-                ? `A 6-digit code was sent to ${pendingEmail}`
-                : 'Fill in your details to get started'}
-            </Typography>
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
-              <Stack spacing={{ xs: 2, sm: 3 }}>
+              <Stack spacing={3}>
                 {!awaitingCode ? (
                   <>
                     <TextField
-                      label="Full Name" fullWidth {...register('name')}
+                      label="Full Name" fullWidth variant="outlined"
+                      {...register('name')}
                       error={!!errors.name} helperText={errors.name?.message}
                       sx={textFieldStyles}
                     />
                     <TextField
-                      label="Email" type="email" fullWidth {...register('email')}
+                      label="Email" type="email" fullWidth variant="outlined"
+                      {...register('email')}
                       error={!!errors.email} helperText={errors.email?.message}
                       sx={textFieldStyles}
                     />
                     <TextField
-                      label="Organization ID" type="number" fullWidth
+                      label="Organization ID" type="number" fullWidth variant="outlined"
                       {...register('organizationId')}
                       error={!!errors.organizationId}
                       helperText={errors.organizationId?.message}
@@ -377,19 +305,21 @@ const SignUpForm: React.FC = () => {
                       inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', min: 1 }}
                     />
                     <TextField
-                      label="Phone Number" type="tel" fullWidth {...register('phone')}
+                      label="Phone Number" type="tel" fullWidth variant="outlined"
+                      {...register('phone')}
                       placeholder="+1234567890"
                       error={!!errors.phone}
                       helperText={errors.phone?.message || "Enter phone number with country code (e.g., +1234567890)"}
                       sx={textFieldStyles}
                     />
                     <TextField
-                      label="Password" type="password" fullWidth {...register('password')}
+                      label="Password" type="password" fullWidth variant="outlined"
+                      {...register('password')}
                       error={!!errors.password} helperText={errors.password?.message}
                       sx={textFieldStyles}
                     />
                     <TextField
-                      label="Confirm Password" type="password" fullWidth
+                      label="Confirm Password" type="password" fullWidth variant="outlined"
                       {...register('confirmPassword')}
                       error={!!errors.confirmPassword}
                       helperText={errors.confirmPassword?.message}
@@ -398,7 +328,8 @@ const SignUpForm: React.FC = () => {
                   </>
                 ) : (
                   <TextField
-                    label="6-digit Code" fullWidth {...register('code')}
+                    label="6-digit Code" fullWidth variant="outlined"
+                    {...register('code')}
                     error={!!errors.code} helperText={errors.code?.message}
                     sx={textFieldStyles}
                     inputProps={{ maxLength: 6 }}
@@ -413,18 +344,9 @@ const SignUpForm: React.FC = () => {
 
                 <Button
                   type="submit"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  fullWidth
-                  sx={{ 
-                    py: { xs: 1.5, sm: 1.5 },
-                    fontSize: { xs: '1rem', sm: '0.875rem' },
-                    fontWeight: 600,
-                    borderRadius: { xs: 2, sm: 1 },
-                    minHeight: { xs: 48, sm: 44 }
-                  }}
-                  disabled={loading}
+                  variant="contained" color="primary"
+                  size="large" fullWidth disabled={loading}
+                  sx={{ py: 1.5 }}
                 >
                   {loading
                     ? awaitingCode ? 'Verifying…' : 'Signing up…'
@@ -433,22 +355,14 @@ const SignUpForm: React.FC = () => {
               </Stack>
             </form>
 
-            {!awaitingCode && (
-              <Button
-                variant="text"
-                color="primary"
-                fullWidth
-                sx={{ 
-                  mt: { xs: 1.5, sm: 2 }, 
-                  textTransform: 'none',
-                  fontSize: { xs: '0.9rem', sm: '0.875rem' }
-                }}
-                component={RouterLink}
-                to="/login"
-              >
-                Already have an account? Login
-              </Button>
-            )}
+            {/* footer links */}
+            <Stack direction="row" justifyContent="space-between" mt={2}>
+              {!awaitingCode && (
+                <Button variant="text" color="primary" component={RouterLink} to="/login">
+                  Already have an account? Login
+                </Button>
+              )}
+            </Stack>
           </Paper>
         </Container>
       </Box>
@@ -458,19 +372,8 @@ const SignUpForm: React.FC = () => {
         autoHideDuration={2000}
         onClose={() => setSnackOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        sx={{ 
-          top: { xs: 16, sm: 24 },
-          left: { xs: 16, sm: 'auto' },
-          right: { xs: 16, sm: 'auto' }
-        }}
       >
-        <Alert 
-          severity="success" 
-          sx={{ 
-            width: '100%',
-            fontSize: { xs: '0.875rem', sm: '0.875rem' }
-          }}
-        >
+        <Alert severity="success" sx={{ width: '100%' }}>
           Account verified — redirecting to login…
         </Alert>
       </Snackbar>

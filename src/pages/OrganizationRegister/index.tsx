@@ -11,6 +11,7 @@ import {
   Alert,
   ThemeProvider,
   CircularProgress,
+  Stack,
 } from '@mui/material';
 import { LoginTheme } from '../../assets/themes/themes';
 import { api } from '../../utils/apis/apiconfig';
@@ -186,251 +187,170 @@ const OrganizationRegister: React.FC = () => {
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       backgroundColor: '#3a3f47',
-      borderRadius: { xs: 2, sm: 1 },
-      '& fieldset': { borderColor: '#3a3f47' },
-      '&:hover fieldset, &.Mui-focused fieldset': { borderColor: 'primary.main' },
+      '& fieldset': { borderColor: 'grey.300' },
+      '&:hover fieldset': { borderColor: 'primary.main' },
+      '& input': { color: '#ffffff' },
     },
-    '& .MuiInputBase-input': { 
-      color: '#fff', 
-      backgroundColor: '#3a3f47 !important',
-      fontSize: { xs: '16px', sm: '14px' }, // Prevent zoom on iOS
-      padding: { xs: '16px 14px', sm: '16px 14px' }
-    },
-    '& input:-webkit-autofill': {
-      WebkitBoxShadow: '0 0 0 100px #3a3f47 inset',
-      WebkitTextFillColor: '#fff',
-      caretColor: '#fff',
-    },
-    '& .MuiInputLabel-root': { 
-      color: '#ddd', 
-      fontSize: { xs: '16px', sm: '14px' },
-      '&.Mui-focused': { color: '#00c28c' } 
-    },
-    '& .MuiFormHelperText-root': {
-      fontSize: { xs: '12px', sm: '12px' },
-      marginLeft: 0
-    }
   } as const;
 
   /* ---------- render ---------- */
 
   return (
     <ThemeProvider theme={LoginTheme}>
-      <Box sx={{ 
-        minHeight: '100vh', 
-        bgcolor: 'background.default', 
-        display: 'flex', 
-        flexDirection: 'column',
-        position: 'relative',
-        overflow: 'auto',
-        WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
+      <Box sx={{
+        position: 'absolute', inset: 0, bgcolor: 'background.default',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <Button 
-          component={RouterLink} 
-          to="/" 
-          startIcon={<HomeIcon />} 
-          variant="text" 
-          color="primary"
-          sx={{ 
-            position: 'absolute', 
-            top: { xs: 16, sm: 24 }, 
-            left: { xs: 16, sm: 24 }, 
-            textTransform: 'none',
-            zIndex: 1
-          }}
+          component={RouterLink} to="/"
+          startIcon={<HomeIcon />}
+          variant="text" color="primary"
+          sx={{ position: 'absolute', top: 24, left: 24, textTransform: 'none' }}
         >
           Home
         </Button>
 
-        <Container 
-          maxWidth="sm" 
-          sx={{ 
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            py: { xs: 2, sm: 4 },
-            px: { xs: 2, sm: 3 }
-          }}
-        >
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: { xs: 3, sm: 4 }, 
-              borderRadius: { xs: 2, sm: 8 }, 
-              bgcolor: 'background.paper',
-              width: '100%',
-              maxWidth: { xs: '100%', sm: 500 },
-              '@media (max-width:600px)': { 
-                bgcolor: 'transparent', 
-                boxShadow: 'none',
-                p: 2
-              } 
-            }}
-          >
-            <Typography 
-              variant="h4" 
-              align="center" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 700, 
-                color: 'primary.main',
-                fontSize: { xs: '1.75rem', sm: '2.125rem' },
-                mb: { xs: 1, sm: 2 }
-              }}
+        <Container maxWidth="sm">
+          <Paper elevation={3} sx={{
+            p: 4, borderRadius: 8, bgcolor: 'background.paper', color: 'white',
+            '@media (max-width:600px)': { bgcolor: 'transparent', boxShadow: 'none' },
+          }}>
+            <Typography variant="h4" align="center" gutterBottom
+              sx={{ fontWeight: 700, color: 'primary.main' }}
             >
               Register Organization
             </Typography>
 
-            <Typography 
-              variant="body1" 
-              align="center" 
-              sx={{ 
-                mb: { xs: 2, sm: 3 }, 
-                color: '#fff',
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-                lineHeight: 1.5
-              }}
-            >
-              {awaitingCode
-                ? `A 6-digit code was sent to ${pendingEmail}`
-                : 'Create your organization and first admin to start using Fillit.'}
-            </Typography>
-
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
-              {/* org + admin fields */}
-              {!awaitingCode && (
-                <>
-                  <TextField 
-                    label="Organization Name" 
-                    fullWidth 
-                    {...register('orgName')}
-                    error={'orgName' in errors} 
-                    helperText={('orgName' in errors) ? (errors as any).orgName?.message : '' }
-                    required 
-                    sx={{ mb: { xs: 2, sm: 3 }, ...textFieldStyles }} 
-                    autoComplete="off" 
-                  />
+              <Stack spacing={3}>
+                {/* org + admin fields */}
+                {!awaitingCode && (
+                  <>
+                    <TextField 
+                      label="Organization Name" 
+                      fullWidth variant="outlined"
+                      {...register('orgName')}
+                      error={'orgName' in errors} 
+                      helperText={('orgName' in errors) ? (errors as any).orgName?.message : '' }
+                      required 
+                      sx={textFieldStyles} 
+                      autoComplete="off" 
+                    />
 
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    mt: { xs: 2, sm: 3 }, 
-                    mb: { xs: 1.5, sm: 2 } 
-                  }}>
-                    <AdminPanelSettingsIcon sx={{ 
-                      color: '#d8d8c5', 
-                      fontSize: { xs: 28, sm: 32 }, 
-                      mr: 1 
-                    }} />
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      mt: 2, 
+                      mb: 1.5 
+                    }}>
+                      <AdminPanelSettingsIcon sx={{ 
                         color: '#d8d8c5', 
-                        fontWeight: 600,
-                        fontSize: { xs: '1rem', sm: '1.1rem' }
-                      }}
-                    >
-                      Admin Account Details
-                    </Typography>
-                  </Box>
+                        fontSize: 28, 
+                        mr: 1 
+                      }} />
+                      <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                          color: '#d8d8c5', 
+                          fontWeight: 600,
+                          fontSize: '1rem'
+                        }}
+                      >
+                        Admin Account Details
+                      </Typography>
+                    </Box>
 
-                  <TextField 
-                    label="Full Name" 
-                    fullWidth 
-                    {...register('adminName')}
-                    error={'adminName' in errors} 
-                    helperText={('adminName' in errors) ? (errors as any).adminName?.message : '' }
-                    required 
-                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
-                    autoComplete="off" 
-                  />
+                    <TextField 
+                      label="Full Name" 
+                      fullWidth variant="outlined"
+                      {...register('adminName')}
+                      error={'adminName' in errors} 
+                      helperText={('adminName' in errors) ? (errors as any).adminName?.message : '' }
+                      required 
+                      sx={textFieldStyles} 
+                      autoComplete="off" 
+                    />
 
-                  <TextField 
-                    label="Email" 
-                    type="email" 
-                    fullWidth 
-                    {...register('adminEmail')}
-                    error={'adminEmail' in errors} 
-                    helperText={('adminEmail' in errors) ? (errors as any).adminEmail?.message : '' }
-                    required 
-                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
-                    autoComplete="email" 
-                  />
+                    <TextField 
+                      label="Email" 
+                      type="email" 
+                      fullWidth variant="outlined"
+                      {...register('adminEmail')}
+                      error={'adminEmail' in errors} 
+                      helperText={('adminEmail' in errors) ? (errors as any).adminEmail?.message : '' }
+                      required 
+                      sx={textFieldStyles} 
+                      autoComplete="email" 
+                    />
 
-                  <TextField 
-                    label="Phone Number" 
-                    type="tel" 
-                    fullWidth 
-                    {...register('adminPhone')}
-                    error={'adminPhone' in errors} 
-                    helperText={('adminPhone' in errors) ? (errors as any).adminPhone?.message : '' }
-                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
-                    autoComplete="tel" 
-                  />
+                    <TextField 
+                      label="Phone Number" 
+                      type="tel" 
+                      fullWidth variant="outlined"
+                      {...register('adminPhone')}
+                      error={'adminPhone' in errors} 
+                      helperText={('adminPhone' in errors) ? (errors as any).adminPhone?.message : '' }
+                      sx={textFieldStyles} 
+                      autoComplete="tel" 
+                    />
 
-                  <TextField 
-                    label="Password" 
-                    type="password" 
-                    fullWidth 
-                    {...register('adminPassword')}
-                    error={'adminPassword' in errors} 
-                    helperText={('adminPassword' in errors) ? (errors as any).adminPassword?.message : '' }
-                    required 
-                    sx={{ mb: { xs: 1.5, sm: 2 }, ...textFieldStyles }} 
-                    autoComplete="new-password" 
-                  />
+                    <TextField 
+                      label="Password" 
+                      type="password" 
+                      fullWidth variant="outlined"
+                      {...register('adminPassword')}
+                      error={'adminPassword' in errors} 
+                      helperText={('adminPassword' in errors) ? (errors as any).adminPassword?.message : '' }
+                      required 
+                      sx={textFieldStyles} 
+                      autoComplete="new-password" 
+                    />
 
-                  <TextField 
-                    label="Confirm Password" 
-                    type="password" 
-                    fullWidth 
-                    {...register('adminConfirmPassword')}
-                    error={'adminConfirmPassword' in errors} 
-                    helperText={('adminConfirmPassword' in errors) ? (errors as any).adminConfirmPassword?.message : '' }
-                    required 
-                    sx={{ mb: { xs: 2, sm: 3 }, ...textFieldStyles }} 
-                    autoComplete="new-password" 
-                  />
-                </>
-              )}
-
-              {/* code field */}
-              {awaitingCode && (
-                <TextField 
-                  label="6-digit Code" 
-                  fullWidth 
-                  {...register('code')}
-                  error={'code' in errors} 
-                  helperText={('code' in errors) ? (errors as any).code?.message : '' }
-                  sx={{ mb: { xs: 2, sm: 3 }, ...textFieldStyles }} 
-                  inputProps={{ maxLength: 6 }} 
-                  autoComplete="one-time-code" 
-                />
-              )}
-
-              <Button 
-                type="submit" 
-                variant="contained" 
-                color="primary" 
-                fullWidth 
-                disabled={loading} 
-                sx={{ 
-                  py: { xs: 1.5, sm: 1.5 },
-                  fontSize: { xs: '1rem', sm: '0.875rem' },
-                  fontWeight: 600,
-                  borderRadius: { xs: 2, sm: 1 },
-                  minHeight: { xs: 48, sm: 44 }
-                }}
-              >
-                {loading ? (
-                  <CircularProgress size={22} color="inherit" />
-                ) : awaitingCode ? (
-                  'Verify'
-                ) : (
-                  'Register Organization & Admin'
+                    <TextField 
+                      label="Confirm Password" 
+                      type="password" 
+                      fullWidth variant="outlined"
+                      {...register('adminConfirmPassword')}
+                      error={'adminConfirmPassword' in errors} 
+                      helperText={('adminConfirmPassword' in errors) ? (errors as any).adminConfirmPassword?.message : '' }
+                      required 
+                      sx={textFieldStyles} 
+                      autoComplete="new-password" 
+                    />
+                  </>
                 )}
-              </Button>
+
+                {/* code field */}
+                {awaitingCode && (
+                  <TextField 
+                    label="6-digit Code" 
+                    fullWidth variant="outlined"
+                    {...register('code')}
+                    error={'code' in errors} 
+                    helperText={('code' in errors) ? (errors as any).code?.message : '' }
+                    sx={textFieldStyles} 
+                    inputProps={{ maxLength: 6 }} 
+                    autoComplete="one-time-code" 
+                  />
+                )}
+
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  fullWidth 
+                  disabled={loading} 
+                  sx={{ py: 1.5 }}
+                >
+                  {loading ? (
+                    <CircularProgress size={22} color="inherit" />
+                  ) : awaitingCode ? (
+                    'Verify'
+                  ) : (
+                    'Register Organization & Admin'
+                  )}
+                </Button>
+              </Stack>
             </form>
           </Paper>
         </Container>
@@ -441,19 +361,11 @@ const OrganizationRegister: React.FC = () => {
         autoHideDuration={4000} 
         onClose={() => setSuccess(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ 
-          bottom: { xs: 16, sm: 24 },
-          left: { xs: 16, sm: 'auto' },
-          right: { xs: 16, sm: 'auto' }
-        }}
       >
         <Alert 
           severity="success" 
           onClose={() => setSuccess(null)} 
-          sx={{ 
-            width: '100%',
-            fontSize: { xs: '0.875rem', sm: '0.875rem' }
-          }}
+          sx={{ width: '100%' }}
         >
           {success}
         </Alert>
@@ -464,19 +376,11 @@ const OrganizationRegister: React.FC = () => {
         autoHideDuration={6000} 
         onClose={() => setError(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ 
-          bottom: { xs: 16, sm: 24 },
-          left: { xs: 16, sm: 'auto' },
-          right: { xs: 16, sm: 'auto' }
-        }}
       >
         <Alert 
           severity="error" 
           onClose={() => setError(null)} 
-          sx={{ 
-            width: '100%',
-            fontSize: { xs: '0.875rem', sm: '0.875rem' }
-          }}
+          sx={{ width: '100%' }}
         >
           {error}
         </Alert>
