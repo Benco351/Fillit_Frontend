@@ -19,7 +19,6 @@ import OrganizationRegister from '../pages/OrganizationRegister';
 
 import { signOut } from '@aws-amplify/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Announcement } from '@mui/icons-material';
 
 /* ── tiny component that logs out then redirects ─────────── */
 function Logout() {
