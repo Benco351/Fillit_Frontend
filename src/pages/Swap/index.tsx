@@ -19,10 +19,12 @@ import {
   TextField,
   Pagination,
   InputAdornment,
+  Tooltip,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import SearchIcon from '@mui/icons-material/Search';
+import InfoIcon from '@mui/icons-material/Info';
 import { getEmployees } from '../../utils/apis/employeeShiftApis';
 import { Employee } from '../../components/CalendarFeatures/calendarStates';
 import { MainTheme, swapPageTheme } from '../../assets/themes/themes';
@@ -509,6 +511,166 @@ const deleteCorrespondingRequestedShifts = async (swapRequest: ShiftSwapRequest)
   }
 };
 
+// Info Dialog Component for Pending Requests
+const PendingRequestInfoDialog: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  request: ShiftSwapRequest | null;
+  employeeDetails: {[key: number]: Employee};
+  shiftDetails: {[key: number]: any};
+  isMyRequest: boolean;
+}> = ({ open, onClose, request, employeeDetails, shiftDetails, isMyRequest }) => {
+  if (!request) return null;
+
+  const otherEmployeeId = isMyRequest ? request.target_employee_id : request.requester_employee_id;
+  const otherEmployee = employeeDetails[otherEmployeeId];
+  const myShiftId = isMyRequest ? request.requester_shift_id : request.target_shift_id;
+  const theirShiftId = isMyRequest ? request.target_shift_id : request.requester_shift_id;
+  const myShiftDetail = shiftDetails[myShiftId];
+  const theirShiftDetail = shiftDetails[theirShiftId];
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <InfoIcon color="primary" />
+          <Typography variant="h6">
+            {isMyRequest ? 'My Pending Swap Request' : 'Pending Request to Me'}
+          </Typography>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Box sx={{ mt: 2 }}>
+          {/* Employee Information */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom color="primary">
+              Employee Information
+            </Typography>
+            <Paper sx={{ p: 2, backgroundColor: '#f5f5f5' }}>
+              <Typography variant="body1" fontWeight={600}>
+                {otherEmployee?.name || `Employee ID: ${otherEmployeeId}`}
+              </Typography>
+              {otherEmployee?.email && (
+                <Typography variant="body2" color="text.secondary">
+                  Email: {otherEmployee.email}
+                </Typography>
+              )}
+            </Paper>
+          </Box>
+
+          {/* Shift Details */}
+          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {/* My Shift */}
+            <Box sx={{ flex: 1, minWidth: 250 }}>
+              <Typography variant="h6" gutterBottom color="primary">
+                {isMyRequest ? 'My Shift' : 'Their Shift'}
+              </Typography>
+              <Paper sx={{ p: 2, backgroundColor: '#f5f5f5' }}>
+                {myShiftDetail?.availableShift ? (
+                  <>
+                    <Typography variant="body2">
+                      <strong>Date:</strong> {myShiftDetail.availableShift.shift_date || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Time:</strong> {myShiftDetail.availableShift.shift_time_start || 'N/A'} - {myShiftDetail.availableShift.shift_time_end || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Department:</strong> {myShiftDetail.availableShift.department_name || 'N/A'}
+                    </Typography>
+                    {myShiftDetail.availableShift.department_address && (
+                      <Typography variant="body2">
+                        <strong>Address:</strong> {myShiftDetail.availableShift.department_address}
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Shift details not available
+                  </Typography>
+                )}
+              </Paper>
+            </Box>
+
+            {/* Their Shift */}
+            <Box sx={{ flex: 1, minWidth: 250 }}>
+              <Typography variant="h6" gutterBottom color="primary">
+                {isMyRequest ? 'Their Shift' : 'My Shift'}
+              </Typography>
+              <Paper sx={{ p: 2, backgroundColor: '#f5f5f5' }}>
+                {theirShiftDetail?.availableShift ? (
+                  <>
+                    <Typography variant="body2">
+                      <strong>Date:</strong> {theirShiftDetail.availableShift.shift_date || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Time:</strong> {theirShiftDetail.availableShift.shift_time_start || 'N/A'} - {theirShiftDetail.availableShift.shift_time_end || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Department:</strong> {theirShiftDetail.availableShift.department_name || 'N/A'}
+                    </Typography>
+                    {theirShiftDetail.availableShift.department_address && (
+                      <Typography variant="body2">
+                        <strong>Address:</strong> {theirShiftDetail.availableShift.department_address}
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Shift details not available
+                  </Typography>
+                )}
+              </Paper>
+            </Box>
+          </Box>
+
+          {/* Message */}
+          {request.message && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom color="primary">
+                Message
+              </Typography>
+              <Paper sx={{ p: 2, backgroundColor: '#f5f5f5' }}>
+                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                  {request.message}
+                </Typography>
+              </Paper>
+            </Box>
+          )}
+
+          {/* Status */}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" gutterBottom color="primary">
+              Status
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                px: 2,
+                py: 1,
+                borderRadius: '8px',
+                backgroundColor: request.status === 'pending' ? '#2196f3' : 
+                               request.status === 'accepted' ? '#00c28c' : 
+                               request.status === 'rejected' ? '#f44336' : '#ff9800',
+                color: 'white',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                display: 'inline-block',
+              }}
+            >
+              {request.status}
+            </Typography>
+          </Box>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} variant="contained" color="primary">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 const SwapPage: React.FC = () => {
   const user = getCurrentUser();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -531,6 +693,11 @@ const SwapPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const employeesPerPage = 5;
+  
+  // Info dialog states for pending requests
+  const [pendingRequestInfoOpen, setPendingRequestInfoOpen] = useState(false);
+  const [selectedPendingRequest, setSelectedPendingRequest] = useState<ShiftSwapRequest | null>(null);
+  const [pendingRequestEmployeeDetails, setPendingRequestEmployeeDetails] = useState<{[key: number]: Employee}>({});
 
   const fetchSwapRequests = async (showLoading = false) => {
     if (showLoading) {
@@ -554,12 +721,90 @@ const SwapPage: React.FC = () => {
       if (requestsToMeChanged) {
         setRequestsToMe(newRequestsToMe);
       }
+      
+      // Fetch employee details for pending requests
+      await fetchEmployeeDetailsForPendingRequests(newMyRequests, newRequestsToMe);
     } catch (err: any) {
       setRequestsError(err.message || 'Failed to fetch swap requests');
     } finally {
       if (showLoading) {
         setRequestsLoading(false);
       }
+    }
+  };
+
+  const fetchEmployeeDetailsForPendingRequests = async (myRequests: ShiftSwapRequest[], requestsToMe: ShiftSwapRequest[]) => {
+    try {
+      const employeeIds = new Set<number>();
+      const shiftIds = new Set<number>();
+      
+      // Collect all unique employee IDs and shift IDs from pending requests
+      myRequests.filter(req => req.status === 'pending').forEach(req => {
+        employeeIds.add(req.target_employee_id);
+        shiftIds.add(req.requester_shift_id);
+        shiftIds.add(req.target_shift_id);
+      });
+      requestsToMe.filter(req => req.status === 'pending').forEach(req => {
+        employeeIds.add(req.requester_employee_id);
+        shiftIds.add(req.requester_shift_id);
+        shiftIds.add(req.target_shift_id);
+      });
+      
+      // Fetch employee details for all unique IDs
+      const employeeDetailsMap: {[key: number]: Employee} = {};
+      for (const employeeId of employeeIds) {
+        const employee = employees.find(emp => emp.id === employeeId);
+        if (employee) {
+          employeeDetailsMap[employeeId] = employee;
+        }
+      }
+      
+      setPendingRequestEmployeeDetails(employeeDetailsMap);
+      
+      // Fetch shift details for pending requests
+      await fetchShiftDetailsForPendingRequests(Array.from(shiftIds));
+    } catch (err) {
+      console.error('Failed to fetch employee details for pending requests:', err);
+    }
+  };
+
+  const fetchShiftDetailsForPendingRequests = async (shiftIds: number[]) => {
+    try {
+      const mod = await import('../../utils/apis/assignedShiftApis');
+      const shiftDetailsMap: {[key: number]: any} = {};
+      
+      // Fetch shift details for each shift ID
+      for (const shiftId of shiftIds) {
+        try {
+          const shiftRes = await mod.getAssignedShiftById(shiftId);
+          if (shiftRes.data) {
+            let shift = shiftRes.data;
+            
+            // Apply the same mapping as in fetchAllSwapRequests
+            shift = {
+              ...shift,
+              availableShift: {
+                ...shift.availableShift,
+                department_id:
+                  shift.availableShift?.department_id ||
+                  shift.availableShift?.department?.department_id ||
+                  shift.department_id,
+                department_name: shift.availableShift?.department?.department_name,
+                department_address: shift.availableShift?.department?.department_address,
+              },
+            };
+            
+            shiftDetailsMap[shiftId] = shift;
+          }
+        } catch (err) {
+          console.error(`Failed to fetch shift details for shift ${shiftId}:`, err);
+        }
+      }
+      
+      // Update shift details state
+      setShiftDetails(prev => ({ ...prev, ...shiftDetailsMap }));
+    } catch (err) {
+      console.error('Failed to fetch shift details for pending requests:', err);
     }
   };
 
@@ -849,24 +1094,49 @@ const SwapPage: React.FC = () => {
                 <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No pending swap requests sent.</Typography>
               )}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, justifyContent: 'center' }}>
-                {myRequests.filter(req => req.status === 'pending').map(req => (
-                  <Paper key={req.id} sx={{ p: 2, minWidth: 260, borderRadius: 2, background: swapPageTheme.cardBg, border: swapPageTheme.cardBorder }}>
-                    <Typography fontWeight={600}>To Employee ID: {req.target_employee_id}</Typography>
-                    <Typography>My Shift ID: {req.requester_shift_id}</Typography>
-                    <Typography>Their Shift ID: {req.target_shift_id}</Typography>
-                    <Typography>Status: {req.status}</Typography>
-                    {req.message && <Typography sx={{ fontStyle: 'italic', color: '#888' }}>Message: {req.message}</Typography>}
-                    <Button
-                      size="small"
-                      color="error"
-                      sx={{ mt: 1 }}
+                {myRequests.filter(req => req.status === 'pending').map(req => {
+                  const targetEmployee = pendingRequestEmployeeDetails[req.target_employee_id];
+                  return (
+                    <Paper key={req.id} sx={{ p: 2, minWidth: 260, borderRadius: 2, background: swapPageTheme.cardBg, border: swapPageTheme.cardBorder }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography fontWeight={600}>
+                          To: {targetEmployee?.name || `Employee ID: ${req.target_employee_id}`}
+                        </Typography>
+                        <Tooltip title="View Details">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setSelectedPendingRequest(req);
+                              setPendingRequestInfoOpen(true);
+                            }}
+                            sx={{ color: '#00c28c' }}
+                          >
+                            <InfoIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Status: {req.status}
+                      </Typography>
+                      {req.message && (
+                        <Typography sx={{ fontStyle: 'italic', color: '#888', mt: 1 }} variant="body2">
+                          Message: {req.message}
+                        </Typography>
+                      )}
+                      <Button
+                        size="small"
+                        color="error"
+                        sx={{ mt: 1 }}
                         onClick={async () => {
                           await respondToShiftSwapRequest(req.id, { status: 'cancelled' });
                           fetchSwapRequests(false); // Don't show loading for manual actions
                         }}
-                    >Cancel</Button>
-                  </Paper>
-                ))}
+                      >
+                        Cancel
+                      </Button>
+                    </Paper>
+                  );
+                })}
               </Box>
             </Box>
             <Box sx={{ mt: 6 }}>
@@ -878,43 +1148,70 @@ const SwapPage: React.FC = () => {
                 <Typography align="center" sx={{ mt: 2 }} style={{ color: '#b0b7be' }}>No pending swap requests received.</Typography>
               )}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, justifyContent: 'center' }}>
-                {requestsToMe.filter(req => req.status === 'pending').map(req => (
-                  <Paper key={req.id} sx={{ p: 2, minWidth: 260, borderRadius: 2, background: swapPageTheme.cardBg, border: swapPageTheme.cardBorder }}>
-                    <Typography fontWeight={600}>From Employee ID: {req.requester_employee_id}</Typography>
-                    <Typography>Their Shift ID: {req.requester_shift_id}</Typography>
-                    <Typography>My Shift ID: {req.target_shift_id}</Typography>
-                    <Typography>Status: {req.status}</Typography>
-                    {req.message && <Typography sx={{ fontStyle: 'italic', color: '#888' }}>Message: {req.message}</Typography>}
-                    <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                      <Button
-                        size="small"
-                        color="success"
-                        onClick={async () => {
-                          await respondToShiftSwapRequest(req.id, { status: 'accepted' });
-                          
-                          // After swap approval, delete corresponding requested shifts
-                          try {
-                            await deleteCorrespondingRequestedShifts(req);
-                          } catch (error) {
-                            console.error('Error deleting requested shifts after swap:', error);
-                            // Don't block the swap approval if this fails
-                            // The swap has already been approved, so we just log the error
-                          }
-                          
-                          fetchSwapRequests(false); // Don't show loading for manual actions
-                        }}
-                      >Accept</Button>
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={async () => {
-                          await respondToShiftSwapRequest(req.id, { status: 'rejected' });
-                          fetchSwapRequests(false); // Don't show loading for manual actions
-                        }}
-                      >Reject</Button>
-                    </Box>
-                  </Paper>
-                ))}
+                {requestsToMe.filter(req => req.status === 'pending').map(req => {
+                  const requesterEmployee = pendingRequestEmployeeDetails[req.requester_employee_id];
+                  return (
+                    <Paper key={req.id} sx={{ p: 2, minWidth: 260, borderRadius: 2, background: swapPageTheme.cardBg, border: swapPageTheme.cardBorder }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography fontWeight={600}>
+                          From: {requesterEmployee?.name || `Employee ID: ${req.requester_employee_id}`}
+                        </Typography>
+                        <Tooltip title="View Details">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setSelectedPendingRequest(req);
+                              setPendingRequestInfoOpen(true);
+                            }}
+                            sx={{ color: '#00c28c' }}
+                          >
+                            <InfoIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Status: {req.status}
+                      </Typography>
+                      {req.message && (
+                        <Typography sx={{ fontStyle: 'italic', color: '#888', mt: 1 }} variant="body2">
+                          Message: {req.message}
+                        </Typography>
+                      )}
+                      <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                        <Button
+                          size="small"
+                          color="success"
+                          onClick={async () => {
+                            await respondToShiftSwapRequest(req.id, { status: 'accepted' });
+                            
+                            // After swap approval, delete corresponding requested shifts
+                            try {
+                              await deleteCorrespondingRequestedShifts(req);
+                            } catch (error) {
+                              console.error('Error deleting requested shifts after swap:', error);
+                              // Don't block the swap approval if this fails
+                              // The swap has already been approved, so we just log the error
+                            }
+                            
+                            fetchSwapRequests(false); // Don't show loading for manual actions
+                          }}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={async () => {
+                            await respondToShiftSwapRequest(req.id, { status: 'rejected' });
+                            fetchSwapRequests(false); // Don't show loading for manual actions
+                          }}
+                        >
+                          Reject
+                        </Button>
+                      </Box>
+                    </Paper>
+                  );
+                })}
               </Box>
             </Box>
             
@@ -1152,6 +1449,16 @@ const SwapPage: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+        
+        {/* Pending Request Info Dialog */}
+        <PendingRequestInfoDialog
+          open={pendingRequestInfoOpen}
+          onClose={() => setPendingRequestInfoOpen(false)}
+          request={selectedPendingRequest}
+          employeeDetails={pendingRequestEmployeeDetails}
+          shiftDetails={shiftDetails}
+          isMyRequest={selectedPendingRequest ? myRequests.some(req => req.id === selectedPendingRequest.id) : false}
+        />
         
       </Box>
       <Footer />

@@ -199,7 +199,7 @@ const LoginForm: React.FC = () => {
         reset();
         setMode('resetConfirm');
         // --- END Cognito logic ---
-        setAuthError('Password reset is not available. Please contact your administrator.');
+
       }
       /* 3 ► forgot-password: confirm code */
       else if (mode === 'resetConfirm') {
@@ -213,7 +213,7 @@ const LoginForm: React.FC = () => {
         setSnackOpen(true);
         setTimeout(() => navigate('/login', { replace: true }), 2000);
         // --- END Cognito logic ---
-        setAuthError('Password reset is not available. Please contact your administrator.');
+
       }
     } catch (err: unknown) {
       // Clear authentication state for any authentication error

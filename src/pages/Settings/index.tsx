@@ -36,6 +36,7 @@ import Navbar from '../../components/layout/userNavbar';
 import { ROUTES } from '../../routes/config/routes';
 import { updateEmployeeById, deleteEmployeeById, getEmployeeById } from '../../utils/apis/employeeShiftApis';
 import { getEmployees } from '../../utils/apis/employeeShiftApis';
+import { deleteUser, signOut } from '@aws-amplify/auth';
 
 // Validation schemas
 const ProfileUpdateSchema = z.object({
@@ -252,16 +253,29 @@ const handleDeleteAccount = async () => {
     const employeeId = sessionStorage.getItem('customEmployeeId');
     if (!employeeId) throw new Error('User ID not found');
 
+    // Step 1: Delete user from Cognito first
+    try {
+      await deleteUser();
+      console.log('User deleted from Cognito successfully');
+    } catch (cognitoError: any) {
+      console.error('Error deleting user from Cognito:', cognitoError);
+      // If Cognito deletion fails, we should still try to delete from backend
+      // but inform the user about the partial failure
+      showSnackbar('Warning: User deleted from database but Cognito deletion failed. Please contact support.', 'error');
+    }
+
+    // Step 2: Delete employee from backend database
     const response = await deleteEmployeeById(Number(employeeId));
     console.log('Delete account response:', response);
+    
     if (response?.status === 'ok') {
-    // Success
-    sessionStorage.clear();
-    setDeleteDialogOpen(false);
-    showSnackbar('Account deleted successfully!', 'success');
-    setTimeout(() => navigate(ROUTES.HOME, { replace: true }), 2000);
+      // Success - clear session and redirect
+      sessionStorage.clear();
+      setDeleteDialogOpen(false);
+      showSnackbar('Account deleted successfully!', 'success');
+      setTimeout(() => navigate(ROUTES.HOME, { replace: true }), 2000);
     } else {
-    throw new Error('Account deletion failed');
+      throw new Error('Account deletion failed');
     }
   } catch (error: any) {
     console.error('Error deleting account:', error);
