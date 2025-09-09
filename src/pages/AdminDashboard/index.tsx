@@ -933,7 +933,7 @@ const AdminDashboard: React.FC = () => {
 
           {/* Top section layout matching UserDashboard */}
           <Box sx={{ my: 3 }}>
-            <UserDashboardTitle title="Admin Management System" />
+            <UserDashboardTitle title="Admin Management System -" />
 
             {/* Filters - Matching User Dashboard position */}
             <Box sx={{
